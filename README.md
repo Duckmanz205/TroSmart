@@ -1,52 +1,52 @@
-# \# 🏠 TroSmart - Smart Hostel Management System
+##### \# 🏠 TroSmart - Smart Hostel Management System
 
-# 
 
-# Dự án TroSmart được tổ chức theo cấu trúc phân lớp (Layer-based Architecture), chia tách minh bạch giữa Giao diện (View), Thành phần (Widget), Dữ liệu (Model) và Logic xử lý. Đặc biệt, hệ thống được thiết kế để hỗ trợ đa vai trò (User/Admin).
 
-# 
+Dự án TroSmart được tổ chức theo cấu trúc phân lớp (Layer-based Architecture), chia tách minh bạch giữa Giao diện (View), Thành phần (Widget), Dữ liệu (Model) và Logic xử lý. Đặc biệt, hệ thống được thiết kế để hỗ trợ đa vai trò (User/Admin).
 
-# \## 📂 Cấu trúc thư mục chi tiết
 
-# 
 
-# ```text
+\## 📂 Cấu trúc thư mục chi tiết
 
-# lib/
 
-# ├── logic/              # Xử lý Logic nghiệp vụ (Controllers, BLoC, Providers)
 
-# ├── models/             # Định nghĩa các đối tượng dữ liệu (DTOs, Entities)
+```text
 
-# ├── shared/             # Cấu hình dùng chung cho toàn hệ thống
+lib/
 
-# │   └── app\_theme.dart  # Quản lý giao diện Light/Dark Mode và màu sắc chủ đạo
+├── logic/              # Xử lý Logic nghiệp vụ (Controllers, BLoC, Providers)
 
-# ├── views/              # LỚP HIỂN THỊ (Màn hình chính)
+├── models/             # Định nghĩa các đối tượng dữ liệu (DTOs, Entities)
 
-# │   ├── admin/          # Giao diện dành cho Chủ trọ
+├── shared/             # Cấu hình dùng chung cho toàn hệ thống
 
-# │   ├── auth/           # Giao diện Đăng nhập / Đăng ký
+│   └── app\_theme.dart  # Quản lý giao diện Light/Dark Mode và màu sắc chủ đạo
 
-# │   └── user/           # Giao diện dành cho Khách thuê
+├── views/              # LỚP HIỂN THỊ (Màn hình chính)
 
-# │       ├── navigation\_screen.dart # Bộ điều hướng Bottom Nav
+│   ├── admin/          # Giao diện dành cho Chủ trọ
 
-# │       ├── payment\_screen.dart    # Chi tiết thanh toán hóa đơn
+│   ├── auth/           # Giao diện Đăng nhập / Đăng ký
 
-# │       └── stats\_screen.dart      # Thống kê chi tiêu \& lịch sử
+│   └── user/           # Giao diện dành cho Khách thuê
 
-# ├── widgets/            # THÀNH PHẦN GIAO DIỆN NHỎ (Components)
+│       ├── navigation\_screen.dart # Bộ điều hướng Bottom Nav
 
-# │   ├── admin/          # Các widget đặc thù cho quản lý (Admin)
+│       ├── payment\_screen.dart    # Chi tiết thanh toán hóa đơn
 
-# │   ├── common/         # Widget dùng chung (Buttons, Inputs, Dialogs)
+│       └── stats\_screen.dart      # Thống kê chi tiêu \& lịch sử
 
-# │   └── user/           # Widget phục vụ giao diện Khách thuê
+├── widgets/            # THÀNH PHẦN GIAO DIỆN NHỎ (Components)
 
-# │       ├── payment\_widgets.dart # Các thẻ bài (Cards) trong trang thanh toán
+│   ├── admin/          # Các widget đặc thù cho quản lý (Admin)
 
-# │       └── stats\_widgets.dart   # Biểu đồ và các thẻ tóm tắt thống kê
+│   ├── common/         # Widget dùng chung (Buttons, Inputs, Dialogs)
 
-# └── main.dart           # File khởi chạy ứng dụng
+│   └── user/           # Widget phục vụ giao diện Khách thuê
+
+│       ├── payment\_widgets.dart # Các thẻ bài (Cards) trong trang thanh toán
+
+│       └── stats\_widgets.dart   # Biểu đồ và các thẻ tóm tắt thống kê
+
+└── main.dart           # File khởi chạy ứng dụng
 
