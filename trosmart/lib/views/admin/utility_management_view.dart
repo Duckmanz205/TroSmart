@@ -4,7 +4,7 @@ import '../../shared/app_colors.dart';
 import '../../widgets/admin/invoice_header.dart';
 import '../../widgets/admin/utility_summary_card.dart';
 import '../../widgets/admin/room_utility_entry_card.dart';
-import '../../widgets/common/custom_bottom_navigation.dart';
+import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
 class UtilityManagementScreen extends StatelessWidget {
   const UtilityManagementScreen({super.key});
@@ -56,7 +56,7 @@ class UtilityManagementScreen extends StatelessWidget {
               ],
             ),
           ),
-          CustomBottomNavigation(),
+          CustomBottomNav(),
         ],
       ),
     );

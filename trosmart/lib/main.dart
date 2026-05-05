@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:trosmart/views/admin/invoice_screen.dart';
 import 'shared/app_theme.dart';
-import 'views/user/navigation_screen.dart';
 
 void main() {
   runApp(const TroSmartApp());
@@ -16,7 +16,7 @@ class TroSmartApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: const MainNavigationScreen(),
+      home: InvoiceScreen(),
     );
   }
 }

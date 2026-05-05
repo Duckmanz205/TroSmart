@@ -3,7 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/notification_screen.dart';
 import 'package:trosmart/views/user/stats_screen.dart';
-import 'package:trosmart/widgets/common/user_app_bar.dart';
+import 'package:trosmart/widgets/common/user/user_app_bar.dart';
 import 'app_sidebar.dart';
 import 'payment_screen.dart';
 

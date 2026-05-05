@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../shared/app_colors.dart';
-import '../../widgets/common/user_app_bar.dart';
+import '../../widgets/common/user/user_app_bar.dart';
 import '../../widgets/user/notification_tile.dart';
 
 class NotificationScreen extends StatelessWidget {
