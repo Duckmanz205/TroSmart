@@ -13,7 +13,6 @@ Dự án TroSmart được tổ chức theo cấu trúc phân lớp (Layer-based
 ```text
 
 lib/
-
 ├── logic/              # Xử lý Logic nghiệp vụ (Controllers, BLoC, Providers)
 
 ├── models/             # Định nghĩa các đối tượng dữ liệu (DTOs, Entities)
