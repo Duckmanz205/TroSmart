@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../shared/app_colors.dart';
+import '../../../shared/app_colors.dart';
 
 class UserAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
