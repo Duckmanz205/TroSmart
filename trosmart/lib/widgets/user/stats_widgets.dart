@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../shared/app_colors.dart'; // Đảm bảo import đúng file chứa AppColors[cite: 1]
 
 class SummaryCard extends StatelessWidget {
   final String title;
@@ -23,24 +24,24 @@ class SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha:0.03), blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text(title, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textLight)),
           const SizedBox(height: 4),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor ?? Theme.of(context).textTheme.bodyLarge?.color)),
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor ?? AppColors.primaryPurple)), // Màu tím chính[cite: 1]
           const SizedBox(height: 8),
           Row(
             children: [
               Container(width: 8, height: 8, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
               const SizedBox(width: 6),
-              Text(status, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.grey)),
+              Text(status, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.textLight)),
             ],
           )
         ],
@@ -57,10 +58,10 @@ class ExpenditureChartBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha:0.03), blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
         ],
       ),
       child: Column(
@@ -72,14 +73,14 @@ class ExpenditureChartBox extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Chi phí Điện & Nước", style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text("Đơn vị: 1000 VNĐ", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                  Text("Đơn vị: 1000 VNĐ", style: TextStyle(fontSize: 10, color: AppColors.textLight)),
                 ],
               ),
               Row(
                 children: [
-                  _chartLegend(const Color(0xFFF6AD55), "Điện"),
+                  _chartLegend(AppColors.statusOrange, "Điện"), // Màu cam điện[cite: 1]
                   const SizedBox(width: 12),
-                  _chartLegend(const Color(0xFF4FD1C5), "Nước"),
+                  _chartLegend(AppColors.accentTeal, "Nước"), // Màu xanh nước[cite: 1]
                 ],
               )
             ],
@@ -95,7 +96,7 @@ class ExpenditureChartBox extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (val, meta) {
-                        const style = TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold);
+                        const style = TextStyle(color: AppColors.textLight, fontSize: 10, fontWeight: FontWeight.bold);
                         switch (val.toInt()) {
                           case 0: return const Text('T9', style: style);
                           case 1: return const Text('T10', style: style);
@@ -114,8 +115,8 @@ class ExpenditureChartBox extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
-                  _lineBarData(const Color(0xFFF6AD55), [320, 450, 420, 580, 520, 480]),
-                  _lineBarData(const Color(0xFF4FD1C5), [150, 180, 160, 210, 190, 180]),
+                  _lineBarData(AppColors.statusOrange, [320, 450, 420, 580, 520, 480]), // Màu cam[cite: 1]
+                  _lineBarData(AppColors.accentTeal, [150, 180, 160, 210, 190, 180]), // Màu xanh teal[cite: 1]
                 ],
               ),
             ),
@@ -130,7 +131,7 @@ class ExpenditureChartBox extends StatelessWidget {
       children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textLight)),
       ],
     );
   }
@@ -164,20 +165,21 @@ class SavingTipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const Color greenSuccess = Color(0xFF48BB78); // Giữ màu xanh lá cho mẹo tiết kiệm
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha:0.03), blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
         ],
       ),
       child: Column(
         children: [
           const Row(
             children: [
-              Icon(LucideIcons.lightbulb, color: Colors.orange, size: 18),
+              Icon(LucideIcons.lightbulb, color: AppColors.statusOrange, size: 18), // Màu cam status[cite: 1]
               SizedBox(width: 8),
               Text("Mẹo tiết kiệm", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             ],
@@ -186,24 +188,24 @@ class SavingTipCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF48BB78).withValues(alpha:0.05),
+              color: greenSuccess.withValues(alpha:0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF48BB78).withValues(alpha:0.1)),
+              border: Border.all(color: greenSuccess.withValues(alpha:0.1)),
             ),
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(LucideIcons.trendingDown, color: Color(0xFF48BB78), size: 20),
+                Icon(LucideIcons.trendingDown, color: greenSuccess, size: 20),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Tiền điện giảm 7%", style: TextStyle(color: Color(0xFF48BB78), fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text("Tiền điện giảm 7%", style: TextStyle(color: greenSuccess, fontWeight: FontWeight.bold, fontSize: 14)),
                       SizedBox(height: 4),
                       Text(
                         "So với tháng trước, bạn đã tiết kiệm được khoảng 120.000đ tiền điện. Hãy tiếp tục duy trì thói quen tắt thiết bị khi không sử dụng!",
-                        style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.5),
+                        style: TextStyle(fontSize: 11, color: AppColors.textLight, height: 1.5),
                       ),
                     ],
                   ),
@@ -252,7 +254,7 @@ class TransactionItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textLight)),
                 ],
               )
             ],
@@ -269,13 +271,13 @@ class RecentActivityHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text("GẦN ĐÂY", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1.2)),
-          Text("Xem tất cả", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF4FD1C5))),
+          const Text("GẦN ĐÂY", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textLight, letterSpacing: 1.2)),
+          Text("Xem tất cả", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.accentTeal)), // Màu teal[cite: 1]
         ],
       ),
     );
