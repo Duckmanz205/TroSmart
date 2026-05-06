@@ -24,4 +24,19 @@ class AppColors {
       Color(0xFF27202C),
     ],
   );
+
+  // ===== MÀU BỔ SUNG =====
+  static const Color darkAccent = Color(0xFF27202C);
+  static const Color warningLightBg = Color(0xFFFFF3E0); 
+  static const Color purpleLightBg = Color(0xFFF3E5F5); 
+  static const Color purpleBorder = Color(0xFFE1BEE7); 
+  static const Color dividerLight = Color(0xFFF5F5F5); 
+  
+  // Màu đặc thù cho Quản lý Điện Nước
+  static const Color utilityPurpleLight = Color(0xFF9D50CF);
+  static const Color utilityPurpleDark = Color(0xFF4D2A72);
+  static const Color utilityTealLight = Color(0xFFE5FDF8);
+  static const Color utilityDarkCard = Color(0xFF362E40);
+  static const Color utilityGray = Color(0xFF8C8C91);
+  static const Color utilityBorder = Color(0xFFE8E8EE);
 }

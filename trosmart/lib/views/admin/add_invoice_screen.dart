@@ -1,69 +1,96 @@
 import 'package:flutter/material.dart';
-import '../../shared/app_colors.dart';
-import '../../widgets/admin/invoice_header.dart';
-import '../../widgets/admin/billing_info_card.dart';
-import '../../widgets/admin/invoice_summary_header.dart';
+import 'package:trosmart/widgets/common/admin/custom_bottom_navigation.dart';
+import '../../widgets/admin/add_invoice_widgets.dart';
 
-class AddInvoiceScreen extends StatelessWidget {
+class AddInvoiceScreen extends StatefulWidget {
   const AddInvoiceScreen({super.key});
+
+  @override
+  State<AddInvoiceScreen> createState() => _AddInvoiceScreenState();
+}
+
+class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
+  bool sendNotify = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundGray,
-      body: Column(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Stack(
         children: [
-          const InvoiceHeader(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                const Text('Lập hóa đơn tháng', 
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.adminDarkPurple)),
-                const Text('Tháng 04/2026 - Cơ sở Quận 7', 
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-                const SizedBox(height: 32),
-                
-                const Text('ĐỐI TƯỢNG THANH TOÁN', 
-                  style: TextStyle(color: AppColors.adminDarkPurple, fontSize: 12, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text('Phòng P.402 - Nguyễn Văn A', 
-                  style: TextStyle(fontSize: 14, color: AppColors.textDark)),
-                
-                const SizedBox(height: 24),
-                const BillingInfoCard(title: 'CHỈ SỐ ĐIỆN (⚡ 3.500đ/kWh)', oldVal: '1250', newVal: '1342'),
-                const BillingInfoCard(title: 'CHỈ SỐ NƯỚC (💧 20.000đ/m3)', oldVal: '430', newVal: '438'),
-                
-                const SizedBox(height: 24),
-                const Text('TIỀN PHÒNG & DỊCH VỤ CỐ ĐỊNH', 
-                  style: TextStyle(color: AppColors.adminDarkPurple, fontSize: 12, fontWeight: FontWeight.bold)),
-                const Text('Phòng: 4.500.000 | Wifi: 100.000', 
-                  style: TextStyle(color: Colors.grey, fontSize: 13)),
-                
-                const SizedBox(height: 40),
-                const InvoiceSummaryHeader(amount: '4.982.000 đ', isEntry: true),
-                
-                const SizedBox(height: 32),
-                _buildSubmitButton(),
-              ],
+          // Header Gradient
+          const HeaderSection(),
+          
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  const PageTitleSection(),
+                  const SizedBox(height: 20),
+                  const InvoiceFormCard(),
+                  const SizedBox(height: 30),
+                  
+                  // Notify Toggle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Gửi thông báo cho khách ngay',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Switch(
+                        value: sendNotify,
+                        onChanged: (val) => setState(() => sendNotify = val),
+                        activeColor: Colors.white,
+                        activeTrackColor: const Color(0xFF6A3092),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Primary Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6A3092),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 4,
+                      ),
+                      child: const Text(
+                        'Lưu & Xuất hóa đơn',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 100), // Space for bottom nav
+                ],
+              ),
             ),
           ),
+          
+          // Bottom Navigation
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: CustomBottomNav(), // Tái sử dụng BottomNav chung của app
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSubmitButton() {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: AppColors.adminHeaderGradient,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: const Center(
-        child: Text('Lưu & Xuất hóa đơn', 
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
       ),
     );
   }
