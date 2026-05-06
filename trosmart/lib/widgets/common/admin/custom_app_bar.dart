@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:trosmart/shared/app_colors.dart';
 
-class CustomAppBar extends StatelessWidget {
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
   const CustomAppBar({super.key});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -12,15 +16,17 @@ class CustomAppBar extends StatelessWidget {
       elevation: 0,
       centerTitle: false,
       leading: IconButton(
-        icon: const Icon(LucideIcons.menu, color: Color(0xFF1A1D1F)),
-        onPressed: () {},
+        icon: const Icon(LucideIcons.menu, color: AppColors.textDark), // Đã đồng bộ màu
+        onPressed: () {
+          Scaffold.of(context).openDrawer();
+        },
       ),
       title: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: const Color(0xFF2DDCB1),
+              color: AppColors.accentTeal, // Đã đồng bộ màu
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(LucideIcons.home, color: Colors.white, size: 16),
@@ -31,7 +37,7 @@ class CustomAppBar extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF2DDCB1),
+              color: AppColors.accentTeal, // Đã đồng bộ màu
             ),
           ),
         ],
@@ -41,20 +47,20 @@ class CustomAppBar extends StatelessWidget {
           margin: const EdgeInsets.only(right: 16),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFE9FAF6),
+            color: AppColors.accentTeal.withOpacity(0.1), 
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFD0F4EC)),
+            border: Border.all(color: AppColors.accentTeal.withOpacity(0.3)), 
           ),
           child: Row(
             children: [
-              const CircleAvatar(radius: 3, backgroundColor: Color(0xFF2DDCB1)),
+              const CircleAvatar(radius: 3, backgroundColor: AppColors.accentTeal),
               const SizedBox(width: 6),
               Text(
                 'Chủ trọ',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2DDCB1),
+                  color: AppColors.accentTeal, // Đã đồng bộ màu
                 ),
               ),
             ],

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
-import 'package:trosmart/views/user/notification_screen.dart';
+import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
+import 'package:trosmart/views/user/UR_ThongBao.dart';
 import 'package:trosmart/views/user/stats_screen.dart';
 import 'package:trosmart/widgets/common/user/user_app_bar.dart';
 import 'app_sidebar.dart';
@@ -21,13 +22,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // 2. Danh sách các trang hiển thị trong IndexedStack
   // Thứ tự này sẽ tương ứng với số index của IndexedStack
   final List<String> _pageOrder = [
-    AppPages.home,          // 0
-    AppPages.payment,       // 1
-    AppPages.chat,          // 2
-    AppPages.contract,      // 3
-    AppPages.notifications, // 4
-    AppPages.stats,         // 5
-    AppPages.profileDetail, // 6
+    AppPages.home,              // 0: Trang chủ
+    AppPages.payment,           // 1: Thanh toán
+    AppPages.chat,              // 2: Chat
+    AppPages.contract,          // 3: Hợp đồng
+    AppPages.searchroom,        // 4: Tra cứu phòng
+    AppPages.reportIssue,       // 5: Báo cáo sự cố
+    AppPages.notifications,     // 6: UrThongBao 
+    AppPages.accommodationShare,// 7: Ở ghép
+    AppPages.stats,             // 8: HistoryStatsScreen
+    AppPages.profileDetail,     // 9: Cá nhân
   ];
 
   // 3. Hàm điều hướng dùng chung
@@ -52,7 +56,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: UserAppBar(title: _activePage), // Hiển thị tiêu đề động
+      appBar: UserAppBar(), // Hiển thị tiêu đề động
       drawer: AppSidebar(
         activePage: _activePage, 
         onPageSelected: _navigateTo,
@@ -64,9 +68,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           const PaymentDetailsScreen(),                // 1
           const Center(child: Text("Chat")),           // 2
           const Center(child: Text("Hợp đồng")),       // 3
-          const NotificationScreen(),                  // 4
-          const HistoryStatsScreen(),                  // 5
-          const Center(child: Text("Cá nhân")),        // 6
+          const Center(child: Text("Tra cứu phòng")),  // 4
+          const IssueReportingScreen(),                 // 5
+          const UrThongBao(),                  // 6
+          const Center(child: Text("Ở ghép")),         // 7
+          const HistoryStatsScreen(),                  // 7
+          const Center(child: Text("Cá nhân")),        // 8
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
