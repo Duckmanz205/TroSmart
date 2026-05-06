@@ -9,7 +9,7 @@ class InvoiceDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundGray, // Sử dụng màu có sẵn
+      backgroundColor: AppColors.backgroundGray,
       body: Stack(
         children: [
           SingleChildScrollView(

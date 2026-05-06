@@ -4,7 +4,6 @@ import '../../widgets/common/app_header.dart';
 import '../../widgets/common/app_search_field.dart';
 import '../../widgets/common/chat_list_item.dart';
 
-/// Admin Chat List screen – displays conversations with tenants.
 class AdChat extends StatelessWidget {
   const AdChat({super.key});
 
