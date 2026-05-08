@@ -10,7 +10,7 @@ import '../../models/admin/tien_ich_model.dart';
 
 
 class CoSoService {
-  static const String baseUrl = 'http://localhost:5137/api';
+  static const String baseUrl = 'http://10.0.2.2:5137/api';
 
   Future<List<ManagerModel>> getManagers() async {
     final uri = Uri.parse('$baseUrl/CoSo/managers');

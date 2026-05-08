@@ -8,7 +8,7 @@ import '../../models/admin/phong_view_model.dart';
 import '../../models/admin/tien_ich_model.dart';
 
 class PhongService {
-  static const String baseUrl = 'http://localhost:5137/api';
+  static const String baseUrl = 'http://10.0.2.2:5137/api';
 
   Future<List<PhongModel>> getByCoSo(int maCoSo) async {
     final uri = Uri.parse('$baseUrl/Phong/coso/$maCoSo');
