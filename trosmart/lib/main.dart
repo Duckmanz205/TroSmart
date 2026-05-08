@@ -23,3 +23,45 @@ class TroSmartApp extends StatelessWidget {
     );
   }
 }
+*/
+
+import 'package:flutter/material.dart';
+import 'views/admin/select_manager_view.dart';
+
+void main() {
+  runApp(const TroSmartApp());
+}
+
+class TroSmartApp extends StatelessWidget {
+  const TroSmartApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: SelectManagerView(),
+    );
+  }
+}
+
+/*
+// main xem tra cuu
+import 'package:flutter/material.dart';
+import 'views/user/room_search_view.dart';
+
+void main() {
+  runApp(const TroSmartApp());
+}
+
+class TroSmartApp extends StatelessWidget {
+  const TroSmartApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: RoomSearchView(),
+    );
+  }
+}
+*/
