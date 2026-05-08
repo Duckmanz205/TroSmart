@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'stats_screen.dart';
+import 'package:trosmart/models/user/app_pages.dart';
+import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
+import 'package:trosmart/views/user/UR_ThongBao.dart';
+import 'package:trosmart/views/user/stats_screen.dart';
+import 'package:trosmart/widgets/common/user/user_app_bar.dart';
+import 'app_sidebar.dart';
 import 'payment_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -11,48 +16,80 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
+  // 1. Quản lý bằng Tên Trang
+  String _activePage = AppPages.home;
 
-  // Chỉ sắp xếp lại các màn hình sẵn có theo thứ tự mới
-  final List<Widget> _screens = [
-    const HistoryStatsScreen(),      // 0. TRANG CHỦ
-    const PaymentDetailsScreen(),    // 1. THANH TOÁN
-    const Center(child: Text("Màn hình Chat")),    // 2. CHAT (Tạm thời)
-    const Center(child: Text("Màn hình Hồ sơ")),  // 3. HỒ SƠ (Tạm thời)
+  // 2. Danh sách các trang hiển thị trong IndexedStack
+  // Thứ tự này sẽ tương ứng với số index của IndexedStack
+  final List<String> _pageOrder = [
+    AppPages.home,              // 0: Trang chủ
+    AppPages.payment,           // 1: Thanh toán
+    AppPages.chat,              // 2: Chat
+    AppPages.contract,          // 3: Hợp đồng
+    AppPages.searchroom,        // 4: Tra cứu phòng
+    AppPages.reportIssue,       // 5: Báo cáo sự cố
+    AppPages.notifications,     // 6: UrThongBao 
+    AppPages.accommodationShare,// 7: Ở ghép
+    AppPages.stats,             // 8: HistoryStatsScreen
+    AppPages.profileDetail,     // 9: Cá nhân
   ];
+
+  // 3. Hàm điều hướng dùng chung
+  void _navigateTo(String pageName) {
+    setState(() {
+      _activePage = pageName;
+    });
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context); // Đóng drawer nếu đang mở
+    }
+  }
+
+  // Tính toán Index cho BottomNavigationBar
+  int _getBottomNavIndex() {
+    if (_activePage == AppPages.home) return 0;
+    if (_activePage == AppPages.payment) return 1;
+    if (_activePage == AppPages.chat) return 2;
+    if (_activePage == AppPages.profileDetail) return 3;
+    return 0; // Mặc định về 0 nếu trang đó không nằm trong BottomNav
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: UserAppBar(), // Hiển thị tiêu đề động
+      drawer: AppSidebar(
+        activePage: _activePage, 
+        onPageSelected: _navigateTo,
+      ),
       body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+        index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
+        children: [
+          const Center(child: Text("Trang chủ")),      // 0
+          const PaymentDetailsScreen(),                // 1
+          const Center(child: Text("Chat")),           // 2
+          const Center(child: Text("Hợp đồng")),       // 3
+          const Center(child: Text("Tra cứu phòng")),  // 4
+          const IssueReportingScreen(),                 // 5
+          const UrThongBao(),                  // 6
+          const Center(child: Text("Ở ghép")),         // 7
+          const HistoryStatsScreen(),                  // 7
+          const Center(child: Text("Cá nhân")),        // 8
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        currentIndex: _getBottomNavIndex(),
+        onTap: (index) {
+          // Ánh xạ từ số bấm ở dưới ra Tên trang tương ứng
+          final bottomPages = [AppPages.home, AppPages.payment, AppPages.chat, AppPages.profileDetail];
+          _navigateTo(bottomPages[index]);
+        },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFB794F4),
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 10),
+        selectedItemColor: Colors.purple,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.home), 
-            label: 'TRANG CHỦ',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.creditCard), 
-            label: 'THANH TOÁN',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.messageCircle), 
-            label: 'CHAT',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.user), 
-            label: 'HỒ SƠ',
-          ),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'TRANG CHỦ'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.creditCard), label: 'THANH TOÁN'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.messageCircle), label: 'CHAT'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: 'HỒ SƠ'),
         ],
       ),
     );
