@@ -378,53 +378,55 @@ class _CoSoManagementViewState extends State<CoSoManagementView> {
     );
   }
 
-  Widget _buildAddButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 46,
-      child: ElevatedButton.icon(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const AddCoSoView(),
+ Widget _buildAddButton() {
+  return SizedBox(
+    width: double.infinity,
+    height: 46,
+    child: ElevatedButton.icon(
+      onPressed: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddCoSoView(
+              maQuanLy: widget.maQuanLy,
             ),
-          );
+          ),
+        );
 
-          if (result == true) {
-            _reload();
-          }
-        },
-        icon: Container(
-          width: 22,
-          height: 22,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.18),
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: const Icon(
-            Icons.add_rounded,
-            size: 17,
-          ),
+        if (result == true) {
+          _reload();
+        }
+      },
+      icon: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.18),
+          borderRadius: BorderRadius.circular(7),
         ),
-        label: const Text(
-          'Thêm cơ sở',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF9C42BA),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
+        child: const Icon(
+          Icons.add_rounded,
+          size: 17,
         ),
       ),
-    );
-  }
+      label: const Text(
+        'Thêm cơ sở',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF9C42BA),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+    ),
+  );
+}
 
   Widget _buildSearchBox() {
     return SizedBox(

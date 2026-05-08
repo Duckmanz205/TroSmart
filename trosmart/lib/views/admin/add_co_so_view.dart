@@ -9,7 +9,12 @@ import '../../logic/admin/co_so_service.dart';
 import '../../models/admin/tien_ich_model.dart';
 
 class AddCoSoView extends StatefulWidget {
-  const AddCoSoView({super.key});
+  final int maQuanLy;
+
+  const AddCoSoView({
+    super.key,
+    required this.maQuanLy,
+  });
 
   @override
   State<AddCoSoView> createState() => _AddCoSoViewState();
@@ -172,7 +177,7 @@ class _AddCoSoViewState extends State<AddCoSoView> {
         diaChi: _diaChiController.text.trim(),
         loaiHinh: _loaiHinh,
         moTa: _moTaController.text.trim(),
-        maQuanLy: null,
+        maQuanLy: widget.maQuanLy,
         latitude: _latitude,
         longitude: _longitude,
         maTienIchIds: _selectedTienIchIds.toList(),
