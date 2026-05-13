@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
 class CustomBottomNav extends StatelessWidget {
-  const CustomBottomNav({super.key});
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const CustomBottomNav({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,11 +21,23 @@ class CustomBottomNav extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          NavItem(icon: Icons.home_outlined, label: 'Trang chủ'),
-          NavItem(icon: Icons.description, label: 'Hóa đơn', isActive: true),
-          NavItem(icon: Icons.business_outlined, label: 'Phòng'),
-          NavItem(icon: Icons.person_outline_rounded, label: 'Tài khoản'),
+        children: [
+          GestureDetector(
+            onTap: () => onTap(0),
+            child: NavItem(icon: Icons.home_outlined, label: 'Trang chủ', isActive: currentIndex == 0),
+          ),
+          GestureDetector(
+            onTap: () => onTap(1),
+            child: NavItem(icon: Icons.description, label: 'Hóa đơn', isActive: currentIndex == 1),
+          ),
+          GestureDetector(
+            onTap: () => onTap(2),
+            child: NavItem(icon: Icons.business_outlined, label: 'Phòng', isActive: currentIndex == 2),
+          ),
+          GestureDetector(
+            onTap: () => onTap(3),
+            child: NavItem(icon: Icons.person_outline_rounded, label: 'Tài khoản', isActive: currentIndex == 3),
+          ),
         ],
       ),
     );

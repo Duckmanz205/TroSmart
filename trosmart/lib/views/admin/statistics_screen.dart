@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../../widgets/common/admin/custom_app_bar.dart';
 import '../../widgets/admin/statistics_widgets.dart';
 
 class StatisticsScreen extends StatelessWidget {
@@ -7,22 +7,32 @@ class StatisticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          PageHeader(),
-          SizedBox(height: 24),
-          ActionButtonsRow(),
-          SizedBox(height: 32),
-          SectionLabel(label: 'OVERVIEW'),
-          SizedBox(height: 16),
-          MetricGrid(),
-          SizedBox(height: 24),
-          RevenueProfitChartCard(),
-          SizedBox(height: 24),
-          RentalTrendChartCard(),
+    return Scaffold(
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(70),
+        child: CustomAppBar(),
+      ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                PageHeader(),
+                SizedBox(height: 24),
+                ActionButtonsRow(),
+                SizedBox(height: 32),
+                SectionLabel(label: 'OVERVIEW'),
+                SizedBox(height: 16),
+                MetricGrid(),
+                SizedBox(height: 24),
+                RevenueProfitChartCard(),
+                SizedBox(height: 24),
+                RentalTrendChartCard(),
+              ],
+            ),
+          ),
         ],
       ),
     );

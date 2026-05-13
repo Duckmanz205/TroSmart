@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
-import '../../widgets/common/chat_bubble.dart';
-import '../../widgets/common/chat_input_bar.dart';
+import '../../widgets/chat_widgets.dart';
 
 /// User Chat screen – chatbot-style conversation with TroSmart AI assistant.
 class UrChat extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
-import '../../widgets/common/notification_card.dart';
+import '../../widgets/user/notification_widgets.dart';
 
 /// User Notification (Thông báo) screen.
 class UrThongBao extends StatelessWidget {
@@ -13,9 +13,6 @@ class UrThongBao extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──
-            _NotifHeader(),
-
             // ── Content ──
             Expanded(
               child: SingleChildScrollView(
@@ -126,68 +123,6 @@ class UrThongBao extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Notification screen header.
-class _NotifHeader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.bgWhite,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.bgGray100),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.maybePop(context),
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icon(Icons.arrow_back_ios_new, size: 20),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const ShapeDecoration(
-              color: AppTheme.statusGreen,
-              shape: OvalBorder(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'TroSmart',
-            style: AppTheme.headingMd.copyWith(
-              color: const Color(0xFF1F2937),
-            ),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: ShapeDecoration(
-              color: AppTheme.bgGray100,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(9999),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.person_outline, size: 12, color: AppTheme.textBody),
-                const SizedBox(width: 8),
-                Text('Guest', style: AppTheme.caption),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

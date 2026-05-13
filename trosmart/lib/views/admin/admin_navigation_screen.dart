@@ -20,7 +20,7 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
   final List<Widget> _screens = [
     const StatisticsScreen(),          // 0 - Trang chủ
     const InvoiceScreen(),             // 1 - Hóa đơn
-    const UtilityManagementScreen(),   // 2 - Phòng / Điện nước
+    const UtilityManagementView(),   // 2 - Phòng / Điện nước
     const Center(child: Text("Tài khoản – đang phát triển",
       style: TextStyle(fontSize: 16, color: Colors.black45))), // 3 - Tài khoản
   ];

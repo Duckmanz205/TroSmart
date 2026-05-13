@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
 import '../../widgets/common/app_header.dart';
 import '../../widgets/common/app_search_field.dart';
-import '../../widgets/common/chat_list_item.dart';
+import '../../widgets/chat_widgets.dart';
 
-/// Admin Chat List screen – displays conversations with tenants.
 class AdChat extends StatelessWidget {
   const AdChat({super.key});
 
@@ -45,7 +44,7 @@ class AdChat extends StatelessWidget {
                     time: '15:30',
                     isUnread: true,
                     onTap: () {
-                      // TODO: Navigate to AD_ChiTietChat
+                      Navigator.pushNamed(context, '/admin/chat-detail');
                     },
                   ),
                   const Divider(height: 1, indent: 80),
@@ -54,7 +53,9 @@ class AdChat extends StatelessWidget {
                     name: 'Trần Thị Thu (P.202)',
                     lastMessage: 'Dạ vâng, cảm ơn chủ trọ.',
                     time: '14:20',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushNamed(context, '/admin/chat-detail');
+                    },
                   ),
                   const Divider(height: 1, indent: 80),
                   ChatListItem(
@@ -62,7 +63,9 @@ class AdChat extends StatelessWidget {
                     name: 'Lê Minh (P.305)',
                     lastMessage: 'Phòng em bị hỏng vòi nước...',
                     time: '12:05',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushNamed(context, '/admin/chat-detail');
+                    },
                   ),
                 ],
               ),
