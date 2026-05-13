@@ -1,0 +1,100 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using PhongTroAPI.DTOs;
+using PhongTroAPI.Services;
+
+namespace PhongTroAPI.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class InvoiceController : ControllerBase
+{
+    private readonly IInvoiceService _invoiceService;
+
+    public InvoiceController(IInvoiceService invoiceService)
+    {
+        _invoiceService = invoiceService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<InvoiceDto>>> GetInvoices([FromQuery] int month, [FromQuery] int year)
+    {
+        try
+        {
+            if (month < 1 || month > 12 || year < 2000)
+            {
+                return BadRequest(new { message = "Tháng hoặc năm không hợp lệ." });
+            }
+
+            var invoices = await _invoiceService.GetInvoicesAsync(month, year);
+            return Ok(invoices);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi lấy danh sách hóa đơn.", error = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<InvoiceDto>> GetInvoice(int id)
+    {
+        try
+        {
+            var invoice = await _invoiceService.GetInvoiceByIdAsync(id);
+            if (invoice == null)
+            {
+                return NotFound(new { message = "Không tìm thấy hóa đơn." });
+            }
+            return Ok(invoice);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi lấy chi tiết hóa đơn.", error = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<InvoiceDto>> CreateInvoice([FromBody] InvoiceCreateDto createDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (createDto.SoDienMoi < createDto.SoDienCu || createDto.SoNuocMoi < createDto.SoNuocCu)
+            {
+                return BadRequest(new { message = "Chỉ số mới không được nhỏ hơn chỉ số cũ." });
+            }
+
+            var createdInvoice = await _invoiceService.CreateInvoiceAsync(createDto);
+            return CreatedAtAction(nameof(GetInvoice), new { id = createdInvoice.MaHoaDon }, createdInvoice);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi tạo hóa đơn.", error = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] InvoiceUpdateStatusDto updateDto)
+    {
+        try
+        {
+            var success = await _invoiceService.UpdateInvoiceStatusAsync(id, updateDto);
+            if (!success)
+            {
+                return NotFound(new { message = "Không tìm thấy hóa đơn cần cập nhật." });
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi cập nhật trạng thái hóa đơn.", error = ex.Message });
+        }
+    }
+}

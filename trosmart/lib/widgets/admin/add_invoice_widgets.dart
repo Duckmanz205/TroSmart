@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../logic/admin/invoice_controller.dart';
 
 class HeaderSection extends StatelessWidget {
   const HeaderSection({super.key});
@@ -31,10 +33,12 @@ class PageTitleSection extends StatelessWidget {
       children: [
         IconButton(
           icon: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         const SizedBox(width: 8),
-        const Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -46,8 +50,8 @@ class PageTitleSection extends StatelessWidget {
               ),
             ),
             Text(
-              'Tháng 04/2026 - Cơ sở Quận 7',
-              style: TextStyle(
+              'Tháng ${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().year} - Cơ sở Quận 7',
+              style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 14,
               ),
@@ -62,8 +66,14 @@ class PageTitleSection extends StatelessWidget {
 class InvoiceFormCard extends StatelessWidget {
   const InvoiceFormCard({super.key});
 
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<InvoiceController>();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -82,37 +92,67 @@ class InvoiceFormCard extends StatelessWidget {
         children: [
           const FormLabel(label: 'ĐỐI TƯỢNG THANH TOÁN'),
           const SizedBox(height: 8),
-          const CustomDropdown(text: 'Phòng P.402 - Nguyễn Văn A'),
+          DropdownButtonFormField<int>(
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Colors.black12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Colors.black12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFF6A3092)),
+              ),
+            ),
+            hint: const Text('Chọn phòng', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            value: controller.selectedRoomId,
+            icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF6A3092)),
+            items: controller.availableRooms.map((room) {
+              return DropdownMenuItem<int>(
+                value: room['id'],
+                child: Text(room['name'].toString(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) controller.selectRoom(value);
+            },
+          ),
           
           const SizedBox(height: 24),
           const FormLabel(label: 'CHỈ SỐ ĐIỆN', subLabel: '(⚡ 3.500đ/kWh)'),
           const SizedBox(height: 8),
-          const Row(
+          Row(
             children: [
-              Expanded(child: ReadingInput(label: 'Cũ: 1250', value: '1250', isReadOnly: true)),
-              SizedBox(width: 12),
-              Expanded(child: ReadingInput(label: 'Mới *', value: '1342')),
+              Expanded(child: ReadingInput(label: 'Cũ: ${controller.soDienCu.toInt()}', value: controller.soDienCu.toInt().toString(), isReadOnly: true)),
+              const SizedBox(width: 12),
+              Expanded(child: ReadingInput(label: 'Mới *', value: '', onChanged: controller.updateDienMoi)),
             ],
           ),
           
           const SizedBox(height: 24),
           const FormLabel(label: 'CHỈ SỐ NƯỚC', subLabel: '(💧 20.000đ/m3)'),
           const SizedBox(height: 8),
-          const Row(
+          Row(
             children: [
-              Expanded(child: ReadingInput(label: 'Cũ: 430', value: '430', isReadOnly: true)),
-              SizedBox(width: 12),
-              Expanded(child: ReadingInput(label: 'Mới *', value: '438')),
+              Expanded(child: ReadingInput(label: 'Cũ: ${controller.soNuocCu.toInt()}', value: controller.soNuocCu.toInt().toString(), isReadOnly: true)),
+              const SizedBox(width: 12),
+              Expanded(child: ReadingInput(label: 'Mới *', value: '', onChanged: controller.updateNuocMoi)),
             ],
           ),
           
           const SizedBox(height: 24),
           const FormLabel(label: 'TIỀN PHÒNG & DỊCH VỤ CỐ ĐỊNH'),
           const SizedBox(height: 12),
-          const FeeDisplay(text: 'Phòng: 4.500.000 | Wifi: 100.000'),
+          FeeDisplay(text: 'Phòng: ${formatCurrency(controller.tienPhong)}'),
           const SizedBox(height: 12),
-          const TextField(
-            decoration: InputDecoration(
+          TextField(
+            keyboardType: TextInputType.number,
+            onChanged: controller.updatePhuPhi,
+            decoration: const InputDecoration(
               hintText: 'Phí phát sinh (sửa đồ, vi phạm...)',
               hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
               border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
@@ -160,12 +200,14 @@ class ReadingInput extends StatelessWidget {
   final String label;
   final String value;
   final bool isReadOnly;
+  final ValueChanged<String>? onChanged;
 
   const ReadingInput({
     super.key,
     required this.label,
     required this.value,
     this.isReadOnly = false,
+    this.onChanged,
   });
 
   @override
@@ -191,14 +233,29 @@ class ReadingInput extends StatelessWidget {
               fontWeight: isReadOnly ? FontWeight.normal : FontWeight.bold,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: isReadOnly ? FontWeight.w500 : FontWeight.bold,
-              color: isReadOnly ? Colors.grey : Colors.black87,
-            ),
-          ),
+          isReadOnly
+            ? Text(
+                value,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey,
+                ),
+              )
+            : TextField(
+                keyboardType: TextInputType.number,
+                onChanged: onChanged,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  border: InputBorder.none,
+                ),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
         ],
       ),
     );
@@ -208,8 +265,14 @@ class ReadingInput extends StatelessWidget {
 class SummaryCard extends StatelessWidget {
   const SummaryCard({super.key});
 
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<InvoiceController>();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -217,9 +280,9 @@ class SummaryCard extends StatelessWidget {
         color: const Color(0xFFF5F0FA),
         borderRadius: BorderRadius.circular(24),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Text(
+          const Text(
             'TỔNG CỘNG THANH TOÁN',
             style: TextStyle(
               color: Color(0xFF6A3092),
@@ -228,18 +291,18 @@ class SummaryCard extends StatelessWidget {
               letterSpacing: 1.2,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            '4.982.000 đ',
-            style: TextStyle(
+            formatCurrency(controller.tongTien),
+            style: const TextStyle(
               color: Color(0xFF6A3092),
               fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 6),
-          Text(
-            '(Bao gồm: Phòng, Điện, Nước, Wifi)',
+          const SizedBox(height: 6),
+          const Text(
+            '(Bao gồm: Phòng, Điện, Nước, Phụ phí)',
             style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
         ],

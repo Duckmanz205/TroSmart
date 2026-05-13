@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_colors.dart';
 import '../../widgets/common/admin/custom_app_bar.dart';
-import '../../widgets/common/admin/custom_bottom_navigation.dart';
 import '../../widgets/admin/utility_management_widgets.dart';
 
 class UtilityManagementView extends StatelessWidget {
@@ -61,7 +60,7 @@ class UtilityManagementView extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const CustomBottomNav(), // Tái sử dụng BottomNav
+       // Tái sử dụng BottomNav
     );
   }
 }

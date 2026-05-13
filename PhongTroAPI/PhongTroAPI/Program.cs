@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +11,9 @@ builder.Services.AddDbContext<QuanLyPhongTroContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Services
+builder.Services.AddScoped<PhongTroAPI.Services.IInvoiceService, PhongTroAPI.Services.InvoiceService>();
 
 // ✅ THÊM CORS CHO FLUTTER WEB
 builder.Services.AddCors(options =>

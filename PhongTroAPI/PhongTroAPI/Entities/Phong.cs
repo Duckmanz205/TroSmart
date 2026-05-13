@@ -27,6 +27,10 @@ public partial class Phong
 
     public virtual ICollection<HinhAnhPhong> HinhAnhPhongs { get; set; } = new List<HinhAnhPhong>();
 
+    public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
+
+    public virtual ICollection<HopDongThue> HopDongThues { get; set; } = new List<HopDongThue>();
+
     public virtual CoSo MaCoSoNavigation { get; set; } = null!;
 
     public virtual ICollection<TienIch> MaTienIches { get; set; } = new List<TienIch>();

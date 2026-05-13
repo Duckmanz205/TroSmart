@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:trosmart/views/admin/invoice_screen.dart';
+import '../../views/admin/add_invoice_screen.dart';
 import '../../shared/app_colors.dart';
+
+import '../../models/admin/invoice_model.dart';
 
 // --- Component: Header Gradient ---
 class InvoiceDetailHeader extends StatelessWidget {
-  const InvoiceDetailHeader({super.key});
+  final InvoiceModel invoice;
+  const InvoiceDetailHeader({super.key, required this.invoice});
 
   @override
   Widget build(BuildContext context) {
@@ -17,52 +22,14 @@ class InvoiceDetailHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Icon(Icons.menu, color: Colors.white),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentTeal,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(Icons.home, size: 16, color: AppColors.darkAccent),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'TroSmart',
-                    style: GoogleFonts.inter(
-                      color: AppColors.accentTeal,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(radius: 3, backgroundColor: AppColors.accentTeal),
-                    const SizedBox(width: 6),
-                    Text('Chủ trọ', style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 24),
           Row(
             children: [
-              const Icon(Icons.chevron_left, color: Colors.white, size: 30),
+              IconButton(
+                icon: const Icon(Icons.chevron_left, color: Colors.white, size: 30),
+                onPressed: (){
+                  Navigator.pop(context);
+                }),
               const SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +39,7 @@ class InvoiceDetailHeader extends StatelessWidget {
                     style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Tháng 04/2026 | Mã: #INV-40204',
+                    'Tháng ${invoice.thang}/${invoice.nam} | Mã: #INV-${invoice.maHoaDon}',
                     style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
                   ),
                 ],
@@ -87,7 +54,12 @@ class InvoiceDetailHeader extends StatelessWidget {
 
 // --- Component: Thẻ Tóm tắt ---
 class InvoiceSummaryCard extends StatelessWidget {
-  const InvoiceSummaryCard({super.key});
+  final InvoiceModel invoice;
+  const InvoiceSummaryCard({super.key, required this.invoice});
+
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,18 +78,21 @@ class InvoiceSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('4.982.000 đ', style: GoogleFonts.inter(color: AppColors.adminDarkPurple, fontSize: 28, fontWeight: FontWeight.bold)),
+              Text(formatCurrency(invoice.tongTien), style: GoogleFonts.inter(color: AppColors.adminDarkPurple, fontSize: 28, fontWeight: FontWeight.bold)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.warningLightBg,
+                  color: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFFE6F9F5) : AppColors.warningLightBg,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    const CircleAvatar(radius: 3, backgroundColor: AppColors.statusOrange),
+                    CircleAvatar(radius: 3, backgroundColor: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFF2DDCB1) : AppColors.statusOrange),
                     const SizedBox(width: 6),
-                    Text('CHỜ TRẢ', style: GoogleFonts.inter(color: AppColors.statusOrange, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text(
+                      invoice.trangThai == 'Đã thanh toán' ? 'ĐÃ TRẢ' : 'CHỜ TRẢ', 
+                      style: GoogleFonts.inter(color: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFF2DDCB1) : AppColors.statusOrange, fontSize: 10, fontWeight: FontWeight.bold)
+                    ),
                   ],
                 ),
               ),
@@ -131,7 +106,12 @@ class InvoiceSummaryCard extends StatelessWidget {
 
 // --- Component: Thẻ Chi tiết phí ---
 class InvoiceDetailsCard extends StatelessWidget {
-  const InvoiceDetailsCard({super.key});
+  final InvoiceModel invoice;
+  const InvoiceDetailsCard({super.key, required this.invoice});
+
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,16 +123,28 @@ class InvoiceDetailsCard extends StatelessWidget {
         border: Border.all(color: AppColors.dividerLight),
       ),
       child: Column(
-        children: const [
-          InvoiceDetailRow(title: 'Tiền phòng (P.402)', amount: '4.500.000đ', isBold: true),
-          Divider(height: 30, color: AppColors.backgroundGray),
-          InvoiceDetailRow(icon: Icons.bolt, iconColor: Colors.yellow, title: 'Điện (92 kWh x 3.500)', subtitle: 'Số cũ: 1250 - Số mới: 1342', amount: '322.000đ'),
-          SizedBox(height: 16),
-          InvoiceDetailRow(icon: Icons.water_drop, iconColor: Colors.blue, title: 'Nước (8 m3 x 20.000)', subtitle: 'Số cũ: 430 - Số mới: 438', amount: '160.000đ'),
-          SizedBox(height: 16),
-          InvoiceDetailRow(icon: Icons.language, iconColor: Colors.lightBlueAccent, title: 'Wifi & Rác', amount: '0đ (Free)'),
-          SizedBox(height: 16),
-          InvoiceDetailRow(icon: Icons.build, iconColor: Colors.grey, title: 'Sửa khóa cửa', amount: 'không có'),
+        children: [
+          InvoiceDetailRow(title: 'Tiền phòng (${invoice.tenPhong.isNotEmpty ? invoice.tenPhong : 'P.${invoice.maPhong}'})', amount: formatCurrency(invoice.tienPhong), isBold: true),
+          const Divider(height: 30, color: AppColors.backgroundGray),
+          InvoiceDetailRow(
+            icon: Icons.bolt, iconColor: Colors.yellow, 
+            title: 'Điện (${(invoice.soDienMoi - invoice.soDienCu).toInt()} kWh x 3.500)', 
+            subtitle: 'Số cũ: ${invoice.soDienCu.toInt()} - Số mới: ${invoice.soDienMoi.toInt()}', 
+            amount: formatCurrency((invoice.soDienMoi - invoice.soDienCu) * 3500)
+          ),
+          const SizedBox(height: 16),
+          InvoiceDetailRow(
+            icon: Icons.water_drop, iconColor: Colors.blue, 
+            title: 'Nước (${(invoice.soNuocMoi - invoice.soNuocCu).toInt()} m3 x 20.000)', 
+            subtitle: 'Số cũ: ${invoice.soNuocCu.toInt()} - Số mới: ${invoice.soNuocMoi.toInt()}', 
+            amount: formatCurrency((invoice.soNuocMoi - invoice.soNuocCu) * 20000)
+          ),
+          const SizedBox(height: 16),
+          const InvoiceDetailRow(icon: Icons.language, iconColor: Colors.lightBlueAccent, title: 'Wifi & Rác', amount: '0đ (Free)'),
+          if (invoice.phuPhi > 0) ...[
+            const SizedBox(height: 16),
+            InvoiceDetailRow(icon: Icons.build, iconColor: Colors.grey, title: 'Phụ phí', amount: formatCurrency(invoice.phuPhi)),
+          ],
         ],
       ),
     );
@@ -250,7 +242,9 @@ class ActionButtons extends StatelessWidget {
       children: [
         Expanded(
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chuyển sang Zalo...')));
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.adminDarkPurple,
               foregroundColor: Colors.white,
@@ -263,7 +257,9 @@ class ActionButtons extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const InvoiceScreen()));
+            },
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.adminDarkPurple, width: 2),
               foregroundColor: AppColors.adminDarkPurple,
