@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
-import 'package:trosmart/views/user/notification_screen.dart';
+import 'package:trosmart/views/user/UR_ThongBao.dart';
+import 'package:trosmart/views/user/UR_Chat.dart';
+import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
 import 'package:trosmart/views/user/stats_screen.dart';
 import 'package:trosmart/widgets/common/user/user_app_bar.dart';
 import 'app_sidebar.dart';
@@ -23,11 +25,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<String> _pageOrder = [
     AppPages.home,          // 0
     AppPages.payment,       // 1
-    AppPages.chat,          // 2
-    AppPages.contract,      // 3
-    AppPages.notifications, // 4
-    AppPages.stats,         // 5
-    AppPages.profileDetail, // 6
+    AppPages.contract,      // 2
+    AppPages.searchRoom,    // 3
+    AppPages.incidentReport, // 4
+    AppPages.chat,          // 5
+    AppPages.notifications, // 6
+    AppPages.findRoommate,  // 7
+    AppPages.stats,         // 8
+    AppPages.profileDetail, // 9
   ];
 
   // 3. Hàm điều hướng dùng chung
@@ -46,7 +51,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (_activePage == AppPages.payment) return 1;
     if (_activePage == AppPages.chat) return 2;
     if (_activePage == AppPages.profileDetail) return 3;
-    return 0; // Mặc định về 0 nếu trang đó không nằm trong BottomNav
+    return 0;
   }
 
   @override
@@ -58,32 +63,83 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onPageSelected: _navigateTo,
       ),
       body: IndexedStack(
-        index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
+        index: _pageOrder.indexOf(_activePage),
         children: [
-          const Center(child: Text("Trang chủ")),      // 0
-          const PaymentDetailsScreen(),                // 1
-          const Center(child: Text("Chat")),           // 2
-          const Center(child: Text("Hợp đồng")),       // 3
-          const NotificationScreen(),                  // 4
-          const HistoryStatsScreen(),                  // 5
-          const Center(child: Text("Cá nhân")),        // 6
+          const Center(child: Text("Trang chủ (Dashboard)")), // 0
+          const PaymentDetailsScreen(),                      // 1
+          const Center(child: Text("Hợp đồng")),              // 2
+          const Center(child: Text("Tra cứu phòng trọ")),     // 3
+          const UrBaoCaoSuCo(),                              // 4
+          const UrChat(),                                    // 5
+          const UrThongBao(),                                // 6
+          const Center(child: Text("Ở ghép")),                // 7
+          const HistoryStatsScreen(),                        // 8
+          const Center(child: Text("Cá nhân")),              // 9
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _getBottomNavIndex(),
-        onTap: (index) {
-          // Ánh xạ từ số bấm ở dưới ra Tên trang tương ứng
-          final bottomPages = [AppPages.home, AppPages.payment, AppPages.chat, AppPages.profileDetail];
-          _navigateTo(bottomPages[index]);
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.purple,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'TRANG CHỦ'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.creditCard), label: 'THANH TOÁN'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.messageCircle), label: 'CHAT'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: 'HỒ SƠ'),
-        ],
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    final bottomPages = [AppPages.home, AppPages.payment, AppPages.chat, AppPages.profileDetail];
+    final currentIndex = _getBottomNavIndex();
+
+    return Container(
+      height: 80,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFF3F4F6))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(bottomPages.length, (index) {
+          final page = bottomPages[index];
+          final isActive = currentIndex == index;
+          
+          IconData icon;
+          switch (index) {
+            case 0: icon = LucideIcons.home; break;
+            case 1: icon = LucideIcons.creditCard; break;
+            case 2: icon = LucideIcons.messageSquare; break;
+            case 3: icon = LucideIcons.user; break;
+            default: icon = LucideIcons.home;
+          }
+
+          return GestureDetector(
+            onTap: () => _navigateTo(page),
+            behavior: HitTestBehavior.opaque,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isActive ? const Color(0xFFF5F3FF) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isActive ? const Color(0xFF6D28D9) : const Color(0xFF6B7280),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (isActive)
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF6D28D9),
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                else
+                  const SizedBox(height: 4),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }

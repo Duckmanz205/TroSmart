@@ -13,7 +13,9 @@ class CustomAppBar extends StatelessWidget {
       centerTitle: false,
       leading: IconButton(
         icon: const Icon(LucideIcons.menu, color: Color(0xFF1A1D1F)),
-        onPressed: () {},
+        onPressed: () {
+          Scaffold.of(context).openDrawer();
+        },
       ),
       title: Row(
         children: [

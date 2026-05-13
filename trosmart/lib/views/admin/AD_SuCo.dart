@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
-import '../../widgets/common/app_header.dart';
+
 
 /// Admin Incident Management (Sự cố) screen.
 class AdSuCo extends StatelessWidget {
@@ -8,21 +8,12 @@ class AdSuCo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.bgWhite,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──
-            const AppGradientHeader(
-              roleLabel: 'Chủ trọ',
-              isDarkText: true,
-            ),
-
-            // ── Page Title ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Page Title ──
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Text('Quản lý sự cố', style: AppTheme.headingXl),
             ),
             Padding(
@@ -157,9 +148,7 @@ class AdSuCo extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
+        );
   }
 }
 
