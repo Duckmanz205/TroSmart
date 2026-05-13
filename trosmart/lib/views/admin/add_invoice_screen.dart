@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:trosmart/widgets/common/admin/custom_bottom_navigation.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/admin/add_invoice_widgets.dart';
+import '../../logic/admin/invoice_controller.dart';
 
 class AddInvoiceScreen extends StatefulWidget {
   const AddInvoiceScreen({super.key});
@@ -14,14 +15,16 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Stack(
-        children: [
-          // Header Gradient
-          const HeaderSection(),
-          
-          SafeArea(
+    return ChangeNotifierProvider(
+      create: (_) => InvoiceController(),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Stack(
+          children: [
+            // Header Gradient
+            const HeaderSection(),
+            
+            SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -55,27 +58,71 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                   const SizedBox(height: 20),
                   
                   // Primary Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6A3092),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                  Consumer<InvoiceController>(
+                    builder: (context, controller, child) {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: controller.isLoading || controller.selectedRoomId == null
+                              ? null
+                              : () async {
+                                  final success = await controller.createInvoice(
+                                    maPhong: controller.selectedRoomId!,
+                                    thang: DateTime.now().month,
+                                    nam: DateTime.now().year,
+                                    soDienCu: controller.soDienCu,
+                                    soDienMoi: controller.soDienMoi,
+                                    soNuocCu: controller.soNuocCu,
+                                    soNuocMoi: controller.soNuocMoi,
+                                    donGiaDien: controller.donGiaDien,
+                                    donGiaNuoc: controller.donGiaNuoc,
+                                    phuPhi: controller.phuPhi,
+                                  );
+
+                                  if (mounted) {
+                                    if (success) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Tạo hóa đơn thành công!')),
+                                      );
+                                      Navigator.pop(context);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(controller.errorMessage ?? 'Có lỗi xảy ra'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6A3092),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 4,
+                          ),
+                          child: controller.isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  'Lưu & Xuất hóa đơn',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
-                        elevation: 4,
-                      ),
-                      child: const Text(
-                        'Lưu & Xuất hóa đơn',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 100), // Space for bottom nav
                 ],
@@ -83,15 +130,10 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
             ),
           ),
           
-          // Bottom Navigation
-          const Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: CustomBottomNav(), // Tái sử dụng BottomNav chung của app
-          ),
+
         ],
       ),
+    ),
     );
   }
 }

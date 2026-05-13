@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../shared/app_colors.dart';
 import '../../widgets/common/admin/custom_app_bar.dart'; 
-import '../../widgets/common/admin/custom_bottom_navigation.dart'; 
+ 
 import '../../widgets/admin/incident_management_widgets.dart';
 
 class AD_SuCo extends StatelessWidget {
@@ -106,7 +106,7 @@ class AD_SuCo extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: const CustomBottomNav(), // Tái sử dụng BottomNav
+       // Tái sử dụng BottomNav
     );
   }
 }

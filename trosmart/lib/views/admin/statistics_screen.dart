@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common/admin/custom_app_bar.dart';
-import '../../widgets/common/admin/custom_bottom_navigation.dart';
 import '../../widgets/admin/statistics_widgets.dart';
 
 class StatisticsScreen extends StatelessWidget {
@@ -34,12 +33,7 @@ class StatisticsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const Positioned(
-            bottom: 24,
-            left: 20,
-            right: 20,
-            child: CustomBottomNav(),
-          ),
+
         ],
       ),
     );

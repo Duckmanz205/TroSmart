@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../models/user/app_pages.dart';
 import '../../shared/app_colors.dart';
 
 /// --- TIÊU ĐỀ TRANG VÀ NÚT TẠO YÊU CẦU ---
@@ -24,30 +26,35 @@ class ActionHeader extends StatelessWidget {
               const Text('Issue Reporting', style: TextStyle(color: Colors.grey)),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.userPurpleLight, AppColors.userPurple],
-              ),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.userPurple.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.add, color: Colors.white, size: 20),
-                SizedBox(width: 4),
-                Text(
-                  'Tạo yêu cầu',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/user/create-issue');
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.userPurpleLight, AppColors.userPurple],
                 ),
-              ],
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.userPurple.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.add, color: Colors.white, size: 20),
+                  SizedBox(width: 4),
+                  Text(
+                    'Tạo yêu cầu',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

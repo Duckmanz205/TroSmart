@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:trosmart/views/admin/add_invoice_screen.dart';
+import '../../logic/admin/invoice_controller.dart';
+import '../../models/admin/invoice_model.dart';
+import '../../views/admin/invoice_detail_screen.dart';
 
 class SectionTitleAction extends StatelessWidget {
   const SectionTitleAction({super.key});
@@ -27,7 +32,13 @@ class SectionTitleAction extends StatelessWidget {
           ],
         ),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddInvoiceScreen()));
+            if (context.mounted) {
+              final now = DateTime.now();
+              context.read<InvoiceController>().fetchInvoices(now.month, now.year);
+            }
+          },
           icon: const Icon(Icons.add, color: Colors.white),
           label: const Text('Tạo', style: TextStyle(fontWeight: FontWeight.bold)),
           style: ElevatedButton.styleFrom(
@@ -49,13 +60,26 @@ class SummaryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<InvoiceController>();
+    double daThu = 0;
+    double choThu = 0;
+    double quaHan = 0;
+
+    for (var inv in controller.invoices) {
+      if (inv.trangThai == 'Đã thanh toán') {
+        daThu += inv.tongTien;
+      } else {
+        choThu += inv.tongTien;
+      }
+    }
+
     return Row(
-      children: const [
-        Expanded(child: StatCard(icon: Icons.check, value: '13.9', label: 'Đã thu', color: Colors.tealAccent)),
-        SizedBox(width: 12),
-        Expanded(child: StatCard(icon: Icons.access_time, value: '10.6', label: 'Chờ thu', color: Colors.amberAccent)),
-        SizedBox(width: 12),
-        Expanded(child: StatCard(icon: Icons.warning_amber_rounded, value: '6.1', label: 'Quá hạn', color: Colors.redAccent)),
+      children: [
+        Expanded(child: StatCard(icon: Icons.check, value: (daThu / 1000000).toStringAsFixed(1), label: 'Đã thu', color: Colors.tealAccent)),
+        const SizedBox(width: 12),
+        Expanded(child: StatCard(icon: Icons.access_time, value: (choThu / 1000000).toStringAsFixed(1), label: 'Chờ thu', color: Colors.amberAccent)),
+        const SizedBox(width: 12),
+        Expanded(child: StatCard(icon: Icons.warning_amber_rounded, value: (quaHan / 1000000).toStringAsFixed(1), label: 'Quá hạn', color: Colors.redAccent)),
       ],
     );
   }
@@ -148,35 +172,76 @@ class SearchAndFilter extends StatelessWidget {
 class InvoiceList extends StatelessWidget {
   const InvoiceList({super.key});
 
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<InvoiceController>();
+
+    if (controller.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (controller.errorMessage != null) {
+      return Center(child: Text(controller.errorMessage!, style: const TextStyle(color: Colors.red)));
+    }
+
+    if (controller.invoices.isEmpty) {
+      return const Center(child: Text("Chưa có hóa đơn nào trong tháng này."));
+    }
+
     return Column(
-      children: const [
-        InvoiceCard(room: 'P.101', tenant: 'Nguyễn Văn A', amount: '3.500.000', deadline: '05/03/2026', status: 'paid'),
-        InvoiceCard(room: 'P.102', tenant: 'Trần Thị B', amount: '4.200.000', deadline: '10/03/2026', status: 'pending'),
-        InvoiceCard(room: 'P.201', tenant: 'Lê Minh C', amount: '3.800.000', deadline: '01/03/2026', status: 'overdue'),
-      ],
+      children: controller.invoices.map((inv) {
+        String status = 'pending';
+        if (inv.trangThai == 'Đã thanh toán') {
+          status = 'paid';
+        }
+        
+        return InvoiceCard(
+          invoice: inv,
+          room: inv.tenPhong.isNotEmpty ? inv.tenPhong : 'Phòng ${inv.maPhong}',
+          tenant: 'Khách thuê',
+          amount: formatCurrency(inv.tongTien),
+          deadline: 'Tự động tính', 
+          status: status,
+        );
+      }).toList(),
     );
   }
 }
 
 class InvoiceCard extends StatelessWidget {
+  final InvoiceModel invoice;
   final String room;
   final String tenant;
   final String amount;
   final String deadline;
   final String status;
 
-  const InvoiceCard({required this.room, required this.tenant, required this.amount, required this.deadline, required this.status, super.key});
+  const InvoiceCard({
+    required this.invoice,
+    required this.room, 
+    required this.tenant, 
+    required this.amount, 
+    required this.deadline, 
+    required this.status, 
+    super.key
+  });
 
   @override
   Widget build(BuildContext context) {
     Color statusColor = status == 'paid' ? const Color(0xFF2DDCB1) : (status == 'pending' ? Colors.orange : Colors.redAccent);
     String statusText = status == 'paid' ? 'ĐÃ THANH TOÁN' : (status == 'pending' ? 'CHỜ THANH TOÁN' : 'QUÁ HẠN');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => InvoiceDetailsScreen(invoice: invoice)));
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
@@ -210,7 +275,7 @@ class InvoiceCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('$amount đ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: status == 'overdue' ? Colors.redAccent : const Color(0xFF2DDCB1))),
+              Text(amount, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: status == 'overdue' ? Colors.redAccent : const Color(0xFF2DDCB1))),
               Text('Hạn: $deadline', style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.5))),
             ],
           ),
@@ -236,6 +301,7 @@ class InvoiceCard extends StatelessWidget {
           ],
         ],
       ),
+    ),
     );
   }
 }
