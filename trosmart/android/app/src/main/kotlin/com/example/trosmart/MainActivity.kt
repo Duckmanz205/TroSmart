@@ -1,4 +1,4 @@
-package com.example.doanmon
+package com.example.trosmart
 
 import io.flutter.embedding.android.FlutterActivity
 
