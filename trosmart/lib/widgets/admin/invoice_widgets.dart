@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:trosmart/views/admin/add_invoice_screen.dart';
+import 'package:trosmart/views/admin/AD_ThemHoaDon.dart';
 import '../../logic/admin/invoice_controller.dart';
 import '../../models/admin/invoice_model.dart';
-import '../../views/admin/invoice_detail_screen.dart';
+import '../../views/admin/AD_ChiTietHoaDon.dart';
 
 class SectionTitleAction extends StatelessWidget {
   const SectionTitleAction({super.key});

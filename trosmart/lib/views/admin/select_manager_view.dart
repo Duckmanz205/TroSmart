@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../logic/admin/co_so_service.dart';
 import '../../models/admin/manager_model.dart';
-import 'co_so_management_view.dart';
+import 'AD_QLCoSo.dart';
 
 class SelectManagerView extends StatefulWidget {
   const SelectManagerView({super.key});

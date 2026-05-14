@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
+import 'package:trosmart/views/auth/login_screen.dart';
 import '../../shared/app_colors.dart';
 import '../../widgets/user/sidebar_item.dart';
 
@@ -40,7 +41,7 @@ class AppSidebar extends StatelessWidget {
               ],
             ),
           ),
-          _buildFooterProfile(),
+          _buildFooterProfile(context),
         ],
       ),
     );
@@ -80,7 +81,7 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildFooterProfile() {
+  Widget _buildFooterProfile(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: AppColors.backgroundGray,
@@ -110,7 +111,10 @@ class AppSidebar extends StatelessWidget {
           SidebarItem(
             icon: LucideIcons.logOut,
             title: 'Đăng xuất',
-            onTap: () {},
+            onTap: () {Navigator.pushAndRemoveUntil(
+              context, 
+              MaterialPageRoute(builder: (context)=>const LoginScreen()),
+              (Route<dynamic> route) => false);},
           ),
         ],
       ),

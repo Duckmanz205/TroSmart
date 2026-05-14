@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Import các View
-import 'package:trosmart/views/admin/invoice_screen.dart';
+import 'package:trosmart/views/admin/AD_HoaDon.dart';
 import 'package:trosmart/views/admin/select_manager_view.dart';
 // Import Widgets chung
 import 'package:trosmart/widgets/common/admin/custom_app_bar.dart';

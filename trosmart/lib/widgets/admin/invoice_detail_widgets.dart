@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:trosmart/views/admin/invoice_screen.dart';
-import '../../views/admin/add_invoice_screen.dart';
+import 'package:trosmart/views/admin/AD_HoaDon.dart';
+import '../../views/admin/AD_ThemHoaDon.dart';
 import '../../shared/app_colors.dart';
 
 import '../../models/admin/invoice_model.dart';
