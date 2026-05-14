@@ -8,7 +8,6 @@ class UrOGhep extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
@@ -58,26 +57,6 @@ class UrOGhep extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: const Icon(Icons.menu, color: Color(0xFF0F172A)),
-      title: Text('TroSmart', style: AppTheme.titleMd.copyWith(color: AppTheme.deepPurple, fontStyle: FontStyle.italic)),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: CircleAvatar(
-            radius: 18,
-            backgroundColor: AppTheme.bgGray200,
-            child: const Icon(Icons.person_outline, color: AppTheme.textPrimary),
-          ),
-        )
-      ],
     );
   }
 
@@ -220,18 +199,4 @@ class UrOGhep extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: AppTheme.deepPurple,
-      unselectedItemColor: AppTheme.textSecondary,
-      currentIndex: 1,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-      ],
-    );
-  }
 }

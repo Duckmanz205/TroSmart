@@ -23,7 +23,7 @@ class UrHoanTatDatLich extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.check_circle_rounded,
-                  color: AppTheme.mint,
+                  color: AppTheme.accentTeal,
                   size: 60,
                 ),
               ),

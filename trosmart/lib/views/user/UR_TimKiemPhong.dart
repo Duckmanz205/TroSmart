@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_view_model.dart';
-import 'room_detail_view.dart';
+import 'UR_ChiTietPhong.dart';
 
 class RoomSearchView extends StatefulWidget {
   const RoomSearchView({super.key});

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'delete_phong_view.dart';
+import 'AD_XoaPhong.dart';
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_model.dart';
 import '../../models/admin/tien_ich_model.dart';

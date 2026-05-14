@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
+import 'package:trosmart/views/user/UR_Chat.dart';
+import 'package:trosmart/views/user/UR_HopDong.dart';
+import 'package:trosmart/views/user/UR_OGhep.dart';
 import 'package:trosmart/views/user/UR_ThongBao.dart';
-import 'package:trosmart/views/user/stats_screen.dart';
+import 'package:trosmart/views/user/UR_TrangChu.dart';
+import 'package:trosmart/views/user/UR_Frofile.dart';
+import 'package:trosmart/views/user/UR_TimKiemPhong.dart';
+import 'package:trosmart/views/user/UR_ThongKe.dart';
 import 'package:trosmart/widgets/common/user/user_app_bar.dart';
 import 'app_sidebar.dart';
-import 'payment_screen.dart';
+import 'UR_ThanhToan.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -64,16 +70,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(
         index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
         children: [
-          const Center(child: Text("Trang chủ")),      // 0
-          const PaymentDetailsScreen(),                // 1
-          const Center(child: Text("Chat")),           // 2
-          const Center(child: Text("Hợp đồng")),       // 3
-          const Center(child: Text("Tra cứu phòng")),  // 4
+          const UserHomeScreen(),                       // 0
+          const PaymentDetailsScreen(),                 // 1
+          const UrChat(),                               // 2
+          const UrHopDong(),                            // 3
+          const RoomSearchView(),                       // 4
           const IssueReportingScreen(),                 // 5
-          const UrThongBao(),                  // 6
-          const Center(child: Text("Ở ghép")),         // 7
-          const HistoryStatsScreen(),                  // 7
-          const Center(child: Text("Cá nhân")),        // 8
+          const UrThongBao(),                           // 6
+          const UrOGhep(),                              // 7
+          const HistoryStatsScreen(),                   // 8
+          const UserProfileScreen(),                    // 9
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

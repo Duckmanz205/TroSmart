@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:trosmart/shared/app_theme.dart';
+import 'package:trosmart/views/auth/login_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
@@ -20,7 +22,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
         child: Column(
@@ -38,52 +39,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white.withOpacity(0.9),
-      elevation: 0,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1.0),
-        child: Container(color: const Color(0xFFF3F4F6), height: 1.0),
-      ),
-      leading: IconButton(
-        icon: const Icon(Icons.menu, color: Color(0xFF374151)),
-        onPressed: () {},
-      ),
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(color: Color(0xFF22C55E), shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            "User",
-            style: TextStyle(color: Color(0xFF111827), fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-      actions: [
-        Center(
-          child: Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: const Text(
-              "Khách",
-              style: TextStyle(color: Color(0xFF718096), fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildProfileSummary() {
     return Column(
@@ -312,7 +267,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               side: const BorderSide(color: Color(0xFFE5E7EB)),
               elevation: 0,
             ),
-            child: const Text("Đăng Xuất", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF6B7280))),
+            child: ListTile(
+              title: const Center(child: Text('Đăng xuất', style: TextStyle(color: AppTheme.textDark))),
+              onTap: () {
+                // Luôn nhớ dùng pushAndRemoveUntil cho đăng xuất
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+            )
           ),
         ),
         const SizedBox(height: 20), // Tránh đè với BottomNav

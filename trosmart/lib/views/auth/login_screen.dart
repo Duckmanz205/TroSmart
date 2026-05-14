@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:trosmart/views/admin/navigation_screen_admin.dart';
+import 'package:trosmart/views/user/navigation_screen.dart';
 import '../../widgets/common/custom_text_field.dart';
-import '../../logic/database_helper.dart';
-import '../admin/home_screen.dart';
-import '../user/home_screen.dart';
+import '../../logic/auth/login_service.dart';
+import '../admin/AD_TrangChu.dart';
+import '../user/UR_TrangChu.dart';
 
 class LoginScreen extends StatefulWidget {
   // Đã cập nhật cú pháp super.key theo chuẩn Flutter mới để fix cảnh báo xanh
@@ -55,12 +57,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (user['role'] == 'admin') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
+          MaterialPageRoute(builder: (context) => const AdminNavigationScreen()),
         );
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const UserHomeScreen()),
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
         );
       }
     } else {

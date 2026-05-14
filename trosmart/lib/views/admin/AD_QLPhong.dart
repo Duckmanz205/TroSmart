@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_model.dart';
-import 'add_phong_view.dart';
-import 'phong_detail_view.dart';
+import 'AD_ThemPhong.dart';
+import 'AD_ChiTietPhong.dart';
 
 class PhongManagementView extends StatefulWidget {
   final int maCoSo;

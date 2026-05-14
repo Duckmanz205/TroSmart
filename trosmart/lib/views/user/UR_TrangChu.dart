@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../widgets/user/user_drawer.dart';
 
 class UserHomeScreen extends StatelessWidget {
-  const UserHomeScreen({Key? key}) : super(key: key);
+  const UserHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      drawer: const UserDrawer(), // Gắn Drawer vào đây
-      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -29,39 +26,6 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.white.withOpacity(0.8),
-      elevation: 0,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1.0),
-        child: Container(color: const Color(0xFFE5E7EB), height: 1.0),
-      ),
-      leading: Builder( // Cần Builder để mở Drawer
-        builder: (context) => IconButton(
-          icon: const Icon(Icons.menu, color: Color(0xFF6750A4)),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
-      title: const Text(
-        "TroSmart",
-        style: TextStyle(color: Color(0xFF6750A4), fontSize: 24, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
-      ),
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 24),
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            border: Border.all(color: const Color(0x336750A4)),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade300, // Thay bằng NetworkImage khi có link avatar
-          ),
-          child: const Icon(Icons.person, color: Colors.white),
-        )
-      ],
-    );
-  }
 
   Widget _buildWelcomeSection() {
     return Column(

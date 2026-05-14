@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../logic/admin/co_so_service.dart';
 import '../../models/admin/co_so_model.dart';
 import '../../widgets/admin/co_so_card.dart';
-import 'add_co_so_view.dart';
-import 'co_so_detail_view.dart';
+import 'AD_ThemCoSo.dart';
+import 'AD_ChiTietCoSo.dart';
 
 class CoSoManagementView extends StatefulWidget {
   final int maQuanLy;

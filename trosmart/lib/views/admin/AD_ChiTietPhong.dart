@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_model.dart';
-import 'edit_phong_view.dart';
+import 'AD_SuaPhong.dart';
 
 class PhongDetailView extends StatefulWidget {
   final int maPhong;

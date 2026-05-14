@@ -11,7 +11,6 @@ class UrHopDong extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildTopBar(context),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -75,41 +74,6 @@ class UrHopDong extends StatelessWidget {
       ),
     );
   }
-
-  // --- Top Bar ---
-  Widget _buildTopBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Icon(Icons.menu, color: Color(0xFF0F172A)),
-          Row(
-            children: [
-              Container(
-                width: 10, height: 10,
-                decoration: const BoxDecoration(color: AppTheme.deepPurple, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              const Text('TroSmart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(20)),
-            child: Row(
-              children: const [
-                Icon(Icons.person_outline, size: 16),
-                SizedBox(width: 6),
-                Text('Guest', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
   // --- Header Title ---
   Widget _buildMainTitle() {
     return Column(
