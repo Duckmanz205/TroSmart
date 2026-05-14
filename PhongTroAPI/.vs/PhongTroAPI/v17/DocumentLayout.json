@@ -1,0 +1,204 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\dtos\\invoicedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\dtos\\invoicedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\dtos\\phongupsertdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\dtos\\phongupsertdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\dtos\\phongviewdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\dtos\\phongviewdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\dtos\\tienichcreatedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\dtos\\tienichcreatedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\entities\\coso.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\entities\\coso.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\entities\\khachthue.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\entities\\khachthue.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\phongtroapi.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\phongtroapi.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\services\\iinvoiceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\services\\iinvoiceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon2\\phongtroapi\\phongtroapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "HomeController.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Controllers\\HomeController.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\Controllers\\HomeController.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Controllers\\HomeController.cs",
+              "RelativeToolTip": "PhongTroAPI\\Controllers\\HomeController.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAgwBoAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T09:24:53.873Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "InvoiceDto.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\InvoiceDto.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\DTOs\\InvoiceDto.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\InvoiceDto.cs",
+              "RelativeToolTip": "PhongTroAPI\\DTOs\\InvoiceDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T09:18:15.969Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PhongUpsertDto.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\PhongUpsertDto.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\DTOs\\PhongUpsertDto.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\PhongUpsertDto.cs",
+              "RelativeToolTip": "PhongTroAPI\\DTOs\\PhongUpsertDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T09:18:12.305Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PhongViewDTO.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\PhongViewDTO.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\DTOs\\PhongViewDTO.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\PhongViewDTO.cs",
+              "RelativeToolTip": "PhongTroAPI\\DTOs\\PhongViewDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T09:18:11.385Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "TienIchCreateDto.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\TienIchCreateDto.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\DTOs\\TienIchCreateDto.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\DTOs\\TienIchCreateDto.cs",
+              "RelativeToolTip": "PhongTroAPI\\DTOs\\TienIchCreateDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T09:18:09.497Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CoSo.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Entities\\CoSo.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\Entities\\CoSo.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Entities\\CoSo.cs",
+              "RelativeToolTip": "PhongTroAPI\\Entities\\CoSo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T09:18:00.976Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "KhachThue.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Entities\\KhachThue.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\Entities\\KhachThue.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Entities\\KhachThue.cs",
+              "RelativeToolTip": "PhongTroAPI\\Entities\\KhachThue.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T09:17:59.809Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "PhongTroAPI\\Properties\\launchSettings.json",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Properties\\launchSettings.json",
+              "RelativeToolTip": "PhongTroAPI\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-05-13T14:58:30.572Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "IInvoiceService.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Services\\IInvoiceService.cs",
+              "RelativeDocumentMoniker": "PhongTroAPI\\Services\\IInvoiceService.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\Services\\IInvoiceService.cs",
+              "RelativeToolTip": "PhongTroAPI\\Services\\IInvoiceService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T14:42:41.807Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\appsettings.json",
+              "RelativeDocumentMoniker": "PhongTroAPI\\appsettings.json",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\appsettings.json",
+              "RelativeToolTip": "PhongTroAPI\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-05-13T14:38:29.699Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "PhongTroAPI.http",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\PhongTroAPI.http",
+              "RelativeDocumentMoniker": "PhongTroAPI\\PhongTroAPI.http",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon2\\PhongTroAPI\\PhongTroAPI\\PhongTroAPI.http",
+              "RelativeToolTip": "PhongTroAPI\\PhongTroAPI.http",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2026-05-13T14:38:03.356Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
