@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common/admin/custom_app_bar.dart'; 
+import '../../widgets/admin/admin_drawer.dart';
+import '../../widgets/common/admin/custom_app_bar.dart';
 import '../../widgets/admin/invoice_widgets.dart';
 import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
@@ -9,6 +10,8 @@ class InvoiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const CustomAppBar(),
+      drawer: const AdminDrawer(activeTitle: "Hóa đơn"),
       backgroundColor: const Color(0xFFF9FAFB),
       bottomNavigationBar: const CustomBottomNav(currentIndex: 1),
       body: SingleChildScrollView(

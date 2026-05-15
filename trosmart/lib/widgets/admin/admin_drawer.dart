@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../logic/admin/invoice_controller.dart';
+import '../../views/admin/AD_HoaDon.dart';
 import '../../views/admin/AD_TrangChu.dart';
 import '../../views/admin/AD_QLCoSo.dart';
 import '../../views/admin/AD_QLPhong.dart';
@@ -8,6 +11,8 @@ import '../../views/admin/AD_LichCongViec.dart';
 import '../../views/admin/AD_Chat.dart';
 import '../../views/admin/settings_screen.dart';
 
+import '../../views/admin/statistics_screen.dart';
+import '../../views/admin/utility_management_view.dart';
 import '../../views/auth/login_screen.dart';
 
 class AdminDrawer extends StatelessWidget {
@@ -105,6 +110,18 @@ class AdminDrawer extends StatelessWidget {
                     icon: Icons.receipt_long, 
                     title: "Thu & Thuê",
                     isActive: activeTitle == "Thu & Thuê",
+                    onTap:(){
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(
+                          builder: (context) => ChangeNotifierProvider(
+                            create: (context) => InvoiceController(),
+                            child: const InvoiceScreen(),
+                          ),
+                        ),
+                      );
+                    }
                   ),
                   _buildMenuItem(
                     icon: Icons.description, 
@@ -119,6 +136,10 @@ class AdminDrawer extends StatelessWidget {
                     icon: Icons.flash_on, 
                     title: "Điện nước",
                     isActive: activeTitle == "Điện nước",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const UtilityManagementView()));
+                    },
                   ),
                   _buildMenuItem(
                     icon: Icons.build, 
@@ -142,6 +163,10 @@ class AdminDrawer extends StatelessWidget {
                     icon: Icons.pie_chart, 
                     title: "Báo cáo",
                     isActive: activeTitle == "Báo cáo",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const StatisticsScreen()));
+                    },
                   ),
                   _buildMenuItem(
                     icon: Icons.chat_bubble_outline, 

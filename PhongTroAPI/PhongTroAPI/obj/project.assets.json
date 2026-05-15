@@ -4458,11 +4458,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Code\\doan_ltdd_nhomcomsuon3\\TroSmart-main\\PhongTroAPI\\PhongTroAPI\\PhongTroAPI.csproj",
+      "projectUniqueName": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\PhongTroAPI\\PhongTroAPI.csproj",
       "projectName": "PhongTroAPI",
-      "projectPath": "D:\\Code\\doan_ltdd_nhomcomsuon3\\TroSmart-main\\PhongTroAPI\\PhongTroAPI\\PhongTroAPI.csproj",
+      "projectPath": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\PhongTroAPI\\PhongTroAPI.csproj",
       "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-      "outputPath": "D:\\Code\\doan_ltdd_nhomcomsuon3\\TroSmart-main\\PhongTroAPI\\PhongTroAPI\\obj\\",
+      "outputPath": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\PhongTroAPI\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
