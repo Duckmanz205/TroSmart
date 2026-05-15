@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/admin/admin_drawer.dart';
 
 class AdLichCongViec extends StatelessWidget {
   const AdLichCongViec({super.key});
@@ -8,6 +9,7 @@ class AdLichCongViec extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
+      drawer: const AdminDrawer(activeTitle: "Lịch & Công việc"),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -47,7 +49,12 @@ class AdLichCongViec extends StatelessWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0.5,
-      leading: const Icon(Icons.menu, color: Colors.black),
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu, color: Colors.black),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -3,6 +3,16 @@ import '../../shared/app_theme.dart';
 import '../../widgets/common/app_header.dart';
 import '../../widgets/common/app_search_field.dart';
 import '../../widgets/common/chat_list_item.dart';
+import '../../widgets/admin/admin_drawer.dart';
+import '../../widgets/common/admin/custom_bottom_navigation.dart';
+import 'package:provider/provider.dart';
+import '../../logic/admin/invoice_controller.dart';
+import 'AD_TrangChu.dart';
+import 'AD_HoaDon.dart';
+import 'AD_QLPhong.dart';
+import 'settings_screen.dart';
+
+import 'AD_ChiTietChat.dart';
 
 class AdChat extends StatelessWidget {
   const AdChat({super.key});
@@ -11,12 +21,49 @@ class AdChat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bgWhite,
+      drawer: const AdminDrawer(activeTitle: "Chat"),
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          if (index == 0) return;
+          Widget page;
+          switch (index) {
+            case 1:
+              page = ChangeNotifierProvider(
+                create: (_) => InvoiceController(),
+                child: const InvoiceScreen(),
+              );
+              break;
+            case 2:
+              page = const PhongManagementView(maCoSo: 1, tenCoSo: 'Cơ sở 1');
+              break;
+            case 3:
+              page = const AdminSettingsScreen();
+              break;
+            default:
+              return;
+          }
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, a1, a2) => page,
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        },
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Gradient Header ──
-            const AppGradientHeader(roleLabel: 'Chủ trọ'),
+            Builder(
+              builder: (context) => AppGradientHeader(
+                roleLabel: 'Chủ trọ',
+                onMenuTap: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
 
             // ── Page Title ──
             Padding(
@@ -44,7 +91,7 @@ class AdChat extends StatelessWidget {
                     time: '15:30',
                     isUnread: true,
                     onTap: () {
-                      Navigator.pushNamed(context, '/admin/chat-detail');
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdChiTietChat()));
                     },
                   ),
                   const Divider(height: 1, indent: 80),
@@ -54,7 +101,7 @@ class AdChat extends StatelessWidget {
                     lastMessage: 'Dạ vâng, cảm ơn chủ trọ.',
                     time: '14:20',
                     onTap: () {
-                      Navigator.pushNamed(context, '/admin/chat-detail');
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdChiTietChat()));
                     },
                   ),
                   const Divider(height: 1, indent: 80),
@@ -64,7 +111,7 @@ class AdChat extends StatelessWidget {
                     lastMessage: 'Phòng em bị hỏng vòi nước...',
                     time: '12:05',
                     onTap: () {
-                      Navigator.pushNamed(context, '/admin/chat-detail');
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdChiTietChat()));
                     },
                   ),
                 ],

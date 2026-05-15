@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../views/admin/AD_TrangChu.dart';
+import '../../views/admin/AD_QLCoSo.dart';
+import '../../views/admin/AD_QLPhong.dart';
+import '../../views/admin/AD_QLHopDong.dart';
+import '../../views/admin/AD_SuCo.dart';
+import '../../views/admin/AD_LichCongViec.dart';
+import '../../views/admin/AD_Chat.dart';
+import '../../views/admin/settings_screen.dart';
+
+import '../../views/auth/login_screen.dart';
 
 class AdminDrawer extends StatelessWidget {
-  const AdminDrawer({Key? key}) : super(key: key);
+  final String activeTitle;
+  const AdminDrawer({Key? key, this.activeTitle = ""}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -63,17 +74,93 @@ class AdminDrawer extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  _buildMenuItem(icon: Icons.dashboard, title: "Dashboard"),
-                  _buildMenuItem(icon: Icons.business, title: "Cơ sở"),
-                  _buildMenuItem(icon: Icons.meeting_room, title: "Phòng"),
-                  _buildMenuItem(icon: Icons.receipt_long, title: "Thu & Thuê"),
-                  _buildMenuItem(icon: Icons.description, title: "Hợp đồng"),
-                  _buildMenuItem(icon: Icons.flash_on, title: "Điện nước"),
-                  _buildMenuItem(icon: Icons.build, title: "Sự cố"),
-                  _buildMenuItem(icon: Icons.calendar_month, title: "Lịch & Công việc"),
-                  _buildMenuItem(icon: Icons.pie_chart, title: "Báo cáo"),
-                  _buildMenuItem(icon: Icons.chat_bubble_outline, title: "Chat", isActive: true, badgeCount: 3),
-                  _buildMenuItem(icon: Icons.settings, title: "Cài đặt"),
+                  _buildMenuItem(
+                    icon: Icons.dashboard, 
+                    title: "Dashboard",
+                    isActive: activeTitle == "Dashboard",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminHomeScreen()));
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.business, 
+                    title: "Cơ sở",
+                    isActive: activeTitle == "Cơ sở",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const CoSoManagementView(maQuanLy: 1)));
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.meeting_room, 
+                    title: "Phòng",
+                    isActive: activeTitle == "Phòng",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const PhongManagementView(maCoSo: 1, tenCoSo: "Cơ sở 1")));
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.receipt_long, 
+                    title: "Thu & Thuê",
+                    isActive: activeTitle == "Thu & Thuê",
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.description, 
+                    title: "Hợp đồng",
+                    isActive: activeTitle == "Hợp đồng",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdQLHopDong()));
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.flash_on, 
+                    title: "Điện nước",
+                    isActive: activeTitle == "Điện nước",
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.build, 
+                    title: "Sự cố",
+                    isActive: activeTitle == "Sự cố",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AD_SuCo()));
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.calendar_month, 
+                    title: "Lịch & Công việc",
+                    isActive: activeTitle == "Lịch & Công việc",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdLichCongViec()));
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.pie_chart, 
+                    title: "Báo cáo",
+                    isActive: activeTitle == "Báo cáo",
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.chat_bubble_outline, 
+                    title: "Chat", 
+                    isActive: activeTitle == "Chat",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdChat()));
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.settings, 
+                    title: "Cài đặt",
+                    isActive: activeTitle == "Cài đặt",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminSettingsScreen()));
+                    },
+                  ),
                 ],
               ),
             ),
@@ -109,7 +196,13 @@ class AdminDrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
@@ -129,7 +222,7 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({required IconData icon, required String title, bool isActive = false, int? badgeCount}) {
+  Widget _buildMenuItem({required IconData icon, required String title, bool isActive = false, int? badgeCount, VoidCallback? onTap}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -156,7 +249,7 @@ class AdminDrawer extends StatelessWidget {
                 child: Text(badgeCount.toString(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
               )
             : null,
-        onTap: () {},
+        onTap: onTap,
       ),
     );
   }

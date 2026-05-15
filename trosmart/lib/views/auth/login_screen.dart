@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:trosmart/views/admin/navigation_screen_admin.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:trosmart/views/user/navigation_screen.dart';
 import '../../widgets/common/custom_text_field.dart';
-import '../../logic/auth/login_service.dart';
 import '../admin/AD_TrangChu.dart';
 import '../user/UR_TrangChu.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  // Đã cập nhật cú pháp super.key theo chuẩn Flutter mới để fix cảnh báo xanh
   const LoginScreen({super.key});
 
   @override
@@ -30,47 +30,52 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Hàm xử lý đăng nhập ĐÃ ĐƯỢC ĐẶT ĐÚNG VỊ TRÍ (Bên trong class State)
   void _handleLogin() async {
     String identifier = isLoginByEmail ? _emailController.text.trim() : _phoneController.text.trim();
     String password = _passwordController.text.trim();
 
-    // 1. Kiểm tra rỗng
     if (identifier.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng nhập đầy đủ thông tin'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin'), backgroundColor: Colors.red),
       );
       return;
     }
 
-    // 2. Gọi Database
-    final user = await DatabaseHelper.instance.login(identifier, password);
+    try {
+      final url = Uri.parse('http://10.0.2.2:5137/api/auth/login');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'identifier': identifier, 'password': password}),
+      );
 
-    // 3. Kiểm tra mounted (bắt buộc trước khi dùng context sau hàm async)
-    if (!mounted) return;
+      if (!mounted) return;
 
-    // 4. Xử lý kết quả
-    if (user != null) {
-      if (user['role'] == 'admin') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminNavigationScreen()),
-        );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = data['user'];
+
+        if (user['role'] == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+          );
+        }
       } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        final data = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Đăng nhập thất bại'), backgroundColor: Colors.red),
         );
       }
-    } else {
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Thông tin đăng nhập không chính xác'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Lỗi kết nối: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -219,9 +224,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Social Login
                   Row(
                     children: [
-                      Expanded(child: _buildSocialBtn("Google", "assets/icons/google.png")),
+                      Expanded(child: _buildSocialBtn("Google", "assets/images/login/google.png")),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildSocialBtn("Facebook", "assets/icons/facebook.png")),
+                      Expanded(child: _buildSocialBtn("Facebook", "assets/images/login/facebook.png")),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -232,7 +237,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text("Chưa có tài khoản? "),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                          );
+                        },
                         child: const Text(
                           "Đăng ký ngay",
                           style: TextStyle(
