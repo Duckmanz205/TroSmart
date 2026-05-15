@@ -4,6 +4,8 @@ import '../../shared/app_colors.dart';
 import '../../widgets/common/admin/custom_app_bar.dart'; 
  
 import '../../widgets/admin/incident_management_widgets.dart';
+import '../../widgets/admin/admin_drawer.dart';
+import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
 class AD_SuCo extends StatelessWidget {
   const AD_SuCo({super.key});
@@ -13,6 +15,7 @@ class AD_SuCo extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundGray,
       appBar: const CustomAppBar(),
+      drawer: const AdminDrawer(activeTitle: "Sự cố"),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -106,7 +109,7 @@ class AD_SuCo extends StatelessWidget {
           ),
         ),
       ),
-       // Tái sử dụng BottomNav
+      bottomNavigationBar: const CustomBottomNav(currentIndex: 0),
     );
   }
 }
