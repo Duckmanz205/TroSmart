@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trosmart/views/admin/AD_AddHopDong.dart';
 import 'package:trosmart/views/admin/AD_DetailHopDong.dart';
 import '../../shared/app_theme.dart';
+import '../../widgets/admin/admin_drawer.dart';
 
 class AdQLHopDong extends StatelessWidget {
   const AdQLHopDong({super.key});
@@ -11,6 +12,7 @@ class AdQLHopDong extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
+      drawer: const AdminDrawer(activeTitle: "Hợp đồng"),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -89,7 +91,12 @@ class AdQLHopDong extends StatelessWidget {
           ),
         ),
       ),
-      leading: const Icon(Icons.menu, color: Colors.white),
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

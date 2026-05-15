@@ -1,14 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../views/admin/AD_TrangChu.dart';
+import '../../../views/admin/AD_HoaDon.dart';
+import '../../../views/admin/AD_QLPhong.dart';
+import '../../../views/admin/settings_screen.dart';
+import '../../../logic/admin/invoice_controller.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final Function(int)? onTap;
 
   const CustomBottomNav({
     super.key,
     required this.currentIndex,
-    required this.onTap,
+    this.onTap,
   });
+
+  void _navigate(BuildContext context, int index) {
+    if (index == currentIndex) return;
+    
+    // Nếu có truyền onTap tuỳ chỉnh thì dùng nó (ví dụ trong navigation_screen_admin)
+    if (onTap != null) {
+      onTap!(index);
+      return;
+    }
+
+    Widget page;
+    switch (index) {
+      case 0:
+        page = const AdminHomeScreen();
+        break;
+      case 1:
+        page = ChangeNotifierProvider(
+          create: (_) => InvoiceController(),
+          child: const InvoiceScreen(),
+        );
+        break;
+      case 2:
+        page = const PhongManagementView(maCoSo: 1, tenCoSo: 'Cơ sở 1');
+        break;
+      case 3:
+        page = const AdminSettingsScreen();
+        break;
+      default:
+        return;
+    }
+    
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation1, animation2) => page,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +70,19 @@ class CustomBottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
-            onTap: () => onTap(0),
+            onTap: () => _navigate(context, 0),
             child: NavItem(icon: Icons.home_outlined, label: 'Trang chủ', isActive: currentIndex == 0),
           ),
           GestureDetector(
-            onTap: () => onTap(1),
+            onTap: () => _navigate(context, 1),
             child: NavItem(icon: Icons.description, label: 'Hóa đơn', isActive: currentIndex == 1),
           ),
           GestureDetector(
-            onTap: () => onTap(2),
+            onTap: () => _navigate(context, 2),
             child: NavItem(icon: Icons.business_outlined, label: 'Phòng', isActive: currentIndex == 2),
           ),
           GestureDetector(
-            onTap: () => onTap(3),
+            onTap: () => _navigate(context, 3),
             child: NavItem(icon: Icons.person_outline_rounded, label: 'Tài khoản', isActive: currentIndex == 3),
           ),
         ],

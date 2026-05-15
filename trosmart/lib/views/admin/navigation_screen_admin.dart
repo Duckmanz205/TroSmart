@@ -46,6 +46,7 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(), // Thêm const nếu CustomAppBar hỗ trợ
+      drawer: const Drawer(),
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
