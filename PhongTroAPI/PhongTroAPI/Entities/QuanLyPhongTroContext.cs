@@ -153,12 +153,17 @@ public partial class QuanLyPhongTroContext : DbContext
             entity.Property(e => e.NgayTao)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+
             entity.Property(e => e.TienCoc)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(18, 2)");
+
             entity.Property(e => e.TrangThai)
                 .HasMaxLength(50)
-                .HasDefaultValue("Đang hiệu lực");
+                .HasDefaultValue("Chờ khách ký");
+
+            // THÊM DÒNG NÀY: Cấu hình lưu trữ chuỗi chữ ký số Base64 siêu dài
+            entity.Property(e => e.ChuKy).HasColumnType("nvarchar(max)");
 
             entity.HasOne(d => d.MaKhachNavigation).WithMany(p => p.HopDongThues)
                 .HasForeignKey(d => d.MaKhach)
@@ -170,7 +175,6 @@ public partial class QuanLyPhongTroContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__HopDongTh__MaPho__656C112C");
         });
-
         modelBuilder.Entity<KhachThue>(entity =>
         {
             entity.HasKey(e => e.MaKhach).HasName("PK__KhachThu__D0CB8DDDBD6E1744");
