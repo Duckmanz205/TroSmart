@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PhongTroAPI.Entities;
@@ -38,4 +38,6 @@ public partial class Phong
     public virtual ICollection<SuCo> SuCos { get; set; } = new List<SuCo>();
 
     public virtual ICollection<TienIch> MaTienIches { get; set; } = new List<TienIch>();
+
+    public virtual ICollection<LichHenXemPhong> LichHenXemPhongs { get; set; } = new List<LichHenXemPhong>();
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -52,6 +52,8 @@ public partial class QuanLyPhongTroContext : DbContext
     public virtual DbSet<LichHenXemPhong> LichHenXemPhongs { get; set; } 
 
     public virtual DbSet<OGhep> OGheps { get; set; }
+
+    public virtual DbSet<LichSuGiaHan> LichSuGiaHans { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Server=.;Database=QuanLyPhongTro;Integrated Security=True;TrustServerCertificate=True");

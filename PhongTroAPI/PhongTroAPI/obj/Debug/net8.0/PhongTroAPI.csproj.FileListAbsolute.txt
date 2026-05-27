@@ -273,7 +273,6 @@ E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\stat
 E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.PhongTroAPI.props
 E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.PhongTroAPI.props
 E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\staticwebassets.pack.json
-E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\PhongTro.3D96D1D3.Up2Date
 E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\PhongTroAPI.dll
 E:\ThaiCo_LTDD\MergeDuong\TroSmart\PhongTroAPI\PhongTroAPI\obj\Debug\net8.0\refint\PhongTroAPI.dll

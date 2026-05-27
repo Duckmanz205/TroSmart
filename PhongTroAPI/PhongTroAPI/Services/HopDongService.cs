@@ -100,7 +100,7 @@ namespace PhongTroAPI.Services
                     GiaThue = hd.MaPhongNavigation.GiaThue,
                     TienCoc = hd.TienCoc ?? 0m,
                     NgayBatDau = hd.NgayBatDau,
-                    NgayKetThuc = hd.NgayKetThuc ?? DateTime.MinValue,
+                    NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
                     TrangThai = hd.TrangThai,
                     ChuKyBase64 = hd.ChuKy // Gửi kèm chữ ký số về để Flutter render thành ảnh
                 })

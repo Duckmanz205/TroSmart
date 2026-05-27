@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PhongTroAPI.Entities;
@@ -13,6 +13,20 @@ public partial class KhachThue
 
     public string? Cccd { get; set; }
 
+    public string? Email { get; set; }
+
+    public DateTime? NgaySinh { get; set; }
+
+    public string? GioiTinh { get; set; }
+
+    public string? DiaChiThuongTru { get; set; }
+
+    public DateTime? NgayCapCccd { get; set; }
+
+    public string? NoiCapCccd { get; set; }
+
+    public string? TrangThai { get; set; }
+
     public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
 
     public virtual ICollection<HopDongThue> HopDongThues { get; set; } = new List<HopDongThue>();
@@ -22,4 +36,8 @@ public partial class KhachThue
     public virtual ICollection<TaiKhoan> TaiKhoans { get; set; } = new List<TaiKhoan>();
 
     public virtual ICollection<ThongBao> ThongBaos { get; set; } = new List<ThongBao>();
+
+    public virtual ICollection<LichHenXemPhong> LichHenXemPhongs { get; set; } = new List<LichHenXemPhong>();
+
+    public virtual ICollection<OGhep> OGheps { get; set; } = new List<OGhep>();
 }

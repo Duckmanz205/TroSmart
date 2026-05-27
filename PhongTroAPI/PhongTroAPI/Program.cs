@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.Entities;
+using PhongTroAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +12,11 @@ builder.Services.AddDbContext<QuanLyPhongTroContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register Custom Services
 builder.Services.AddScoped<HopDongService>();
 builder.Services.AddScoped<OGhepService>();
+builder.Services.AddScoped<LichHenService>();
 
 // Services
 builder.Services.AddScoped<PhongTroAPI.Services.IInvoiceService, PhongTroAPI.Services.InvoiceService>();
