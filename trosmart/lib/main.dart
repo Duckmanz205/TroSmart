@@ -18,7 +18,7 @@ class TroSmartApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: const LoginScreen(),
+      home: const AdminNavigationScreen(),
     );
   }
 }

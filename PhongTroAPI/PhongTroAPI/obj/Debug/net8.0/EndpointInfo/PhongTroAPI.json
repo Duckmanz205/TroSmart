@@ -426,6 +426,184 @@
         }
       }
     },
+    "/api/HopDong": {
+      "post": {
+        "tags": [
+          "HopDong"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHopDongDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHopDongDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHopDongDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HopDong/{id}": {
+      "put": {
+        "tags": [
+          "HopDong"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHopDongDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHopDongDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHopDongDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "HopDong"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HopDong/{id}/ky": {
+      "post": {
+        "tags": [
+          "HopDong"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HopDong/{id}/gia-han": {
+      "post": {
+        "tags": [
+          "HopDong"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiaHanHopDongDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiaHanHopDongDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiaHanHopDongDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Invoice": {
       "get": {
         "tags": [
@@ -566,6 +744,27 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Invoice"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/Invoice/{id}/status": {
@@ -599,6 +798,300 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/InvoiceUpdateStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/LichHen": {
+      "post": {
+        "tags": [
+          "LichHen"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLichHenDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLichHenDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLichHenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "LichHen"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/LichHen/{id}": {
+      "get": {
+        "tags": [
+          "LichHen"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "LichHen"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/LichHen/{id}/trang-thai": {
+      "put": {
+        "tags": [
+          "LichHen"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/OGhep": {
+      "post": {
+        "tags": [
+          "OGhep"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOGhepDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOGhepDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOGhepDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "OGhep"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/OGhep/{id}": {
+      "get": {
+        "tags": [
+          "OGhep"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "OGhep"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOGhepDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOGhepDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOGhepDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "OGhep"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/OGhep/{id}/trang-thai": {
+      "put": {
+        "tags": [
+          "OGhep"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "string"
               }
             }
           }
@@ -939,6 +1432,105 @@
           }
         }
       }
+    },
+    "/api/UtilityReading": {
+      "get": {
+        "tags": [
+          "UtilityReading"
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "UtilityReading"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveReadingDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveReadingDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveReadingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UtilityReading/batch": {
+      "post": {
+        "tags": [
+          "UtilityReading"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SaveReadingDto"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SaveReadingDto"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SaveReadingDto"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -988,12 +1580,127 @@
         },
         "additionalProperties": false
       },
+      "CreateHopDongDto": {
+        "type": "object",
+        "properties": {
+          "maPhong": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maKhach": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ngayBatDau": {
+            "type": "string",
+            "format": "date"
+          },
+          "ngayKetThuc": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "tienCoc": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateLichHenDto": {
+        "type": "object",
+        "properties": {
+          "maKhach": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "hoTenKhach": {
+            "type": "string",
+            "nullable": true
+          },
+          "sdtKhach": {
+            "type": "string",
+            "nullable": true
+          },
+          "maPhong": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "thoiGianHen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ghiChu": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateOGhepDto": {
+        "type": "object",
+        "properties": {
+          "maKhach": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tieuDe": {
+            "type": "string",
+            "nullable": true
+          },
+          "noiDung": {
+            "type": "string",
+            "nullable": true
+          },
+          "chiPhiDuKien": {
+            "type": "number",
+            "format": "double"
+          },
+          "khuVuc": {
+            "type": "string",
+            "nullable": true
+          },
+          "yeuCauGioiTinh": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GiaHanHopDongDto": {
+        "type": "object",
+        "properties": {
+          "ngayBatDauMoi": {
+            "type": "string",
+            "format": "date"
+          },
+          "ngayKetThucMoi": {
+            "type": "string",
+            "format": "date"
+          },
+          "giaThueMoi": {
+            "type": "number",
+            "format": "double"
+          },
+          "ghiChu": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "InvoiceCreateDto": {
         "type": "object",
         "properties": {
           "maPhong": {
             "type": "integer",
             "format": "int32"
+          },
+          "maKhach": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           },
           "thang": {
             "type": "integer",
@@ -1027,9 +1734,21 @@
             "type": "number",
             "format": "double"
           },
+          "tienDichVu": {
+            "type": "number",
+            "format": "double"
+          },
+          "moTaDichVu": {
+            "type": "string",
+            "nullable": true
+          },
           "phuPhi": {
             "type": "number",
             "format": "double"
+          },
+          "moTaPhuPhi": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1045,7 +1764,20 @@
             "type": "integer",
             "format": "int32"
           },
+          "maKhach": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "tenPhong": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenCoSo": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenKhachThue": {
             "type": "string",
             "nullable": true
           },
@@ -1073,19 +1805,51 @@
             "type": "number",
             "format": "double"
           },
+          "donGiaDien": {
+            "type": "number",
+            "format": "double"
+          },
+          "donGiaNuoc": {
+            "type": "number",
+            "format": "double"
+          },
           "tienPhong": {
             "type": "number",
             "format": "double"
           },
+          "tienDichVu": {
+            "type": "number",
+            "format": "double"
+          },
+          "moTaDichVu": {
+            "type": "string",
+            "nullable": true
+          },
           "phuPhi": {
             "type": "number",
             "format": "double"
+          },
+          "moTaPhuPhi": {
+            "type": "string",
+            "nullable": true
           },
           "tongTien": {
             "type": "number",
             "format": "double"
           },
           "trangThai": {
+            "type": "string",
+            "nullable": true
+          },
+          "ngayLap": {
+            "type": "string",
+            "nullable": true
+          },
+          "hanThanhToan": {
+            "type": "string",
+            "nullable": true
+          },
+          "ngayThanhToan": {
             "type": "string",
             "nullable": true
           }
@@ -1199,6 +1963,42 @@
           },
           "phone": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaveReadingDto": {
+        "type": "object",
+        "properties": {
+          "maPhong": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "thang": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nam": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "chiSoDienCu": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "chiSoDienMoi": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "chiSoNuocCu": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "chiSoNuocMoi": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },

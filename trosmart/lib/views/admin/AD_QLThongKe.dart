@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common/admin/custom_app_bar.dart';
 import '../../widgets/admin/statistics_widgets.dart';
 
 class StatisticsScreen extends StatelessWidget {
@@ -8,10 +7,6 @@ class StatisticsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(70),
-        child: CustomAppBar(),
-      ),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -33,7 +28,6 @@ class StatisticsScreen extends StatelessWidget {
               ],
             ),
           ),
-
         ],
       ),
     );
