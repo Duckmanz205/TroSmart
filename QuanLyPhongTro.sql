@@ -142,6 +142,79 @@ PRIMARY KEY CLUSTERED ([MaHoaDon] ASC)
 ) ON [PRIMARY]
 GO
 
+-- BẢNG MỚI: Tài Khoản
+CREATE TABLE [dbo].[TaiKhoan](
+    [MaTaiKhoan] [int] IDENTITY(1,1) NOT NULL,
+    [TenDangNhap] [varchar](50) NOT NULL,
+    [MatKhau] [varchar](255) NOT NULL,
+    [VaiTro] [nvarchar](50) NOT NULL, -- Admin, QuanLy, KhachThue
+    [MaQuanLy] [int] NULL,
+    [MaKhach] [int] NULL,
+    [TrangThai] [nvarchar](50) NULL,
+    [NgayTao] [datetime] NULL,
+PRIMARY KEY CLUSTERED ([MaTaiKhoan] ASC)
+) ON [PRIMARY]
+GO
+
+-- BẢNG MỚI: Sự Cố / Yêu Cầu Bảo Trì
+CREATE TABLE [dbo].[SuCo](
+    [MaSuCo] [int] IDENTITY(1,1) NOT NULL,
+    [MaPhong] [int] NOT NULL,
+    [MaKhach] [int] NOT NULL,
+    [TieuDe] [nvarchar](255) NOT NULL,
+    [MoTa] [nvarchar](max) NULL,
+    [HinhAnh] [nvarchar](max) NULL,
+    [TrangThai] [nvarchar](50) NULL, -- Chờ xử lý, Đang xử lý, Đã hoàn thành
+    [NgayBao] [datetime] NULL,
+    [NgayXuLy] [datetime] NULL,
+PRIMARY KEY CLUSTERED ([MaSuCo] ASC)
+) ON [PRIMARY]
+GO
+
+-- BẢNG MỚI: Lịch Sử Thanh Toán
+CREATE TABLE [dbo].[LichSuThanhToan](
+    [MaThanhToan] [int] IDENTITY(1,1) NOT NULL,
+    [MaHoaDon] [int] NOT NULL,
+    [SoTien] [decimal](18, 2) NOT NULL,
+    [PhuongThuc] [nvarchar](50) NULL, -- Chuyển khoản, Tiền mặt
+    [NgayThanhToan] [datetime] NULL,
+    [NguoiGhiNhan] [int] NULL, -- MaQuanLy
+PRIMARY KEY CLUSTERED ([MaThanhToan] ASC)
+) ON [PRIMARY]
+GO
+
+-- BẢNG MỚI: Thông Báo
+CREATE TABLE [dbo].[ThongBao](
+    [MaThongBao] [int] IDENTITY(1,1) NOT NULL,
+    [MaKhach] [int] NOT NULL,
+    [TieuDe] [nvarchar](255) NOT NULL,
+    [NoiDung] [nvarchar](max) NULL,
+    [DaDoc] [bit] DEFAULT ((0)),
+    [NgayGui] [datetime] NULL,
+PRIMARY KEY CLUSTERED ([MaThongBao] ASC)
+) ON [PRIMARY]
+GO
+
+
+-- BẢNG MỚI: Chỉ Số Điện Nước (hỗ trợ quản lý điện nước hàng tháng)
+CREATE TABLE [dbo].[ChiSoDienNuoc](
+    [MaChiSo] [int] IDENTITY(1,1) NOT NULL,
+    [MaPhong] [int] NOT NULL,
+    [Thang] [int] NOT NULL,
+    [Nam] [int] NOT NULL,
+    [ChiSoDienCu] [int] NOT NULL DEFAULT(0),
+    [ChiSoDienMoi] [int] NULL,
+    [ChiSoNuocCu] [int] NOT NULL DEFAULT(0),
+    [ChiSoNuocMoi] [int] NULL,
+    [DaLapHoaDon] [bit] NOT NULL DEFAULT(0),
+    [NgayCapNhat] [datetime] NULL DEFAULT(getdate()),
+PRIMARY KEY CLUSTERED ([MaChiSo] ASC),
+CONSTRAINT [UQ_ChiSo_Phong_Thang_Nam] UNIQUE ([MaPhong], [Thang], [Nam])
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[ChiSoDienNuoc] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
+GO
 
 -- =========================================================
 -- 2. TẠO CÁC VIEWS
@@ -344,6 +417,43 @@ VALUES (3, 24, 3, 9, 2024, CAST(2900000.00 AS Decimal(18,2)), 300, 450, CAST(350
 SET IDENTITY_INSERT [dbo].[HoaDon] OFF
 GO
 
+-- Tài Khoản (Dữ liệu mới)
+SET IDENTITY_INSERT [dbo].[TaiKhoan] ON
+INSERT [dbo].[TaiKhoan] ([MaTaiKhoan], [TenDangNhap], [MatKhau], [VaiTro], [MaQuanLy], [MaKhach]) VALUES (1, 'admin', '123456', N'Admin', 1, NULL)
+INSERT [dbo].[TaiKhoan] ([MaTaiKhoan], [TenDangNhap], [MatKhau], [VaiTro], [MaQuanLy], [MaKhach]) VALUES (2, 'khach1', '123456', N'KhachThue', NULL, 1)
+INSERT [dbo].[TaiKhoan] ([MaTaiKhoan], [TenDangNhap], [MatKhau], [VaiTro], [MaQuanLy], [MaKhach]) VALUES (3, 'khach2', '123456', N'KhachThue', NULL, 2)
+SET IDENTITY_INSERT [dbo].[TaiKhoan] OFF
+GO
+
+-- Sự Cố (Dữ liệu mới)
+SET IDENTITY_INSERT [dbo].[SuCo] ON
+INSERT [dbo].[SuCo] ([MaSuCo], [MaPhong], [MaKhach], [TieuDe], [MoTa], [TrangThai]) VALUES (1, 2, 1, N'Hư bóng đèn', N'Bóng đèn nhà vệ sinh bị cháy', N'Chờ xử lý')
+INSERT [dbo].[SuCo] ([MaSuCo], [MaPhong], [MaKhach], [TieuDe], [MoTa], [TrangThai]) VALUES (2, 12, 2, N'Rỉ nước bồn rửa chén', N'Nước nhỏ giọt liên tục', N'Đang xử lý')
+SET IDENTITY_INSERT [dbo].[SuCo] OFF
+GO
+
+-- Lịch Sử Thanh Toán (Dữ liệu mới)
+SET IDENTITY_INSERT [dbo].[LichSuThanhToan] ON
+INSERT [dbo].[LichSuThanhToan] ([MaThanhToan], [MaHoaDon], [SoTien], [PhuongThuc], [NguoiGhiNhan]) VALUES (1, 1, CAST(2782000.00 AS Decimal(18,2)), N'Chuyển khoản', 1)
+SET IDENTITY_INSERT [dbo].[LichSuThanhToan] OFF
+GO
+
+-- Thông Báo (Dữ liệu mới)
+SET IDENTITY_INSERT [dbo].[ThongBao] ON
+INSERT [dbo].[ThongBao] ([MaThongBao], [MaKhach], [TieuDe], [NoiDung]) VALUES (1, 1, N'Đóng tiền nhà tháng 10', N'Vui lòng thanh toán tiền nhà tháng 10 trước ngày 05/10/2024')
+INSERT [dbo].[ThongBao] ([MaThongBao], [MaKhach], [TieuDe], [NoiDung]) VALUES (2, 2, N'Bảo trì thang máy', N'Thang máy sẽ bảo trì vào lúc 9h-11h ngày 10/10/2024')
+SET IDENTITY_INSERT [dbo].[ThongBao] OFF
+GO
+
+-- Dữ liệu mẫu ChiSoDienNuoc (Đã chuyển xuống sau khi đã insert Phong)
+SET IDENTITY_INSERT [dbo].[ChiSoDienNuoc] ON
+INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (1, 2, 10, 2024, 1250, 1342, 430, 438, 1)
+INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (2, 12, 10, 2024, 2100, 2185, 150, 156, 1)
+INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (3, 24, 9, 2024, 300, 450, 80, 92, 1)
+INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (4, 5, 10, 2024, 800, 865, 200, 210, 0)
+INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (5, 8, 10, 2024, 1500, NULL, 350, NULL, 0)
+SET IDENTITY_INSERT [dbo].[ChiSoDienNuoc] OFF
+GO
 -- =========================================================
 -- 4. TẠO CONSTRAINTS, MẶC ĐỊNH VÀ FOREIGN KEYS
 -- =========================================================
@@ -415,4 +525,119 @@ GO
 ALTER TABLE [dbo].[HoaDon] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
 GO
 ALTER TABLE [dbo].[HoaDon] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+
+-- Defaults MỚI cho bảng bổ sung
+ALTER TABLE [dbo].[TaiKhoan] ADD DEFAULT (N'Hoạt động') FOR [TrangThai]
+GO
+ALTER TABLE [dbo].[TaiKhoan] ADD DEFAULT (getdate()) FOR [NgayTao]
+GO
+ALTER TABLE [dbo].[TaiKhoan] ADD UNIQUE NONCLUSTERED ([TenDangNhap] ASC)
+GO
+ALTER TABLE [dbo].[SuCo] ADD DEFAULT (N'Chờ xử lý') FOR [TrangThai]
+GO
+ALTER TABLE [dbo].[SuCo] ADD DEFAULT (getdate()) FOR [NgayBao]
+GO
+ALTER TABLE [dbo].[LichSuThanhToan] ADD DEFAULT (getdate()) FOR [NgayThanhToan]
+GO
+ALTER TABLE [dbo].[ThongBao] ADD DEFAULT (getdate()) FOR [NgayGui]
+GO
+
+-- Khóa ngoại cho bảng bổ sung
+ALTER TABLE [dbo].[TaiKhoan] WITH CHECK ADD FOREIGN KEY([MaQuanLy]) REFERENCES [dbo].[NguoiQuanLy] ([MaQuanLy])
+GO
+ALTER TABLE [dbo].[TaiKhoan] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+ALTER TABLE [dbo].[SuCo] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
+GO
+ALTER TABLE [dbo].[SuCo] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+ALTER TABLE [dbo].[LichSuThanhToan] WITH CHECK ADD FOREIGN KEY([MaHoaDon]) REFERENCES [dbo].[HoaDon] ([MaHoaDon])
+GO
+ALTER TABLE [dbo].[LichSuThanhToan] WITH CHECK ADD FOREIGN KEY([NguoiGhiNhan]) REFERENCES [dbo].[NguoiQuanLy] ([MaQuanLy])
+GO
+ALTER TABLE [dbo].[ThongBao] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+
+-- =========================================================
+-- BỔ SUNG BẢNG LỊCH HẸN (Cho các màn hình đặt lịch)
+-- =========================================================
+CREATE TABLE [dbo].[LichHenXemPhong](
+    [MaLichHen] [int] IDENTITY(1,1) NOT NULL,
+    [MaKhach] [int] NULL, -- Người đặt (nếu đã có tài khoản)
+    [HoTenKhach] [nvarchar](100) NOT NULL, -- Dự phòng khách vãng lai chưa có tài khoản
+    [SDTKhach] [varchar](15) NOT NULL,
+    [MaPhong] [int] NOT NULL,
+    [ThoiGianHen] [datetime] NOT NULL, -- Ngày giờ đến xem phòng
+    [GhiChu] [nvarchar](255) NULL,
+    [TrangThai] [nvarchar](50) DEFAULT (N'Chờ xác nhận'), -- Chờ xác nhận, Đã xác nhận, Đã xem, Đã hủy
+    [NgayTao] [datetime] DEFAULT (getdate()),
+PRIMARY KEY CLUSTERED ([MaLichHen] ASC)
+) ON [PRIMARY]
+GO
+
+-- =========================================================
+-- BỔ SUNG PHỤ LỤC / LỊCH SỬ GIA HẠN HỢP ĐỒNG (Cho màn hình Gia hạn)
+-- =========================================================
+CREATE TABLE [dbo].[LichSuGiaHan](
+    [MaGiaHan] [int] IDENTITY(1,1) NOT NULL,
+    [MaHopDong] [int] NOT NULL,
+    [NgayBatDauMoi] [date] NOT NULL,
+    [NgayKetThucMoi] [date] NOT NULL,
+    [GiaThueMoi] [decimal](18, 2) NOT NULL,
+    [NgayThucHien] [datetime] DEFAULT (getdate()),
+    [GhiChu] [nvarchar](255) NULL,
+PRIMARY KEY CLUSTERED ([MaGiaHan] ASC)
+) ON [PRIMARY]
+GO
+
+-- =========================================================
+-- UPDATE THÊM CỘT CHO BẢNG KHACHTHUE (Cho màn hình Chi tiết hợp đồng)
+-- =========================================================
+ALTER TABLE [dbo].[KhachThue] ADD 
+    [Email] [varchar](100) NULL,
+    [NgaySinh] [date] NULL,
+    [GioiTinh] [nvarchar](10) NULL,
+    [Dia ChiThuongTru] [nvarchar](255) NULL,
+    [NgayCapCCCD] [date] NULL,
+    [NoiCapCCCD] [nvarchar](155) NULL,
+    [TrangThai] [nvarchar](50) DEFAULT (N'Đang ở')
+GO
+
+CREATE TABLE [dbo].[OGhep](
+    [MaBaiDang] [int] IDENTITY(1,1) NOT NULL,
+    [MaKhach] [int] NOT NULL, -- Người đăng tin
+    [TieuDe] [nvarchar](255) NOT NULL,
+    [NoiDung] [nvarchar](max) NULL,
+    [ChiPhiDuKien] [decimal](18, 2) NOT NULL, -- Số tiền muốn share/đóng mỗi tháng
+    [KhuVuc] [nvarchar](150) NULL, -- Ví dụ: Gần trường HUIT, Quận Tân Phú...
+    [YeuCauGioiTinh] [nvarchar](10) NULL, -- Nam, Nữ, Hoặc Tất cả
+    [TrangThai] [nvarchar](50) DEFAULT (N'Đang tìm'), -- Đang tìm, Đã tìm được, Đã ẩn
+    [NgayDang] [datetime] DEFAULT (getdate()),
+PRIMARY KEY CLUSTERED ([MaBaiDang] ASC)
+) ON [PRIMARY]
+GO
+
+
+-- =========================================================
+-- KHÓA NGOẠI CHO CÁC BẢNG MỚI
+-- =========================================================
+ALTER TABLE [dbo].[LichHenXemPhong] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
+GO
+ALTER TABLE [dbo].[LichHenXemPhong] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+ALTER TABLE [dbo].[LichSuGiaHan] WITH CHECK ADD FOREIGN KEY([MaHopDong]) REFERENCES [dbo].[HopDongThue] ([MaHopDong])
+GO
+ALTER TABLE [dbo].[OGhep] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+
+-- Cập nhật TrangThai = N'Hoạt động' cho các dòng bị NULL
+UPDATE [dbo].[TaiKhoan]
+SET [TrangThai] = N'Hoạt động'
+WHERE [TrangThai] IS NULL OR [TrangThai] = ''
+GO
+
+-- Kiểm tra kết quả
+SELECT MaTaiKhoan, TenDangNhap, VaiTro, TrangThai 
+FROM [dbo].[TaiKhoan]
 GO

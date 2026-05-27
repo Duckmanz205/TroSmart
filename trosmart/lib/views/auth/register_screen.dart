@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:trosmart/logic/auth/auth_service.dart';
+import 'package:trosmart/views/user/navigation_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -21,6 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
+  final AuthService _authService = AuthService();
+
   Future<void> _handleRegister() async {
     if (!isAgreeTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -29,71 +31,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    final name = _nameController.text.trim();
-    final phone = _phoneController.text.trim();
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final hoTen = _nameController.text.trim();
+    final sDT = _phoneController.text.trim();
+    // _emailController được dùng làm TenDangNhap (username)
+    final tenDangNhap = _emailController.text.trim();
+    final matKhau = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty) {
+    if (hoTen.isEmpty || tenDangNhap.isEmpty || matKhau.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin!')),
       );
       return;
     }
 
-    if (password != confirmPassword) {
+    if (matKhau != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Mật khẩu nhập lại không khớp!')),
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // Gọi API đăng ký (Thay đổi URL nếu cần, 10.0.2.2 dùng cho Android Emulator)
-      final url = Uri.parse('http://10.0.2.2:5137/api/auth/register'); 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-          'name': name,
-          'phone': phone,
-        }),
+      // register() tự động gọi login() sau khi thành công
+      await _authService.register(
+        tenDangNhap,
+        matKhau,
+        hoTen,
+        sDT.isEmpty ? null : sDT,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đăng ký thành công! Đang chuyển về đăng nhập...')),
-        );
-        // Chờ 1 chút để user thấy thông báo rồi pop về Login
-        await Future.delayed(const Duration(seconds: 1));
-        if (!mounted) return;
-        Navigator.pop(context);
-      } else {
-        final body = jsonDecode(response.body);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(body['message'] ?? 'Đăng ký thất bại!')),
-        );
-      }
+      if (!mounted) return;
+      // VaiTro luôn là KhachThue → điến home user
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
+      final message = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi kết nối máy chủ: $e')),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -160,10 +144,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 20),
                         
                         _buildInputField(
-                          label: "EMAIL",
-                          icon: Icons.email_outlined,
-                          hint: "example@email.com",
-                          keyboardType: TextInputType.emailAddress,
+                          label: "TÊN ĐĂNG NHẬP",
+                          icon: Icons.person_outline,
+                          hint: "Tên để đăng nhập vào hệ thống",
+                          keyboardType: TextInputType.text,
                           controller: _emailController,
                         ),
                         const SizedBox(height: 20),

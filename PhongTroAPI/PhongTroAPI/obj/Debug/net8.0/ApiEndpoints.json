@@ -1,7 +1,7 @@
 [
   {
     "ContainingType": "PhongTroAPI.Controllers.AuthController",
-    "Method": "LoginPost",
+    "Method": "Login",
     "RelativePath": "api/Auth/login",
     "HttpMethod": "POST",
     "IsController": true,
@@ -9,29 +9,8 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "PhongTroAPI.Controllers.AuthController\u002BLoginRequest",
+        "Type": "PhongTroAPI.DTOs.LoginRequest",
         "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "PhongTroAPI.Controllers.AuthController",
-    "Method": "LoginGet",
-    "RelativePath": "api/Auth/login",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "identifier",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "password",
-        "Type": "System.String",
-        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -46,7 +25,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "PhongTroAPI.Controllers.AuthController\u002BRegisterRequest",
+        "Type": "PhongTroAPI.DTOs.RegisterRequest",
         "IsRequired": true
       }
     ],

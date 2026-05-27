@@ -1,13 +1,13 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\",
+  "WorkspaceRootPath": "D:\\Code\\doan_ltdd_nhomcomsuon10\\TroSmart\\PhongTroAPI\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon10\\phongtroapi\\phongtroapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon10\\trosmart\\phongtroapi\\phongtroapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon10\\phongtroapi\\phongtroapi\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "AbsoluteMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|d:\\code\\doan_ltdd_nhomcomsuon10\\trosmart\\phongtroapi\\phongtroapi\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{2CDF106A-AE23-4156-807D-1B3088C6D28F}|PhongTroAPI\\PhongTroAPI.csproj|solutionrelative:phongtroapi\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     }
   ],
@@ -36,9 +36,9 @@
               "$type": "Document",
               "DocumentIndex": 1,
               "Title": "launchSettings.json",
-              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\PhongTroAPI\\Properties\\launchSettings.json",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon10\\TroSmart\\PhongTroAPI\\PhongTroAPI\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "PhongTroAPI\\Properties\\launchSettings.json",
-              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\PhongTroAPI\\Properties\\launchSettings.json",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon10\\TroSmart\\PhongTroAPI\\PhongTroAPI\\Properties\\launchSettings.json",
               "RelativeToolTip": "PhongTroAPI\\Properties\\launchSettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
@@ -48,11 +48,11 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "AuthController.cs",
-              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\PhongTroAPI\\Controllers\\AuthController.cs",
+              "DocumentMoniker": "D:\\Code\\doan_ltdd_nhomcomsuon10\\TroSmart\\PhongTroAPI\\PhongTroAPI\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "PhongTroAPI\\Controllers\\AuthController.cs",
-              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon10\\PhongTroAPI\\PhongTroAPI\\Controllers\\AuthController.cs",
+              "ToolTip": "D:\\Code\\doan_ltdd_nhomcomsuon10\\TroSmart\\PhongTroAPI\\PhongTroAPI\\Controllers\\AuthController.cs",
               "RelativeToolTip": "PhongTroAPI\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAA2wBQAAAAtAAAAAAAAAA==",
+              "ViewState": "AgIAADEAAAAAAAAAAAAiwDwAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-14T14:54:16.341Z",
               "EditorCaption": ""
