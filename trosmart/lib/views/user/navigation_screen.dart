@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
+import 'package:trosmart/views/user/UR_Chat.dart';
 import 'package:trosmart/views/user/UR_ThongBao.dart';
+import 'package:trosmart/views/user/room_search_view.dart';
 import 'package:trosmart/views/user/stats_screen.dart';
 import 'package:trosmart/widgets/common/user/user_app_bar.dart';
 import 'app_sidebar.dart';
@@ -40,7 +42,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       _activePage = pageName;
     });
     if (Navigator.canPop(context)) {
-      Navigator.pop(context); // Đóng drawer nếu đang mở
+      Navigator.pop(context);
     }
   }
 
@@ -50,7 +52,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (_activePage == AppPages.payment) return 1;
     if (_activePage == AppPages.chat) return 2;
     if (_activePage == AppPages.profileDetail) return 3;
-    return 0; // Mặc định về 0 nếu trang đó không nằm trong BottomNav
+    return 0;
   }
 
   @override
@@ -66,14 +68,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         children: [
           const Center(child: Text("Trang chủ")),      // 0
           const PaymentDetailsScreen(),                // 1
-          const Center(child: Text("Chat")),           // 2
+          const UrChat(),                               // 2
           const Center(child: Text("Hợp đồng")),       // 3
-          const Center(child: Text("Tra cứu phòng")),  // 4
+          const RoomSearchView(),                       // 4
           const IssueReportingScreen(),                 // 5
-          const UrThongBao(),                  // 6
+          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 6
           const Center(child: Text("Ở ghép")),         // 7
-          const HistoryStatsScreen(),                  // 7
-          const Center(child: Text("Cá nhân")),        // 8
+          const HistoryStatsScreen(),                  // 8
+          const Center(child: Text("Cá nhân")),        // 9
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

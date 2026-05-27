@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:trosmart/views/admin/invoice_screen.dart';
-import '../../views/admin/add_invoice_screen.dart';
+import 'package:trosmart/views/admin/AD_SuaHoaDon.dart';
 import '../../shared/app_colors.dart';
 
 import '../../models/admin/invoice_model.dart';
@@ -31,18 +30,33 @@ class InvoiceDetailHeader extends StatelessWidget {
                   Navigator.pop(context);
                 }),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Chi tiết hóa đơn',
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    'Tháng ${invoice.thang}/${invoice.nam} | Mã: #INV-${invoice.maHoaDon}',
-                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Chi tiết hóa đơn',
+                      style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Tháng ${invoice.thang}/${invoice.nam} | Mã: #INV-${invoice.maHoaDon}',
+                      style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
+                    ),
+                    if (invoice.tenKhachThue.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Khách: ${invoice.tenKhachThue}',
+                          style: GoogleFonts.inter(color: Colors.white60, fontSize: 11),
+                        ),
+                      ),
+                    if (invoice.tenCoSo.isNotEmpty)
+                      Text(
+                        'Cơ sở: ${invoice.tenCoSo}',
+                        style: GoogleFonts.inter(color: Colors.white60, fontSize: 11),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -63,6 +77,28 @@ class InvoiceSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Xác định trạng thái hiển thị
+    final isOverdue = invoice.trangThai == 'Quá hạn';
+    final isPaid = invoice.trangThai == 'Đã thanh toán';
+    
+    Color statusColor;
+    String statusText;
+    Color statusBgColor;
+    
+    if (isPaid) {
+      statusColor = const Color(0xFF2DDCB1);
+      statusText = 'ĐÃ TRẢ';
+      statusBgColor = const Color(0xFFE6F9F5);
+    } else if (isOverdue) {
+      statusColor = Colors.redAccent;
+      statusText = 'QUÁ HẠN';
+      statusBgColor = const Color(0xFFFFEBEE);
+    } else {
+      statusColor = AppColors.statusOrange;
+      statusText = 'CHỜ TRẢ';
+      statusBgColor = AppColors.warningLightBg;
+    }
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -78,28 +114,61 @@ class InvoiceSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(formatCurrency(invoice.tongTien), style: GoogleFonts.inter(color: AppColors.adminDarkPurple, fontSize: 28, fontWeight: FontWeight.bold)),
+              Expanded(
+                child: Text(formatCurrency(invoice.tongTien), style: GoogleFonts.inter(color: AppColors.adminDarkPurple, fontSize: 28, fontWeight: FontWeight.bold)),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFFE6F9F5) : AppColors.warningLightBg,
+                  color: statusBgColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    CircleAvatar(radius: 3, backgroundColor: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFF2DDCB1) : AppColors.statusOrange),
+                    CircleAvatar(radius: 3, backgroundColor: statusColor),
                     const SizedBox(width: 6),
                     Text(
-                      invoice.trangThai == 'Đã thanh toán' ? 'ĐÃ TRẢ' : 'CHỜ TRẢ', 
-                      style: GoogleFonts.inter(color: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFF2DDCB1) : AppColors.statusOrange, fontSize: 10, fontWeight: FontWeight.bold)
+                      statusText, 
+                      style: GoogleFonts.inter(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)
                     ),
                   ],
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          // Thông tin ngày tháng
+          Row(
+            children: [
+              _InfoChip(icon: Icons.calendar_today, label: 'Ngày lập: ${invoice.ngayLapDisplay}'),
+              const SizedBox(width: 12),
+              _InfoChip(icon: Icons.schedule, label: 'Hạn: ${invoice.hanThanhToanDisplay}'),
+            ],
+          ),
+          if (invoice.ngayThanhToan != null) ...[
+            const SizedBox(height: 8),
+            _InfoChip(icon: Icons.check_circle, label: 'Thanh toán: ${invoice.ngayThanhToan}'),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _InfoChip({required this.icon, required this.label});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: AppColors.textLight),
+        const SizedBox(width: 4),
+        Text(label, style: GoogleFonts.inter(fontSize: 10, color: AppColors.textLight)),
+      ],
     );
   }
 }
@@ -113,6 +182,10 @@ class InvoiceDetailsCard extends StatelessWidget {
     return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
   }
 
+  String formatNumber(double number) {
+    return number.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -124,26 +197,54 @@ class InvoiceDetailsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          InvoiceDetailRow(title: 'Tiền phòng (${invoice.tenPhong.isNotEmpty ? invoice.tenPhong : 'P.${invoice.maPhong}'})', amount: formatCurrency(invoice.tienPhong), isBold: true),
+          // Tiền phòng
+          InvoiceDetailRow(
+            title: 'Tiền phòng (${invoice.tenPhong.isNotEmpty ? invoice.tenPhong : 'P.${invoice.maPhong}'})', 
+            amount: formatCurrency(invoice.tienPhong), 
+            isBold: true,
+          ),
           const Divider(height: 30, color: AppColors.backgroundGray),
+          
+          // Tiền điện - dùng đơn giá thực từ API
           InvoiceDetailRow(
             icon: Icons.bolt, iconColor: Colors.yellow, 
-            title: 'Điện (${(invoice.soDienMoi - invoice.soDienCu).toInt()} kWh x 3.500)', 
+            title: 'Điện (${(invoice.soDienMoi - invoice.soDienCu).toInt()} kWh x ${formatNumber(invoice.donGiaDien)})', 
             subtitle: 'Số cũ: ${invoice.soDienCu.toInt()} - Số mới: ${invoice.soDienMoi.toInt()}', 
-            amount: formatCurrency((invoice.soDienMoi - invoice.soDienCu) * 3500)
+            amount: formatCurrency(invoice.tienDien),
           ),
           const SizedBox(height: 16),
+          
+          // Tiền nước - dùng đơn giá thực từ API
           InvoiceDetailRow(
             icon: Icons.water_drop, iconColor: Colors.blue, 
-            title: 'Nước (${(invoice.soNuocMoi - invoice.soNuocCu).toInt()} m3 x 20.000)', 
+            title: 'Nước (${(invoice.soNuocMoi - invoice.soNuocCu).toInt()} m³ x ${formatNumber(invoice.donGiaNuoc)})', 
             subtitle: 'Số cũ: ${invoice.soNuocCu.toInt()} - Số mới: ${invoice.soNuocMoi.toInt()}', 
-            amount: formatCurrency((invoice.soNuocMoi - invoice.soNuocCu) * 20000)
+            amount: formatCurrency(invoice.tienNuoc),
           ),
-          const SizedBox(height: 16),
-          const InvoiceDetailRow(icon: Icons.language, iconColor: Colors.lightBlueAccent, title: 'Wifi & Rác', amount: '0đ (Free)'),
+          
+          // Tiền dịch vụ
+          if (invoice.tienDichVu > 0) ...[
+            const SizedBox(height: 16),
+            InvoiceDetailRow(
+              icon: Icons.language, iconColor: Colors.lightBlueAccent, 
+              title: 'Dịch vụ', 
+              subtitle: invoice.moTaDichVu,
+              amount: formatCurrency(invoice.tienDichVu),
+            ),
+          ] else ...[
+            const SizedBox(height: 16),
+            const InvoiceDetailRow(icon: Icons.language, iconColor: Colors.lightBlueAccent, title: 'Dịch vụ', amount: '0đ (Free)'),
+          ],
+          
+          // Phụ phí
           if (invoice.phuPhi > 0) ...[
             const SizedBox(height: 16),
-            InvoiceDetailRow(icon: Icons.build, iconColor: Colors.grey, title: 'Phụ phí', amount: formatCurrency(invoice.phuPhi)),
+            InvoiceDetailRow(
+              icon: Icons.build, iconColor: Colors.grey, 
+              title: 'Phụ phí', 
+              subtitle: invoice.moTaPhuPhi,
+              amount: formatCurrency(invoice.phuPhi),
+            ),
           ],
         ],
       ),
@@ -175,21 +276,26 @@ class InvoiceDetailRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: iconColor, size: 18),
-              const SizedBox(width: 12),
-            ],
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: GoogleFonts.inter(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
-                if (subtitle != null) Text(subtitle!, style: GoogleFonts.inter(color: AppColors.textLight, fontSize: 11)),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, color: iconColor, size: 18),
+                const SizedBox(width: 12),
               ],
-            ),
-          ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: GoogleFonts.inter(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
+                    if (subtitle != null && subtitle!.isNotEmpty) 
+                      Text(subtitle!, style: GoogleFonts.inter(color: AppColors.textLight, fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         Text(amount, style: GoogleFonts.inter(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.w500)),
       ],
@@ -234,7 +340,8 @@ class BankTransferCard extends StatelessWidget {
 
 // --- Component: Các nút hành động ---
 class ActionButtons extends StatelessWidget {
-  const ActionButtons({super.key});
+  final InvoiceModel invoice;
+  const ActionButtons({super.key, required this.invoice});
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +365,7 @@ class ActionButtons extends StatelessWidget {
         Expanded(
           child: OutlinedButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const InvoiceScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => EditInvoiceScreen(invoice: invoice)));
             },
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.adminDarkPurple, width: 2),

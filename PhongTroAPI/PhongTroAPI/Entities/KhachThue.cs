@@ -16,4 +16,10 @@ public partial class KhachThue
     public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
 
     public virtual ICollection<HopDongThue> HopDongThues { get; set; } = new List<HopDongThue>();
+
+    public virtual ICollection<SuCo> SuCos { get; set; } = new List<SuCo>();
+
+    public virtual ICollection<TaiKhoan> TaiKhoans { get; set; } = new List<TaiKhoan>();
+
+    public virtual ICollection<ThongBao> ThongBaos { get; set; } = new List<ThongBao>();
 }

@@ -1,18 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../models/admin/invoice_model.dart';
+import '../../views/user/UR_VietQRPage.dart';
+import '../../shared/app_theme.dart';
 
 class BillBanner extends StatelessWidget {
-  const BillBanner({super.key});
+  final InvoiceModel invoice;
+  const BillBanner({super.key, required this.invoice});
+
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}đ';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final hasPaid = invoice.trangThai == 'Đã thanh toán';
+    final statusColor = hasPaid ? Colors.green : const Color(0xFFB794F4);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha:0.03), blurRadius: 20, offset: const Offset(0, 10))
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
         ],
       ),
       child: Column(
@@ -24,13 +40,18 @@ class BillBanner extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Hóa đơn tháng 03/2024", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text(
+                      "Hóa đơn tháng ${invoice.thang.toString().padLeft(2, '0')}/${invoice.nam}",
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
                     const SizedBox(height: 4),
-                    // 2. Dùng FittedBox để số tiền tự co giãn nếu quá dài
-                    const FittedBox(
+                    FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text("4.250.000đ", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+                      child: Text(
+                        formatCurrency(invoice.tongTien),
+                        style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+                      ),
                     ),
                   ],
                 ),
@@ -38,11 +59,18 @@ class BillBanner extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB794F4).withValues(alpha:0.1),
+                  color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFB794F4).withValues(alpha:0.2)),
+                  border: Border.all(color: statusColor.withOpacity(0.2)),
                 ),
-                child: const Text("CHƯA THANH TOÁN", style: TextStyle(color: Color(0xFFB794F4), fontSize: 10, fontWeight: FontWeight.w900)),
+                child: Text(
+                  invoice.trangThai.toUpperCase(),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               )
             ],
           ),
@@ -51,11 +79,20 @@ class BillBanner extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: hasPaid
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => UrVietQRPage(invoice: invoice),
+                            ),
+                          );
+                        },
                   icon: const Icon(LucideIcons.scanLine),
-                  label: const Text("Scan QR"),
+                  label: Text(hasPaid ? "Đã thanh toán" : "Thanh toán QR"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFB794F4),
+                    backgroundColor: hasPaid ? Colors.grey : const Color(0xFFB794F4),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -65,7 +102,14 @@ class BillBanner extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Đã xuất hóa đơn PDF thành công!"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
                   icon: const Icon(LucideIcons.fileText),
                   label: const Text("PDF Bill"),
                   style: OutlinedButton.styleFrom(
@@ -92,7 +136,15 @@ class SectionHeader extends StatelessWidget {
     return Row(
       children: [
         const Expanded(child: Divider(thickness: 0.5, endIndent: 10)),
-        Text(title, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1.5)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            color: Colors.grey,
+            letterSpacing: 1.5,
+          ),
+        ),
         const Expanded(child: Divider(thickness: 0.5, indent: 10)),
       ],
     );
@@ -100,23 +152,53 @@ class SectionHeader extends StatelessWidget {
 }
 
 class BillDetailList extends StatelessWidget {
-  const BillDetailList({super.key});
+  final InvoiceModel invoice;
+  const BillDetailList({super.key, required this.invoice});
+
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}đ';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final soDien = invoice.soDienMoi - invoice.soDienCu;
+    final soNuoc = invoice.soNuocMoi - invoice.soNuocCu;
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withValues(alpha:0.5),
+        color: Theme.of(context).cardColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha:0.1)),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          _DetailTile(icon: LucideIcons.home, label: "Tiền nhà", value: "3.500.000đ"),
-          _DetailTile(icon: LucideIcons.zap, label: "Tiền điện (125 kWh)", value: "437.500đ"),
-          _DetailTile(icon: LucideIcons.droplets, label: "Tiền nước", value: "80.000đ"),
-          _DetailTile(icon: LucideIcons.wifi, label: "Mạng Internet", value: "150.000đ"),
-          _DetailTile(icon: LucideIcons.settings, label: "Dịch vụ khác", value: "82.500đ", isLast: true),
+          _DetailTile(
+            icon: LucideIcons.home,
+            label: "Tiền phòng trọ",
+            value: formatCurrency(invoice.tienPhong),
+          ),
+          _DetailTile(
+            icon: LucideIcons.zap,
+            label: "Tiền điện (${soDien.toInt()} kWh)",
+            value: formatCurrency(invoice.tienDien),
+          ),
+          _DetailTile(
+            icon: LucideIcons.droplets,
+            label: "Tiền nước (${soNuoc.toInt()} m³)",
+            value: formatCurrency(invoice.tienNuoc),
+          ),
+          if (invoice.phuPhi > 0)
+            _DetailTile(
+              icon: LucideIcons.alertTriangle,
+              label: invoice.moTaPhuPhi?.isNotEmpty == true ? invoice.moTaPhuPhi! : "Phí phát sinh",
+              value: formatCurrency(invoice.phuPhi),
+            ),
+          _DetailTile(
+            icon: LucideIcons.settings,
+            label: "Dịch vụ & cố định",
+            value: formatCurrency(invoice.tienDichVu),
+            isLast: true,
+          ),
         ],
       ),
     );
@@ -135,7 +217,7 @@ class _DetailTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: isLast ? null : Border(bottom: BorderSide(color: Colors.grey.withValues(alpha:0.1), width: 0.5)),
+        border: isLast ? null : Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 0.5)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -155,10 +237,19 @@ class _DetailTile extends StatelessWidget {
 }
 
 class SharedCostSection extends StatelessWidget {
-  const SharedCostSection({super.key});
+  final InvoiceModel invoice;
+  const SharedCostSection({super.key, required this.invoice});
+
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}đ';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final halfCost = invoice.tongTien / 2;
+    final costStr = formatCurrency(halfCost);
+    final statusStr = invoice.trangThai == 'Đã thanh toán' ? 'ĐÃ THANH TOÁN' : 'ĐANG CHỜ';
+
     return Column(
       children: [
         const Row(
@@ -171,9 +262,9 @@ class SharedCostSection extends StatelessWidget {
         const SizedBox(height: 16),
         Row(
           children: [
-            _PartnerCard(name: "Bình (Tôi)", amount: "2.125.000đ", status: "ĐÃ SẴN SÀNG", isMe: true),
+            _PartnerCard(name: "Bình (Tôi)", amount: costStr, status: statusStr, isMe: true),
             const SizedBox(width: 16),
-            _PartnerCard(name: "Sarah", amount: "2.125.000đ", status: "ĐANG CHỜ", isMe: false),
+            _PartnerCard(name: "Sarah", amount: costStr, status: statusStr, isMe: false),
           ],
         )
       ],
@@ -190,14 +281,16 @@ class _PartnerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = status == 'ĐÃ THANH TOÁN' ? Colors.green : const Color(0xFFB794F4);
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.withValues(alpha:0.05)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha:0.02), blurRadius: 10)],
+          border: Border.all(color: Colors.grey.withOpacity(0.05)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,9 +303,9 @@ class _PartnerCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(amount, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: isMe ? const Color(0xFFB794F4) : null)),
+            Text(amount, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: isMe ? activeColor : null)),
             const SizedBox(height: 4),
-            Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: isMe ? const Color(0xFFB794F4).withValues(alpha:0.5) : Colors.grey.withValues(alpha:0.5))),
+            Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: isMe ? activeColor.withOpacity(0.5) : Colors.grey.withOpacity(0.5))),
           ],
         ),
       ),
@@ -224,17 +317,20 @@ class PaymentHistoryItem extends StatelessWidget {
   final String month;
   final String amount;
   final String date;
-  const PaymentHistoryItem({super.key, required this.month, required this.amount, required this.date});
+  final String status;
+  const PaymentHistoryItem({super.key, required this.month, required this.amount, required this.date, required this.status});
 
   @override
   Widget build(BuildContext context) {
+    final isPaid = status == 'Đã thanh toán';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha:0.1)),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -243,15 +339,25 @@ class PaymentHistoryItem extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.green.withValues(alpha:0.1), shape: BoxShape.circle),
-                child: const Icon(LucideIcons.checkCircle2, color: Colors.green, size: 20),
+                decoration: BoxDecoration(
+                  color: (isPaid ? Colors.green : const Color(0xFFB794F4)).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isPaid ? LucideIcons.checkCircle2 : LucideIcons.clock,
+                  color: isPaid ? Colors.green : const Color(0xFFB794F4),
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Tháng $month", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text("$date • Đã quyết toán", style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(
+                    isPaid ? "$date • Đã thanh toán" : "$date • Chờ phê duyệt",
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
                 ],
               )
             ],

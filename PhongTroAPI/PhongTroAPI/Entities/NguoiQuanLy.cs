@@ -18,4 +18,8 @@ public partial class NguoiQuanLy
     public DateTime? NgayTao { get; set; }
 
     public virtual ICollection<CoSo> CoSos { get; set; } = new List<CoSo>();
+
+    public virtual ICollection<LichSuThanhToan> LichSuThanhToans { get; set; } = new List<LichSuThanhToan>();
+
+    public virtual ICollection<TaiKhoan> TaiKhoans { get; set; } = new List<TaiKhoan>();
 }

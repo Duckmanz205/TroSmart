@@ -4,9 +4,9 @@ import 'package:latlong2/latlong.dart';
 
 import '../../logic/admin/co_so_service.dart';
 import '../../models/admin/co_so_detail_model.dart';
-import 'delete_co_so_view.dart';
-import 'edit_co_so_view.dart';
-import 'phong_detail_view.dart';
+import 'AD_XoaCoSo.dart';
+import 'AD_SuaCoSo.dart';
+import 'AD_ChiTietPhong.dart';
 import 'phong_management_view.dart';
 
 class CoSoDetailView extends StatefulWidget {

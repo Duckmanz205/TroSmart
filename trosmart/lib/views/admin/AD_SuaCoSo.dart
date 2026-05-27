@@ -9,7 +9,7 @@ import '../../logic/admin/co_so_service.dart';
 import '../../models/admin/co_so_detail_model.dart';
 import '../../models/admin/co_so_image_model.dart';
 import '../../models/admin/tien_ich_model.dart';
-import 'delete_co_so_view.dart';
+import 'AD_XoaCoSo.dart';
 
 class EditCoSoView extends StatefulWidget {
   final CoSoDetailModel coSo;

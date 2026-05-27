@@ -148,15 +148,99 @@ class InvoiceFormCard extends StatelessWidget {
           const FormLabel(label: 'TIỀN PHÒNG & DỊCH VỤ CỐ ĐỊNH'),
           const SizedBox(height: 12),
           FeeDisplay(text: 'Phòng: ${formatCurrency(controller.tienPhong)}'),
-          const SizedBox(height: 12),
-          TextField(
-            keyboardType: TextInputType.number,
-            onChanged: controller.updatePhuPhi,
-            decoration: const InputDecoration(
-              hintText: 'Phí phát sinh (sửa đồ, vi phạm...)',
-              hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          const SizedBox(height: 16),
+          const FormLabel(label: 'PHÍ PHÁT SINH'),
+          const SizedBox(height: 8),
+          ...List.generate(controller.incidentalItems.length, (index) {
+            final item = controller.incidentalItems[index];
+            return Padding(
+              key: ValueKey(index),
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextFormField(
+                      initialValue: item.name,
+                      onChanged: (val) => controller.updateIncidentalItemName(index, val),
+                      decoration: InputDecoration(
+                        hintText: 'Tên dịch vụ/phí',
+                        hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.black12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.black12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFF6A3092)),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      initialValue: item.amount > 0 ? item.amount.toStringAsFixed(0) : '',
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) => controller.updateIncidentalItemAmount(index, val),
+                      decoration: InputDecoration(
+                        hintText: 'Thành tiền',
+                        hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                        suffixText: 'đ',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.black12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.black12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFF6A3092)),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  if (controller.incidentalItems.length > 1) ...[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
+                      onPressed: () => controller.removeIncidentalItem(index),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+          GestureDetector(
+            onTap: controller.addIncidentalItem,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.add_circle_outline, size: 16, color: Color(0xFF6A3092)),
+                  SizedBox(width: 6),
+                  Text(
+                    'Thêm chi phí phát sinh',
+                    style: TextStyle(
+                      color: Color(0xFF6A3092),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           
@@ -167,6 +251,7 @@ class InvoiceFormCard extends StatelessWidget {
     );
   }
 }
+
 
 class FormLabel extends StatelessWidget {
   final String label;
