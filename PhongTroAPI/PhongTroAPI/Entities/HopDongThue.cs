@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace PhongTroAPI.Entities;
@@ -21,11 +21,10 @@ public partial class HopDongThue
 
     public DateTime? NgayTao { get; set; }
 
-    public string? ChuKy { get; set; }
+    public virtual ICollection<LichSuGiaHan> LichSuGiaHans { get; set; } = new List<LichSuGiaHan>();
 
     public virtual KhachThue MaKhachNavigation { get; set; } = null!;
 
     public virtual Phong MaPhongNavigation { get; set; } = null!;
-
-    public virtual ICollection<LichSuGiaHan> LichSuGiaHans { get; set; } = new List<LichSuGiaHan>();
+    public string ChuKy { get; internal set; }
 }

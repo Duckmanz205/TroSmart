@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:trosmart/views/auth/login_screen.dart';
 import '../../../models/admin/admin_pages.dart';
 
 class AdminDrawer extends StatelessWidget {
@@ -101,7 +102,10 @@ class AdminDrawer extends StatelessWidget {
               ),
               if (badge != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFB794F4),
                     borderRadius: BorderRadius.circular(12),
@@ -172,7 +176,9 @@ class AdminDrawer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15), width: 0.5)),
+        border: Border(
+          top: BorderSide(color: Colors.grey.withOpacity(0.15), width: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,7 +190,11 @@ class AdminDrawer extends StatelessWidget {
                 backgroundColor: Color(0xFF9E77F1),
                 child: Text(
                   'T',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -218,9 +228,10 @@ class AdminDrawer extends StatelessWidget {
             padding: const EdgeInsets.only(left: 52),
             child: GestureDetector(
               onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đang đăng xuất...')),
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                  (router) => false,
                 );
               },
               child: Text(

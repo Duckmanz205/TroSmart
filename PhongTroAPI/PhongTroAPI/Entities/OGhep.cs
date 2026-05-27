@@ -1,8 +1,9 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace PhongTroAPI.Entities;
 
-public partial class OGhep
+public partial class Oghep
 {
     public int MaBaiDang { get; set; }
 

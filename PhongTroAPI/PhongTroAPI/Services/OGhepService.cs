@@ -21,7 +21,7 @@ namespace PhongTroAPI.Services
             var khach = _context.KhachThues.Find(dto.MaKhach);
             if (khach == null) return false;
 
-            var oghep = new OGhep
+            var oghep = new Oghep
             {
                 MaKhach = dto.MaKhach,
                 TieuDe = dto.TieuDe,
@@ -33,13 +33,13 @@ namespace PhongTroAPI.Services
                 NgayDang = DateTime.Now
             };
 
-            _context.OGheps.Add(oghep);
+            _context.Ogheps.Add(oghep);
             return _context.SaveChanges() > 0;
         }
 
         public List<OGhepRenderDto> GetAllOGheps()
         {
-            return _context.OGheps
+            return _context.Ogheps
                 .Include(o => o.MaKhachNavigation)
                 .Select(o => new OGhepRenderDto
                 {
@@ -60,7 +60,7 @@ namespace PhongTroAPI.Services
 
         public OGhepRenderDto? GetOGhepById(int id)
         {
-            return _context.OGheps
+            return _context.Ogheps
                 .Include(o => o.MaKhachNavigation)
                 .Where(o => o.MaBaiDang == id)
                 .Select(o => new OGhepRenderDto
@@ -82,7 +82,7 @@ namespace PhongTroAPI.Services
 
         public bool UpdateOGhep(int id, CreateOGhepDto dto)
         {
-            var oghep = _context.OGheps.Find(id);
+            var oghep = _context.Ogheps.Find(id);
             if (oghep == null) return false;
 
             oghep.TieuDe = dto.TieuDe;
@@ -96,7 +96,7 @@ namespace PhongTroAPI.Services
 
         public bool UpdateTrangThai(int id, string trangThai)
         {
-            var oghep = _context.OGheps.Find(id);
+            var oghep = _context.Ogheps.Find(id);
             if (oghep == null) return false;
 
             oghep.TrangThai = trangThai;
@@ -105,10 +105,10 @@ namespace PhongTroAPI.Services
 
         public bool DeleteOGhep(int id)
         {
-            var oghep = _context.OGheps.Find(id);
+            var oghep = _context.Ogheps.Find(id);
             if (oghep == null) return false;
 
-            _context.OGheps.Remove(oghep);
+            _context.Ogheps.Remove(oghep);
             return _context.SaveChanges() > 0;
         }
     }

@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace PhongTroAPI.Entities;
 
@@ -10,7 +11,7 @@ public partial class LichHenXemPhong
 
     public string HoTenKhach { get; set; } = null!;
 
-    public string SdtKhach { get; set; } = null!;
+    public string Sdtkhach { get; set; } = null!;
 
     public int MaPhong { get; set; }
 

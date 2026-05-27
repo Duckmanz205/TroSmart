@@ -14,10 +14,6 @@ class UtilityManagementView extends StatelessWidget {
       create: (_) => UtilityController(),
       child: Scaffold(
         backgroundColor: AppColors.backgroundGray,
-        appBar: const PreferredSize(
-          preferredSize: Size.fromHeight(60),
-          child: CustomAppBar(),
-        ),
         body: Consumer<UtilityController>(
           builder: (context, controller, _) {
             if (controller.isLoading && controller.rooms.isEmpty) {
@@ -29,24 +25,37 @@ class UtilityManagementView extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(controller.errorMessage!, style: const TextStyle(color: Colors.red)),
+                    Text(
+                      controller.errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
                     const SizedBox(height: 12),
-                    ElevatedButton(onPressed: () => controller.fetchReadings(), child: const Text('Thử lại')),
+                    ElevatedButton(
+                      onPressed: () => controller.fetchReadings(),
+                      child: const Text('Thử lại'),
+                    ),
                   ],
                 ),
               );
             }
 
             // Tách phòng theo trạng thái
-            final occupiedRooms = controller.rooms.where((r) => r['trangThai'] != 'Trống').toList();
-            final vacantRooms = controller.rooms.where((r) => r['trangThai'] == 'Trống').toList();
+            final occupiedRooms = controller.rooms
+                .where((r) => r['trangThai'] != 'Trống')
+                .toList();
+            final vacantRooms = controller.rooms
+                .where((r) => r['trangThai'] == 'Trống')
+                .toList();
 
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  PageTitleSection(month: controller.selectedMonth, year: controller.selectedYear),
+                  PageTitleSection(
+                    month: controller.selectedMonth,
+                    year: controller.selectedYear,
+                  ),
                   const SizedBox(height: 20),
                   SaveAllButton(
                     savedCount: controller.savedRooms,
@@ -56,8 +65,14 @@ class UtilityManagementView extends StatelessWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(success ? 'Đã lưu tất cả chỉ số!' : controller.errorMessage ?? 'Lỗi'),
-                            backgroundColor: success ? AppColors.accentTeal : Colors.red,
+                            content: Text(
+                              success
+                                  ? 'Đã lưu tất cả chỉ số!'
+                                  : controller.errorMessage ?? 'Lỗi',
+                            ),
+                            backgroundColor: success
+                                ? AppColors.accentTeal
+                                : Colors.red,
                           ),
                         );
                       }
@@ -75,17 +90,23 @@ class UtilityManagementView extends StatelessWidget {
                   const SizedBox(height: 20),
                   RoomListHeader(totalRooms: controller.totalRooms),
                   const SizedBox(height: 12),
-                  
+
                   // Phòng có khách thuê
                   ...occupiedRooms.map((room) {
                     final maPhong = room['maPhong'] as int;
-                    final hasSaved = room['chiSoDienMoi'] != null && room['chiSoNuocMoi'] != null;
-                    final hasInput = controller.getDienMoi(maPhong) != null || controller.getNuocMoi(maPhong) != null;
+                    final hasSaved =
+                        room['chiSoDienMoi'] != null &&
+                        room['chiSoNuocMoi'] != null;
+                    final hasInput =
+                        controller.getDienMoi(maPhong) != null ||
+                        controller.getNuocMoi(maPhong) != null;
 
                     RoomStatus status;
                     if (hasSaved && !hasInput) {
                       status = RoomStatus.saved;
-                    } else if (hasInput || (room['chiSoDienMoi'] != null && room['chiSoNuocMoi'] == null)) {
+                    } else if (hasInput ||
+                        (room['chiSoDienMoi'] != null &&
+                            room['chiSoNuocMoi'] == null)) {
                       status = RoomStatus.inputting;
                     } else {
                       status = RoomStatus.inputting;
@@ -94,38 +115,54 @@ class UtilityManagementView extends StatelessWidget {
                     // Tính tổng tiền
                     final dienCu = room['chiSoDienCu'] ?? 0;
                     final nuocCu = room['chiSoNuocCu'] ?? 0;
-                    final dienMoi = controller.getDienMoi(maPhong) ?? room['chiSoDienMoi'];
-                    final nuocMoi = controller.getNuocMoi(maPhong) ?? room['chiSoNuocMoi'];
+                    final dienMoi =
+                        controller.getDienMoi(maPhong) ?? room['chiSoDienMoi'];
+                    final nuocMoi =
+                        controller.getNuocMoi(maPhong) ?? room['chiSoNuocMoi'];
 
                     String? totalAmount;
                     if (dienMoi != null && nuocMoi != null) {
-                      final tienDien = (dienMoi - dienCu) * controller.donGiaDien;
-                      final tienNuoc = (nuocMoi - nuocCu) * controller.donGiaNuoc;
+                      final tienDien =
+                          (dienMoi - dienCu) * controller.donGiaDien;
+                      final tienNuoc =
+                          (nuocMoi - nuocCu) * controller.donGiaNuoc;
                       final total = tienDien + tienNuoc;
-                      totalAmount = '${total.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
-                      status = hasSaved && !hasInput ? RoomStatus.saved : RoomStatus.calculated;
+                      totalAmount =
+                          '${total.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
+                      status = hasSaved && !hasInput
+                          ? RoomStatus.saved
+                          : RoomStatus.calculated;
                     }
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: RoomUtilityCard(
                         roomName: 'Phòng ${room['soPhong']}',
-                        tenant: '${room['tenKhachThue']?.isNotEmpty == true ? room['tenKhachThue'] : 'Chưa rõ'} - Tầng ${room['tang'] ?? '?'}',
+                        tenant:
+                            '${room['tenKhachThue']?.isNotEmpty == true ? room['tenKhachThue'] : 'Chưa rõ'} - Tầng ${room['tang'] ?? '?'}',
                         status: status,
                         totalAmount: totalAmount,
                         dienCu: (dienCu as int).toString(),
                         dienMoi: dienMoi?.toString(),
                         nuocCu: (nuocCu as int).toString(),
                         nuocMoi: nuocMoi?.toString(),
-                        onDienMoiChanged: (val) => controller.updateDienMoi(maPhong, val),
-                        onNuocMoiChanged: (val) => controller.updateNuocMoi(maPhong, val),
+                        onDienMoiChanged: (val) =>
+                            controller.updateDienMoi(maPhong, val),
+                        onNuocMoiChanged: (val) =>
+                            controller.updateNuocMoi(maPhong, val),
                         onSave: () async {
                           final ok = await controller.saveRoom(maPhong);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(ok ? 'Đã lưu chỉ số Phòng ${room['soPhong']}' : controller.errorMessage ?? 'Lỗi'),
-                                backgroundColor: ok ? AppColors.accentTeal : Colors.red,
+                                content: Text(
+                                  ok
+                                      ? 'Đã lưu chỉ số Phòng ${room['soPhong']}'
+                                      : controller.errorMessage ?? 'Lỗi',
+                                ),
+                                backgroundColor: ok
+                                    ? AppColors.accentTeal
+                                    : Colors.red,
                               ),
                             );
                           }
@@ -135,15 +172,18 @@ class UtilityManagementView extends StatelessWidget {
                   }),
 
                   // Phòng trống
-                  ...vacantRooms.map((room) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: RoomUtilityCard(
-                      roomName: 'Phòng ${room['soPhong']}',
-                      tenant: 'Chưa có khách thuê - Tầng ${room['tang'] ?? '?'}',
-                      status: RoomStatus.vacant,
+                  ...vacantRooms.map(
+                    (room) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: RoomUtilityCard(
+                        roomName: 'Phòng ${room['soPhong']}',
+                        tenant:
+                            'Chưa có khách thuê - Tầng ${room['tang'] ?? '?'}',
+                        status: RoomStatus.vacant,
+                      ),
                     ),
-                  )),
-                  
+                  ),
+
                   const SizedBox(height: 80),
                 ],
               ),
