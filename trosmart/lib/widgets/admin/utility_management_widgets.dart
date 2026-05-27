@@ -4,7 +4,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../shared/app_colors.dart';
 
 class PageTitleSection extends StatelessWidget {
-  const PageTitleSection({super.key});
+  final int month;
+  final int year;
+  const PageTitleSection({super.key, required this.month, required this.year});
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +34,9 @@ class PageTitleSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'THÁNG 10 / 2024',
-              style: TextStyle(
+            Text(
+              'THÁNG ${month.toString().padLeft(2, '0')} / $year',
+              style: const TextStyle(
                 color: AppColors.adminDarkPurple,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
@@ -54,71 +56,81 @@ class PageTitleSection extends StatelessWidget {
 }
 
 class SaveAllButton extends StatelessWidget {
-  const SaveAllButton({super.key});
+  final int savedCount;
+  final int totalCount;
+  final VoidCallback onPressed;
+  const SaveAllButton({super.key, required this.savedCount, required this.totalCount, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.utilityPurpleLight,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.adminDarkPurple.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.utilityPurpleLight,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.adminDarkPurple.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(LucideIcons.save, color: Colors.white, size: 20),
                 ),
-                child: const Icon(LucideIcons.save, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                const Text(
+                  'Lưu tất cả',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.utilityPurpleDark.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
               ),
-              const SizedBox(width: 12),
-              const Text(
-                'Lưu tất cả',
-                style: TextStyle(
+              child: Text(
+                '$savedCount/$totalCount',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 14,
                 ),
               ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.utilityPurpleDark.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text(
-              '12/24',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class UtilityStatsGrid extends StatelessWidget {
-  const UtilityStatsGrid({super.key});
+  final int enteredRooms;
+  final int totalRooms;
+  final int month;
+  final int year;
+  const UtilityStatsGrid({super.key, required this.enteredRooms, required this.totalRooms, required this.month, required this.year});
 
   @override
   Widget build(BuildContext context) {
@@ -131,9 +143,9 @@ class UtilityStatsGrid extends StatelessWidget {
       childAspectRatio: 2.2,
       children: [
         _buildStatCard('Giá điện', '3.500đ', '/ kWh', LucideIcons.zap, Colors.yellow[400]!),
-        _buildStatCard('Giá nước', '25.000đ', '/ khối', LucideIcons.droplet, Colors.blue[300]!),
-        _buildStatCard('Đã nhập', '12 phòng', '/ 24 phòng', LucideIcons.checkCircle, AppColors.accentTeal),
-        _buildStatCard('Kỳ thu', 'T10/2024', '', LucideIcons.calendar, AppColors.accentTeal, isPicker: true),
+        _buildStatCard('Giá nước', '20.000đ', '/ khối', LucideIcons.droplet, Colors.blue[300]!),
+        _buildStatCard('Đã nhập', '$enteredRooms phòng', '/ $totalRooms phòng', LucideIcons.checkCircle, AppColors.accentTeal),
+        _buildStatCard('Kỳ thu', 'T${month.toString().padLeft(2, '0')}/$year', '', LucideIcons.calendar, AppColors.accentTeal, isPicker: true),
       ],
     );
   }
@@ -242,7 +254,7 @@ class UtilityFilterSection extends StatelessWidget {
               SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Tất cả cơ sở (3)',
+                  'Tất cả cơ sở',
                   style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent),
                 ),
               ),
@@ -256,20 +268,21 @@ class UtilityFilterSection extends StatelessWidget {
 }
 
 class RoomListHeader extends StatelessWidget {
-  const RoomListHeader({super.key});
+  final int totalRooms;
+  const RoomListHeader({super.key, required this.totalRooms});
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
+        const Text(
           'Danh sách phòng',
           style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 13),
         ),
         Text(
-          '24 phòng',
-          style: TextStyle(color: Colors.grey, fontSize: 12),
+          '$totalRooms phòng',
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
       ],
     );
@@ -283,6 +296,13 @@ class RoomUtilityCard extends StatelessWidget {
   final String tenant;
   final RoomStatus status;
   final String? totalAmount;
+  final String? dienCu;
+  final String? dienMoi;
+  final String? nuocCu;
+  final String? nuocMoi;
+  final ValueChanged<String>? onDienMoiChanged;
+  final ValueChanged<String>? onNuocMoiChanged;
+  final VoidCallback? onSave;
 
   const RoomUtilityCard({
     super.key,
@@ -290,6 +310,13 @@ class RoomUtilityCard extends StatelessWidget {
     required this.tenant,
     required this.status,
     this.totalAmount,
+    this.dienCu,
+    this.dienMoi,
+    this.nuocCu,
+    this.nuocMoi,
+    this.onDienMoiChanged,
+    this.onNuocMoiChanged,
+    this.onSave,
   });
 
   @override
@@ -316,55 +343,57 @@ class RoomUtilityCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        roomName,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                      if (status == RoomStatus.saved) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentTeal.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.accentTeal.withOpacity(0.3)),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(LucideIcons.check, color: AppColors.accentTeal, size: 10),
-                              SizedBox(width: 4),
-                              Text('Đã lưu', style: TextStyle(color: AppColors.accentTeal, fontSize: 10, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          roomName,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
                         ),
+                        if (status == RoomStatus.saved) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentTeal.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.accentTeal.withOpacity(0.3)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(LucideIcons.check, color: AppColors.accentTeal, size: 10),
+                                SizedBox(width: 4),
+                                Text('Đã lưu', style: TextStyle(color: AppColors.accentTeal, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (status == RoomStatus.vacant) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text('Trống', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                          ),
+                        ]
                       ],
-                      if (status == RoomStatus.vacant) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text('Trống', style: TextStyle(color: Colors.white70, fontSize: 10)),
-                        ),
-                      ]
-                    ],
-                  ),
-                  Text(
-                    tenant,
-                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
-                  ),
-                ],
+                    ),
+                    Text(
+                      tenant,
+                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                    ),
+                  ],
+                ),
               ),
               if (status != RoomStatus.vacant)
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: onSave,
                   icon: Icon(status == RoomStatus.saved ? LucideIcons.edit2 : LucideIcons.save, size: 14),
                   label: Text(status == RoomStatus.saved ? 'Sửa' : 'Lưu'),
                   style: ElevatedButton.styleFrom(
@@ -406,6 +435,14 @@ class RoomUtilityCard extends StatelessWidget {
   }
 
   Widget _buildReadingInputs() {
+    final dCu = int.tryParse(dienCu ?? '0') ?? 0;
+    final dMoi = int.tryParse(dienMoi ?? '') ?? 0;
+    final nCu = int.tryParse(nuocCu ?? '0') ?? 0;
+    final nMoi = int.tryParse(nuocMoi ?? '') ?? 0;
+
+    final hasDien = dienMoi != null;
+    final hasNuoc = nuocMoi != null;
+
     return Row(
       children: [
         Expanded(
@@ -413,10 +450,11 @@ class RoomUtilityCard extends StatelessWidget {
             'Điện (kWh)',
             LucideIcons.zap,
             Colors.yellow[400]!,
-            '1250',
-            status == RoomStatus.inputting ? null : '2165',
-            consumption: status != RoomStatus.inputting ? '65 kWh' : null,
-            cost: status != RoomStatus.inputting ? '227.500đ' : null,
+            dienCu ?? '0',
+            dienMoi,
+            onChanged: onDienMoiChanged,
+            consumption: hasDien ? '${dMoi - dCu} kWh' : null,
+            cost: hasDien ? '${((dMoi - dCu) * 3500).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
           ),
         ),
         const SizedBox(width: 12),
@@ -425,17 +463,18 @@ class RoomUtilityCard extends StatelessWidget {
             'Nước (m³)',
             LucideIcons.droplet,
             Colors.blue[300]!,
-            '340',
-            status == RoomStatus.inputting ? null : '348',
-            consumption: status != RoomStatus.inputting ? '8 m³' : null,
-            cost: status != RoomStatus.inputting ? '200.000đ' : null,
+            nuocCu ?? '0',
+            nuocMoi,
+            onChanged: onNuocMoiChanged,
+            consumption: hasNuoc ? '${nMoi - nCu} m³' : null,
+            cost: hasNuoc ? '${((nMoi - nCu) * 20000).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInputBox(String title, IconData icon, Color iconColor, String oldVal, String? newVal, {String? consumption, String? cost}) {
+  Widget _buildInputBox(String title, IconData icon, Color iconColor, String oldVal, String? newVal, {String? consumption, String? cost, ValueChanged<String>? onChanged}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -465,20 +504,23 @@ class RoomUtilityCard extends StatelessWidget {
           Text('Chỉ số mới', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            width: double.infinity,
             decoration: BoxDecoration(
               color: Colors.black45,
               borderRadius: BorderRadius.circular(8),
               border: newVal != null ? Border.all(color: AppColors.accentTeal.withOpacity(0.3)) : null,
             ),
-            child: Text(
-              newVal ?? 'Nhập...',
+            child: TextField(
+              keyboardType: TextInputType.number,
+              onChanged: onChanged,
+              controller: newVal != null ? (TextEditingController(text: newVal)..selection = TextSelection.collapsed(offset: newVal.length)) : null,
               textAlign: TextAlign.right,
-              style: TextStyle(
-                color: newVal != null ? Colors.white : Colors.white24,
-                fontSize: 13,
-                fontWeight: newVal != null ? FontWeight.bold : FontWeight.normal,
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                hintText: 'Nhập...',
+                hintStyle: const TextStyle(color: Colors.white24, fontWeight: FontWeight.normal),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                border: InputBorder.none,
               ),
             ),
           ),

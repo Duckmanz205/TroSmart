@@ -10,12 +10,17 @@ class InvoiceService {
     receiveTimeout: const Duration(seconds: 10),
   ));
 
+  /// Lấy danh sách hóa đơn theo tháng/năm.
+  /// Nếu month = 0 hoặc year = 0 thì lấy tất cả hóa đơn.
   Future<List<InvoiceModel>> getInvoices(int month, int year) async {
     try {
-      final response = await _dio.get('/Invoice', queryParameters: {
-        'month': month,
-        'year': year,
-      });
+      final Map<String, dynamic> queryParams = {};
+      if (month > 0 && year > 0) {
+        queryParams['month'] = month;
+        queryParams['year'] = year;
+      }
+
+      final response = await _dio.get('/Invoice', queryParameters: queryParams);
 
       if (response.statusCode == 200) {
         final List data = response.data;
@@ -45,6 +50,7 @@ class InvoiceService {
 
   Future<InvoiceModel> createInvoice({
     required int maPhong,
+    int? maKhach,
     required int thang,
     required int nam,
     required double soDienCu,
@@ -53,13 +59,17 @@ class InvoiceService {
     required double soNuocMoi,
     required double donGiaDien,
     required double donGiaNuoc,
+    double tienDichVu = 0,
+    String? moTaDichVu,
     required double phuPhi,
+    String? moTaPhuPhi,
   }) async {
     try {
       final response = await _dio.post(
         '/Invoice',
         data: {
           'maPhong': maPhong,
+          'maKhach': maKhach,
           'thang': thang,
           'nam': nam,
           'soDienCu': soDienCu,
@@ -68,7 +78,10 @@ class InvoiceService {
           'soNuocMoi': soNuocMoi,
           'donGiaDien': donGiaDien,
           'donGiaNuoc': donGiaNuoc,
+          'tienDichVu': tienDichVu,
+          'moTaDichVu': moTaDichVu,
           'phuPhi': phuPhi,
+          'moTaPhuPhi': moTaPhuPhi,
         },
       );
 
@@ -102,16 +115,32 @@ class InvoiceService {
     }
   }
 
+  Future<void> deleteInvoice(int id) async {
+    try {
+      final response = await _dio.delete('/Invoice/$id');
+
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw Exception('Không xóa được hóa đơn.');
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Lỗi hệ thống: $e');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getAvailableRooms() async {
     try {
-      // Gọi API lấy danh sách phòng để lập hóa đơn
+      // Gọi API lấy danh sách phòng đang thuê để lập hóa đơn
       final response = await _dio.get('/Phong');
       if (response.statusCode == 200) {
         final List data = response.data;
-        return data.map((room) => {
+        return data.map((room) => <String, dynamic>{
           'id': room['maPhong'],
           'name': 'Phòng ${room['soPhong']} - ${room['trangThai']}',
-          'soDienCu': 0.0, // Chỗ này thực tế cần API lấy số điện/nước cũ của tháng trước, tạm đặt 0.0
+          'soPhong': room['soPhong'] ?? '',
+          'trangThai': room['trangThai'] ?? '',
+          'soDienCu': 0.0, // Sẽ lấy từ hóa đơn tháng trước nếu có
           'soNuocCu': 0.0,
           'tienPhong': (room['giaThue'] ?? 0).toDouble(),
         }).toList();

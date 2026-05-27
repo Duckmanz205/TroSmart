@@ -25,6 +25,8 @@ public partial class Phong
 
     public DateTime? NgayTao { get; set; }
 
+    public virtual ICollection<ChiSoDienNuoc> ChiSoDienNuocs { get; set; } = new List<ChiSoDienNuoc>();
+
     public virtual ICollection<HinhAnhPhong> HinhAnhPhongs { get; set; } = new List<HinhAnhPhong>();
 
     public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
@@ -32,6 +34,8 @@ public partial class Phong
     public virtual ICollection<HopDongThue> HopDongThues { get; set; } = new List<HopDongThue>();
 
     public virtual CoSo MaCoSoNavigation { get; set; } = null!;
+
+    public virtual ICollection<SuCo> SuCos { get; set; } = new List<SuCo>();
 
     public virtual ICollection<TienIch> MaTienIches { get; set; } = new List<TienIch>();
 }

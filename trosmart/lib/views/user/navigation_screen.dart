@@ -46,7 +46,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       _activePage = pageName;
     });
     if (Navigator.canPop(context)) {
-      Navigator.pop(context); // Đóng drawer nếu đang mở
+      Navigator.pop(context);
     }
   }
 
@@ -56,7 +56,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (_activePage == AppPages.payment) return 1;
     if (_activePage == AppPages.chat) return 2;
     if (_activePage == AppPages.profileDetail) return 3;
-    return 0; // Mặc định về 0 nếu trang đó không nằm trong BottomNav
+    return 0;
   }
 
   @override
@@ -76,7 +76,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           const UrHopDong(),                            // 3
           const RoomSearchView(),                       // 4
           const IssueReportingScreen(),                 // 5
-          const UrThongBao(),                           // 6
+          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 6
           const UrOGhep(),                              // 7
           const HistoryStatsScreen(),                   // 8
           const UserProfileScreen(),                    // 9

@@ -47,6 +47,8 @@ public partial class HoaDon
 
     public DateOnly? NgayThanhToan { get; set; }
 
+    public virtual ICollection<LichSuThanhToan> LichSuThanhToans { get; set; } = new List<LichSuThanhToan>();
+
     public virtual KhachThue? MaKhachNavigation { get; set; }
 
     public virtual Phong MaPhongNavigation { get; set; } = null!;

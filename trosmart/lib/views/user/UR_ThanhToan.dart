@@ -1,26 +1,126 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/user/payment_widgets.dart';
+import '../../logic/user/user_payment_controller.dart';
+import '../../shared/app_theme.dart';
+
 class PaymentDetailsScreen extends StatelessWidget {
   const PaymentDetailsScreen({super.key});
 
+  String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}đ';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            BillBanner(),
-            SizedBox(height: 32),
-            SectionHeader(title: "CHI TIẾT HÓA ĐƠN"),
-            BillDetailList(),
-            SizedBox(height: 32),
-            SharedCostSection(),
-            SizedBox(height: 32),
-            SectionHeader(title: "LỊCH SỬ THANH TOÁN"),
-            PaymentHistoryItem(month: "02/2024", amount: "4.180.000đ", date: "15/02/2024"),
-            SizedBox(height: 40),
-          ],
+    return ChangeNotifierProvider(
+      create: (_) => UserPaymentController(),
+      child: Scaffold(
+        backgroundColor: AppTheme.bgSlate,
+        body: Consumer<UserPaymentController>(
+          builder: (context, controller, _) {
+            if (controller.isLoading && controller.allInvoices.isEmpty) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryPurple),
+              );
+            }
+
+            if (controller.errorMessage != null && controller.allInvoices.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: AppTheme.statusRed),
+                      const SizedBox(height: 16),
+                      Text(
+                        controller.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppTheme.statusRed),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => controller.loadUserInvoices(),
+                        child: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final activeInvoice = controller.activeInvoice;
+
+            if (activeInvoice == null) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.receipt_long_rounded, size: 64, color: Colors.grey),
+                    SizedBox(height: 16),
+                    Text(
+                      'Hiện tại bạn không có hóa đơn nào.',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Lấy danh sách lịch sử (các hóa đơn khác)
+            final historyInvoices = controller.allInvoices
+                .where((inv) => inv.maHoaDon != activeInvoice.maHoaDon)
+                .toList();
+            historyInvoices.sort((a, b) => b.maHoaDon.compareTo(a.maHoaDon));
+
+            return RefreshIndicator(
+              onRefresh: () => controller.loadUserInvoices(),
+              color: AppTheme.primaryPurple,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                child: Column(
+                  children: [
+                    BillBanner(invoice: activeInvoice),
+                    const SizedBox(height: 32),
+                    const SectionHeader(title: "CHI TIẾT HÓA ĐƠN"),
+                    const SizedBox(height: 16),
+                    BillDetailList(invoice: activeInvoice),
+                    const SizedBox(height: 32),
+                    SharedCostSection(invoice: activeInvoice),
+                    const SizedBox(height: 32),
+                    const SectionHeader(title: "LỊCH SỬ THANH TOÁN"),
+                    const SizedBox(height: 16),
+                    if (historyInvoices.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Chưa có lịch sử thanh toán.',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ),
+                      )
+                    else
+                      ...historyInvoices.map((inv) {
+                        return PaymentHistoryItem(
+                          month: '${inv.thang.toString().padLeft(2, '0')}/${inv.nam}',
+                          amount: formatCurrency(inv.tongTien),
+                          date: inv.ngayThanhToan ?? inv.ngayLapDisplay,
+                          status: inv.trangThai,
+                        );
+                      }),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
