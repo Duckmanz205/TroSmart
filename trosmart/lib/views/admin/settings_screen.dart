@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/admin/admin_drawer.dart';
+import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({Key? key}) : super(key: key);
@@ -14,6 +16,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // Nền xám nhạt để các thẻ màu tím nổi bật
+      drawer: const AdminDrawer(activeTitle: "Cài đặt"),
+      bottomNavigationBar: const CustomBottomNav(currentIndex: 3),
       body: Stack(
         children: [
           // Background Header xám theo thiết kế
@@ -62,7 +66,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Icon(Icons.menu, color: Colors.black),
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.black),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
           Row(
             children: [
               Container(

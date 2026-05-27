@@ -4,6 +4,9 @@ import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_model.dart';
 import 'AD_ThemPhong.dart';
 import 'AD_ChiTietPhong.dart';
+import '../../widgets/admin/admin_drawer.dart';
+import '../../widgets/common/admin/custom_app_bar.dart';
+import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
 class PhongManagementView extends StatefulWidget {
   final int maCoSo;
@@ -112,6 +115,9 @@ class _PhongManagementViewState extends State<PhongManagementView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8FB),
+      appBar: const CustomAppBar(),
+      drawer: const AdminDrawer(activeTitle: "Phòng"),
+      bottomNavigationBar: const CustomBottomNav(currentIndex: 2),
       body: SafeArea(
         child: FutureBuilder<List<PhongModel>>(
           future: _futurePhongs,
