@@ -216,7 +216,6 @@ GO
 ALTER TABLE [dbo].[ChiSoDienNuoc] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
 GO
 
-
 -- =========================================================
 -- 2. TẠO CÁC VIEWS
 -- =========================================================
@@ -455,7 +454,6 @@ INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu
 INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (5, 8, 10, 2024, 1500, NULL, 350, NULL, 0)
 SET IDENTITY_INSERT [dbo].[ChiSoDienNuoc] OFF
 GO
-
 -- =========================================================
 -- 4. TẠO CONSTRAINTS, MẶC ĐỊNH VÀ FOREIGN KEYS
 -- =========================================================
@@ -559,4 +557,76 @@ GO
 ALTER TABLE [dbo].[LichSuThanhToan] WITH CHECK ADD FOREIGN KEY([NguoiGhiNhan]) REFERENCES [dbo].[NguoiQuanLy] ([MaQuanLy])
 GO
 ALTER TABLE [dbo].[ThongBao] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+
+-- =========================================================
+-- BỔ SUNG BẢNG LỊCH HẸN (Cho các màn hình đặt lịch)
+-- =========================================================
+CREATE TABLE [dbo].[LichHenXemPhong](
+    [MaLichHen] [int] IDENTITY(1,1) NOT NULL,
+    [MaKhach] [int] NULL, -- Người đặt (nếu đã có tài khoản)
+    [HoTenKhach] [nvarchar](100) NOT NULL, -- Dự phòng khách vãng lai chưa có tài khoản
+    [SDTKhach] [varchar](15) NOT NULL,
+    [MaPhong] [int] NOT NULL,
+    [ThoiGianHen] [datetime] NOT NULL, -- Ngày giờ đến xem phòng
+    [GhiChu] [nvarchar](255) NULL,
+    [TrangThai] [nvarchar](50) DEFAULT (N'Chờ xác nhận'), -- Chờ xác nhận, Đã xác nhận, Đã xem, Đã hủy
+    [NgayTao] [datetime] DEFAULT (getdate()),
+PRIMARY KEY CLUSTERED ([MaLichHen] ASC)
+) ON [PRIMARY]
+GO
+
+-- =========================================================
+-- BỔ SUNG PHỤ LỤC / LỊCH SỬ GIA HẠN HỢP ĐỒNG (Cho màn hình Gia hạn)
+-- =========================================================
+CREATE TABLE [dbo].[LichSuGiaHan](
+    [MaGiaHan] [int] IDENTITY(1,1) NOT NULL,
+    [MaHopDong] [int] NOT NULL,
+    [NgayBatDauMoi] [date] NOT NULL,
+    [NgayKetThucMoi] [date] NOT NULL,
+    [GiaThueMoi] [decimal](18, 2) NOT NULL,
+    [NgayThucHien] [datetime] DEFAULT (getdate()),
+    [GhiChu] [nvarchar](255) NULL,
+PRIMARY KEY CLUSTERED ([MaGiaHan] ASC)
+) ON [PRIMARY]
+GO
+
+-- =========================================================
+-- UPDATE THÊM CỘT CHO BẢNG KHACHTHUE (Cho màn hình Chi tiết hợp đồng)
+-- =========================================================
+ALTER TABLE [dbo].[KhachThue] ADD 
+    [Email] [varchar](100) NULL,
+    [NgaySinh] [date] NULL,
+    [GioiTinh] [nvarchar](10) NULL,
+    [Dia ChiThuongTru] [nvarchar](255) NULL,
+    [NgayCapCCCD] [date] NULL,
+    [NoiCapCCCD] [nvarchar](155) NULL,
+    [TrangThai] [nvarchar](50) DEFAULT (N'Đang ở')
+GO
+
+CREATE TABLE [dbo].[OGhep](
+    [MaBaiDang] [int] IDENTITY(1,1) NOT NULL,
+    [MaKhach] [int] NOT NULL, -- Người đăng tin
+    [TieuDe] [nvarchar](255) NOT NULL,
+    [NoiDung] [nvarchar](max) NULL,
+    [ChiPhiDuKien] [decimal](18, 2) NOT NULL, -- Số tiền muốn share/đóng mỗi tháng
+    [KhuVuc] [nvarchar](150) NULL, -- Ví dụ: Gần trường HUIT, Quận Tân Phú...
+    [YeuCauGioiTinh] [nvarchar](10) NULL, -- Nam, Nữ, Hoặc Tất cả
+    [TrangThai] [nvarchar](50) DEFAULT (N'Đang tìm'), -- Đang tìm, Đã tìm được, Đã ẩn
+    [NgayDang] [datetime] DEFAULT (getdate()),
+PRIMARY KEY CLUSTERED ([MaBaiDang] ASC)
+) ON [PRIMARY]
+GO
+
+
+-- =========================================================
+-- KHÓA NGOẠI CHO CÁC BẢNG MỚI
+-- =========================================================
+ALTER TABLE [dbo].[LichHenXemPhong] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
+GO
+ALTER TABLE [dbo].[LichHenXemPhong] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+ALTER TABLE [dbo].[LichSuGiaHan] WITH CHECK ADD FOREIGN KEY([MaHopDong]) REFERENCES [dbo].[HopDongThue] ([MaHopDong])
+GO
+ALTER TABLE [dbo].[OGhep] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
 GO

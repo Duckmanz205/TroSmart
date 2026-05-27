@@ -49,6 +49,10 @@ public partial class QuanLyPhongTroContext : DbContext
 
     public virtual DbSet<ViewPhongUi> ViewPhongUis { get; set; }
 
+    public virtual DbSet<LichHenXemPhong> LichHenXemPhongs { get; set; } 
+
+    public virtual DbSet<OGhep> OGheps { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Server=.;Database=QuanLyPhongTro;Integrated Security=True;TrustServerCertificate=True");
 
@@ -177,12 +181,17 @@ public partial class QuanLyPhongTroContext : DbContext
             entity.Property(e => e.NgayTao)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+
             entity.Property(e => e.TienCoc)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(18, 2)");
+
             entity.Property(e => e.TrangThai)
                 .HasMaxLength(50)
-                .HasDefaultValue("Đang hiệu lực");
+                .HasDefaultValue("Chờ khách ký");
+
+            // THÊM DÒNG NÀY: Cấu hình lưu trữ chuỗi chữ ký số Base64 siêu dài
+            entity.Property(e => e.ChuKy).HasColumnType("nvarchar(max)");
 
             entity.HasOne(d => d.MaKhachNavigation).WithMany(p => p.HopDongThues)
                 .HasForeignKey(d => d.MaKhach)
@@ -194,7 +203,6 @@ public partial class QuanLyPhongTroContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__HopDongTh__MaPho__75A278F5");
         });
-
         modelBuilder.Entity<KhachThue>(entity =>
         {
             entity.HasKey(e => e.MaKhach).HasName("PK__KhachThu__D0CB8DDDDF8057E8");
@@ -420,6 +428,44 @@ public partial class QuanLyPhongTroContext : DbContext
             entity.Property(e => e.TenCoSo).HasMaxLength(150);
             entity.Property(e => e.TrangThai).HasMaxLength(50);
             entity.Property(e => e.TrangThaiHienThi).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<LichHenXemPhong>(entity =>
+        {
+            entity.HasKey(e => e.MaLichHen).HasName("PK__LichHenX__ABC12345"); // Tên khóa mặc định
+
+            entity.ToTable("LichHenXemPhong");
+
+            entity.Property(e => e.HoTenKhach).HasMaxLength(100);
+            
+            entity.Property(e => e.SdtKhach)
+                .HasMaxLength(15)
+                .IsUnicode(false)
+                .HasColumnName("SDTKhach");
+
+            entity.Property(e => e.ThoiGianHen).HasColumnType("datetime");
+            
+            entity.Property(e => e.GhiChu).HasMaxLength(255);
+
+            entity.Property(e => e.TrangThai)
+                .HasMaxLength(50)
+                .HasDefaultValue("Chờ xác nhận");
+
+            entity.Property(e => e.NgayTao)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            // Khấu ngoại nối sang bảng Khách Thuê
+            entity.HasOne(d => d.MaKhachNavigation).WithMany(p => p.LichHenXemPhongs)
+                .HasForeignKey(d => d.MaKhach)
+                .OnDelete(DeleteBehavior.SetNull) // Nếu xóa khách, giữ lại lịch hẹn dạng ẩn
+                .HasConstraintName("FK__LichHenXe__MaKha__70A8B953");
+
+            // Khóa ngoại nối sang bảng Phòng
+            entity.HasOne(d => d.MaPhongNavigation).WithMany(p => p.LichHenXemPhongs)
+                .HasForeignKey(d => d.MaPhong)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__LichHenXe__MaPho__719CDDE2");
         });
 
         OnModelCreatingPartial(modelBuilder);

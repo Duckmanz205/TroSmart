@@ -11,6 +11,8 @@ builder.Services.AddDbContext<QuanLyPhongTroContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<HopDongService>();
+builder.Services.AddScoped<OGhepService>();
 
 // Services
 builder.Services.AddScoped<PhongTroAPI.Services.IInvoiceService, PhongTroAPI.Services.InvoiceService>();
