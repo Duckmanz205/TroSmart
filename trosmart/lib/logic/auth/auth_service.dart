@@ -1,0 +1,104 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trosmart/models/user_model.dart';
+
+class AuthService {
+  // ─── Đổi thành IP/host của máy chạy backend ───
+  // Android Emulator: 10.0.2.2 | iOS Simulator: localhost | thiết bị thật: IP LAN
+  static const String _baseUrl = 'http://10.0.2.2:5137';
+
+  // ── SharedPreferences keys ──
+  static const String _keyToken = 'auth_token';
+  static const String _keyVaiTro = 'vai_tro';
+  static const String _keyMaKhach = 'ma_khach';
+
+  // ────────────────────────────────────────
+  // LOGIN
+  // ────────────────────────────────────────
+  Future<AuthResponse> login(String tenDangNhap, String matKhau) async {
+    final url = Uri.parse('$_baseUrl/api/auth/login');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'tenDangNhap': tenDangNhap.trim(),
+        'matKhau': matKhau,
+      }),
+    );
+
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      final authResponse = AuthResponse.fromJson(body);
+      await _saveSession(authResponse);
+      return authResponse;
+    } else {
+      // Lấy message từ response body để hiển thị SnackBar
+      final message = body['message'] as String? ?? 'Đăng nhập thất bại';
+      throw Exception(message);
+    }
+  }
+
+  // ────────────────────────────────────────
+  // REGISTER → tự động gọi login sau đó
+  // ────────────────────────────────────────
+  Future<AuthResponse> register(
+    String tenDangNhap,
+    String matKhau,
+    String hoTen,
+    String? sDT,
+  ) async {
+    final url = Uri.parse('$_baseUrl/api/auth/register');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'tenDangNhap': tenDangNhap.trim(),
+        'matKhau': matKhau,
+        'hoTen': hoTen.trim(),
+        'sDT': sDT?.trim(),
+      }),
+    );
+
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // Đăng ký thành công → gọi login ngay
+      return await login(tenDangNhap, matKhau);
+    } else {
+      final message = body['message'] as String? ?? 'Đăng ký thất bại';
+      throw Exception(message);
+    }
+  }
+
+  // ────────────────────────────────────────
+  // LOGOUT
+  // ────────────────────────────────────────
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyToken);
+    await prefs.remove(_keyVaiTro);
+    await prefs.remove(_keyMaKhach);
+  }
+
+  // ────────────────────────────────────────
+  // GET TOKEN
+  // ────────────────────────────────────────
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyToken);
+  }
+
+  // ────────────────────────────────────────
+  // HELPER: Lưu session vào SharedPreferences
+  // ────────────────────────────────────────
+  Future<void> _saveSession(AuthResponse auth) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyToken, auth.token);
+    await prefs.setString(_keyVaiTro, auth.vaiTro);
+    if (auth.maKhach != null) {
+      await prefs.setInt(_keyMaKhach, auth.maKhach!);
+    }
+  }
+}

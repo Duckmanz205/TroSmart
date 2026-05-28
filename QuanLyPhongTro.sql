@@ -630,3 +630,14 @@ ALTER TABLE [dbo].[LichSuGiaHan] WITH CHECK ADD FOREIGN KEY([MaHopDong]) REFEREN
 GO
 ALTER TABLE [dbo].[OGhep] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
 GO
+
+-- Cập nhật TrangThai = N'Hoạt động' cho các dòng bị NULL
+UPDATE [dbo].[TaiKhoan]
+SET [TrangThai] = N'Hoạt động'
+WHERE [TrangThai] IS NULL OR [TrangThai] = ''
+GO
+
+-- Kiểm tra kết quả
+SELECT MaTaiKhoan, TenDangNhap, VaiTro, TrangThai 
+FROM [dbo].[TaiKhoan]
+GO

@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
+using PhongTroAPI.DTOs;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace PhongTroAPI.Controllers
 {
@@ -8,102 +12,198 @@ namespace PhongTroAPI.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        public class LoginRequest
+        private readonly IConfiguration _config;
+        private readonly string _connStr;
+
+        public AuthController(IConfiguration config)
         {
-            public string Identifier { get; set; }
-            public string Password { get; set; }
-        }
-        public class RegisterRequest
-        {
-            public string Email { get; set; }
-            public string Password { get; set; }
-            public string Name { get; set; }
-            public string Phone { get; set; }
+            _config = config;
+            _connStr = config.GetConnectionString("DefaultConnection")!;
         }
 
-        public class UserAccount
-        {
-            public string Email { get; set; }
-            public string Password { get; set; }
-            public string Name { get; set; }
-            public string Phone { get; set; }
-            public string Role { get; set; }
-        }
-
-        private static List<UserAccount> _users = new List<UserAccount>
-        {
-            new UserAccount { Email = "admin@gmail.com", Password = "123", Name = "Admin", Phone = "0123456789", Role = "admin" },
-            new UserAccount { Email = "user@gmail.com", Password = "123", Name = "User", Phone = "0987654321", Role = "user" }
-        };
+        // ─────────────────────────────────────────────
+        // POST /api/auth/register
+        // ─────────────────────────────────────────────
         [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterRequest request)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await using var conn = new SqlConnection(_connStr);
+            await conn.OpenAsync();
+
+            // Bước 1: Kiểm tra TenDangNhap đã tồn tại chưa
+            await using (var checkCmd = new SqlCommand(
+                "SELECT COUNT(1) FROM TaiKhoan WHERE TenDangNhap = @TenDangNhap", conn))
             {
-                return BadRequest(new { message = "Vui lòng cung cấp đầy đủ thông tin (Email và Password)!" });
+                checkCmd.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap.Trim());
+                var count = Convert.ToInt32(await checkCmd.ExecuteScalarAsync() ?? 0);
+                if (count > 0)
+                    return BadRequest(new { message = "Tên đăng nhập đã được sử dụng" });
             }
 
-            string email = request.Email.Trim().ToLower();
-
-            if (_users.Any(u => u.Email == email))
+            // Bước 2 → 4: Mở transaction, INSERT KhachThue, INSERT TaiKhoan, COMMIT
+            await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync();
+            try
             {
-                return Conflict(new { message = "Email này đã được đăng ký!" });
+                // INSERT vào KhachThue
+                int maKhach;
+                await using (var insertKhachCmd = new SqlCommand(
+                    @"INSERT INTO KhachThue (HoTen, SDT)
+                      VALUES (@HoTen, @SDT);
+                      SELECT CAST(SCOPE_IDENTITY() AS INT);", conn, transaction))
+                {
+                    insertKhachCmd.Parameters.AddWithValue("@HoTen", request.HoTen.Trim());
+                    insertKhachCmd.Parameters.AddWithValue("@SDT",
+                        string.IsNullOrWhiteSpace(request.SDT) ? DBNull.Value : (object)request.SDT.Trim());
+
+                    var result = await insertKhachCmd.ExecuteScalarAsync();
+                    maKhach = Convert.ToInt32(result);
+                }
+
+                // INSERT vào TaiKhoan (VaiTro hard-code = 'KhachThue', lưu plain text)
+                int maTaiKhoan;
+                await using (var insertTkCmd = new SqlCommand(
+                    @"INSERT INTO TaiKhoan (TenDangNhap, MatKhau, VaiTro, MaKhach, MaQuanLy)
+                      VALUES (@TenDangNhap, @MatKhau, N'KhachThue', @MaKhach, NULL);
+                      SELECT CAST(SCOPE_IDENTITY() AS INT);", conn, transaction))
+                {
+                    insertTkCmd.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap.Trim());
+                    insertTkCmd.Parameters.AddWithValue("@MatKhau", request.MatKhau); // plain text
+                    insertTkCmd.Parameters.AddWithValue("@MaKhach", maKhach);
+
+                    var result = await insertTkCmd.ExecuteScalarAsync();
+                    maTaiKhoan = Convert.ToInt32(result);
+                }
+
+                await transaction.CommitAsync();
+
+                // Bước 5: Tạo JWT và trả AuthResponse
+                var token = GenerateJwtToken(maTaiKhoan, request.TenDangNhap.Trim(),
+                    "KhachThue", maKhach, request.HoTen.Trim());
+
+                return Ok(new AuthResponse
+                {
+                    Token = token,
+                    MaTaiKhoan = maTaiKhoan,
+                    TenDangNhap = request.TenDangNhap.Trim(),
+                    HoTen = request.HoTen.Trim(),
+                    VaiTro = "KhachThue",
+                    MaKhach = maKhach
+                });
             }
-
-            string name = string.IsNullOrWhiteSpace(request.Name) ? "Người dùng mới" : request.Name;
-            string phone = string.IsNullOrWhiteSpace(request.Phone) ? "" : request.Phone;
-
-            var newUser = new UserAccount
+            catch (Exception ex)
             {
-                Email = email,
-                Password = request.Password,
-                Name = name,
-                Phone = phone,
-                Role = "user"
-            };
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Đăng ký thất bại. Vui lòng thử lại.", detail = ex.Message });
+            }
+        }
 
-            _users.Add(newUser);
+        // ─────────────────────────────────────────────
+        // POST /api/auth/login
+        // ─────────────────────────────────────────────
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            return Ok(new
+            await using var conn = new SqlConnection(_connStr);
+            await conn.OpenAsync();
+
+            // Bước 1: Query TaiKhoan JOIN KhachThue theo TenDangNhap
+            const string sql = @"
+                SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MatKhau, tk.VaiTro,
+                       tk.TrangThai, tk.MaKhach, k.HoTen
+                FROM TaiKhoan tk
+                LEFT JOIN KhachThue k ON tk.MaKhach = k.MaKhach
+                WHERE tk.TenDangNhap = @TenDangNhap";
+
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap.Trim());
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            // Bước 2: Không tìm thấy → 401
+            if (!await reader.ReadAsync())
+                return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không đúng" });
+
+            var maTaiKhoan = reader.GetInt32(reader.GetOrdinal("MaTaiKhoan"));
+            var tenDangNhap = reader.GetString(reader.GetOrdinal("TenDangNhap"));
+            var matKhauDb = reader.GetString(reader.GetOrdinal("MatKhau"));
+            var vaiTro = reader.GetString(reader.GetOrdinal("VaiTro"));
+            // NULL TrangThai cũng coi là 'Hoạt động' (dữ liệu mẫu INSERT không set TrangThai)
+            var trangThaiRaw = reader.IsDBNull(reader.GetOrdinal("TrangThai"))
+                ? null
+                : reader.GetString(reader.GetOrdinal("TrangThai"));
+            var trangThai = string.IsNullOrWhiteSpace(trangThaiRaw) ? "Hoạt động" : trangThaiRaw;
+            int? maKhach = reader.IsDBNull(reader.GetOrdinal("MaKhach"))
+                ? null
+                : reader.GetInt32(reader.GetOrdinal("MaKhach"));
+            var hoTen = reader.IsDBNull(reader.GetOrdinal("HoTen"))
+                ? tenDangNhap
+                : reader.GetString(reader.GetOrdinal("HoTen"));
+
+            await reader.CloseAsync();
+
+            // Bước 3: So sánh mật khẩu plain text
+            if (request.MatKhau != matKhauDb)
+                return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không đúng" });
+
+            // Bước 4: Kiểm tra trạng thái tài khoản
+            if (trangThai != "Hoạt động")
+                return StatusCode(403, new { message = "Tài khoản đã bị khóa" });
+
+            // Bước 5 & 6: Tạo JWT và trả AuthResponse
+            var token = GenerateJwtToken(maTaiKhoan, tenDangNhap, vaiTro, maKhach, hoTen);
+
+            return Ok(new AuthResponse
             {
-                message = "Đăng ký tài khoản thành công",
-                user = new { email = newUser.Email, name = newUser.Name, phone = newUser.Phone, role = newUser.Role }
+                Token = token,
+                MaTaiKhoan = maTaiKhoan,
+                TenDangNhap = tenDangNhap,
+                HoTen = hoTen,
+                VaiTro = vaiTro,
+                MaKhach = maKhach
             });
         }
 
-        [HttpPost("login")]
-        public IActionResult LoginPost([FromBody] LoginRequest request)
+        // ─────────────────────────────────────────────
+        // Hàm tạo JWT token
+        // ─────────────────────────────────────────────
+        private string GenerateJwtToken(int maTaiKhoan, string tenDangNhap,
+            string vaiTro, int? maKhach, string hoTen)
         {
-            return ProcessLogin(request);
-        }
+            var secretKey = _config["JwtSettings:SecretKey"]!;
+            var issuer = _config["JwtSettings:Issuer"]!;
+            var audience = _config["JwtSettings:Audience"]!;
+            var expiryDays = int.TryParse(_config["JwtSettings:ExpiryDays"], out var d) ? d : 7;
 
-        [HttpGet("login")]
-        public IActionResult LoginGet([FromQuery] string identifier, [FromQuery] string password)
-        {
-            var request = new LoginRequest { Identifier = identifier, Password = password };
-            return ProcessLogin(request);
-        }
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        private IActionResult ProcessLogin(LoginRequest request)
-        {
-            if (request == null || string.IsNullOrWhiteSpace(request.Identifier) || string.IsNullOrWhiteSpace(request.Password))
+            var claims = new List<Claim>
             {
-                return BadRequest(new { message = "Vui lòng cung cấp đầy đủ thông tin!" });
-            }
+                new Claim("MaTaiKhoan", maTaiKhoan.ToString()),
+                new Claim(ClaimTypes.Name, tenDangNhap),
+                new Claim(ClaimTypes.Role, vaiTro),
+                new Claim("HoTen", hoTen),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
-            string email = request.Identifier.Trim().ToLower();
-            var user = _users.FirstOrDefault(u => u.Email == email && u.Password == request.Password);
+            if (maKhach.HasValue)
+                claims.Add(new Claim("MaKhach", maKhach.Value.ToString()));
 
-            if (user != null)
-            {
-                return Ok(new
-                {
-                    message = $"Đăng nhập {user.Role} thành công",
-                    user = new { role = user.Role, name = user.Name, email = user.Email, phone = user.Phone }
-                });
-            }
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(expiryDays),
+                signingCredentials: creds
+            );
 
-            return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không chính xác" });
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
