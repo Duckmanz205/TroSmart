@@ -119,19 +119,5 @@ app.*.symbols
 !/dev/ci/**/Gemfile.lock
 
 .geminiignore
-.vs
-
-# Visual Studio / .NET Core / MSBuild
-[Bb]in/
-[Oo]bj/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
 .vs/
-.vscode/
-**/bin/
-**/obj/
-**/PhongTroAPI/**/bin/
-**/PhongTroAPI/**/obj/
-**/PhongTroAPI/.vs/
+bin/
