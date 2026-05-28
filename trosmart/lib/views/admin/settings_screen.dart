@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/admin/admin_drawer.dart';
-import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({Key? key}) : super(key: key);
@@ -15,9 +13,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // Nền xám nhạt để các thẻ màu tím nổi bật
-      drawer: const AdminDrawer(activeTitle: "Cài đặt"),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 3),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: Stack(
         children: [
           // Background Header xám theo thiết kế
@@ -30,10 +26,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 100), // Không gian cho BottomNav
+              padding: const EdgeInsets.only(
+                bottom: 100,
+              ), // Không gian cho BottomNav
               child: Column(
                 children: [
-                  _buildHeader(),
                   _buildProfileCard(),
                   const SizedBox(height: 16),
                   _buildSectionTitle("THÔNG TIN CÁ NHÂN"),
@@ -58,54 +55,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      height: 65,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.95)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
-          ),
-          Row(
-            children: [
-              Container(
-                width: 28, height: 28,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF2DDCB1), Color(0xFF1AAB87)]),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.home, color: Color(0xFF050A0F), size: 16),
-              ),
-              const SizedBox(width: 8),
-              const Text("TroSmart", style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0x142DDCB1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0x4D2DDCB1)),
-            ),
-            child: Row(
-              children: [
-                Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF2DDCB1), shape: BoxShape.circle)),
-                const SizedBox(width: 6),
-                const Text("Chủ trọ", style: TextStyle(color: Color(0xFFC2B5B5), fontSize: 12)),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
   Widget _buildProfileCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -113,7 +62,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 16, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 16,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -122,23 +77,47 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 56, height: 56,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF2DDCB1), Color(0xFF1AAB87)]),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2DDCB1), Color(0xFF1AAB87)],
+                  ),
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: const Color(0xFF2DDCB1).withOpacity(0.4), blurRadius: 20)],
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2DDCB1).withOpacity(0.4),
+                      blurRadius: 20,
+                    ),
+                  ],
                 ),
                 alignment: Alignment.center,
-                child: const Text("M", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: const Text(
+                  "M",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
               Positioned(
-                right: -4, bottom: -4,
+                right: -4,
+                bottom: -4,
                 child: Container(
-                  width: 20, height: 20,
-                  decoration: BoxDecoration(color: const Color(0xFF2DDCB1), shape: BoxShape.circle, border: Border.all(color: const Color(0xFF0D1520), width: 2)),
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2DDCB1),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF0D1520),
+                      width: 2,
+                    ),
+                  ),
                   child: const Icon(Icons.edit, size: 10, color: Colors.black),
                 ),
-              )
+              ),
             ],
           ),
           const SizedBox(width: 12),
@@ -146,11 +125,21 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text("Nguyễn Minh", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text(
+                "Nguyễn Minh",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
               SizedBox(height: 4),
-              Text("Cài đặt tài khoản", style: TextStyle(fontSize: 12, color: Colors.black45)),
+              Text(
+                "Cài đặt tài khoản",
+                style: TextStyle(fontSize: 12, color: Colors.black45),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -163,7 +152,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF2DDCB1), letterSpacing: 0.3),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2DDCB1),
+            letterSpacing: 0.3,
+          ),
         ),
       ),
     );
@@ -175,7 +169,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xCC6A3092), // Tím với opacity 0.8
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 16, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 16,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -185,9 +185,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  Text("HỌ TÊN", style: TextStyle(fontSize: 11, color: Color(0xCC6A3092), fontWeight: FontWeight.w500)),
+                  Text(
+                    "HỌ TÊN",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xCC6A3092),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   SizedBox(height: 8),
-                  Text("Nguyễn Minh", style: TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.w500)),
+                  Text(
+                    "Nguyễn Minh",
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -199,9 +213,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  Text("SỐ ĐIỆN THOẠI", style: TextStyle(fontSize: 11, color: Color(0xCC6A3092), fontWeight: FontWeight.w500)),
+                  Text(
+                    "SỐ ĐIỆN THOẠI",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xCC6A3092),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   SizedBox(height: 8),
-                  Text("0901 234 567", style: TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.w500)),
+                  Text(
+                    "0901 234 567",
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -217,7 +245,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xCC6A3092),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 16, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 16,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -226,19 +260,54 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Thông báo", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                const Text(
+                  "Thông báo",
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
                 Container(
                   padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(color: const Color(0x1E2DDCB1), shape: BoxShape.circle),
-                  child: const Icon(Icons.edit, size: 15, color: Color(0xFF2DDCB1)),
-                )
+                  decoration: BoxDecoration(
+                    color: const Color(0x1E2DDCB1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    size: 15,
+                    color: Color(0xFF2DDCB1),
+                  ),
+                ),
               ],
             ),
           ),
-          _buildAdminListTile("Nhắc thu tiền", "Rent Collection", Icons.monetization_on, showSwitch: true),
-          _buildAdminListTile("Phòng trống", "Vacant Rooms", Icons.meeting_room, showSwitch: true),
-          _buildAdminListTile("Bảo trì", "Maintenance", Icons.build, showSwitch: true),
-          _buildAdminListTile("Tin nhắn", "Messages", Icons.message, showSwitch: true, isLast: true),
+          _buildAdminListTile(
+            "Nhắc thu tiền",
+            "Rent Collection",
+            Icons.monetization_on,
+            showSwitch: true,
+          ),
+          _buildAdminListTile(
+            "Phòng trống",
+            "Vacant Rooms",
+            Icons.meeting_room,
+            showSwitch: true,
+          ),
+          _buildAdminListTile(
+            "Bảo trì",
+            "Maintenance",
+            Icons.build,
+            showSwitch: true,
+          ),
+          _buildAdminListTile(
+            "Tin nhắn",
+            "Messages",
+            Icons.message,
+            showSwitch: true,
+            isLast: true,
+          ),
         ],
       ),
     );
@@ -250,28 +319,69 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xCC6A3092),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 16, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 16,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          _buildAdminListTile("Mật khẩu", "Password", Icons.lock, iconColor: const Color(0xFF6382FF)),
-          _buildAdminListTile("Bảo mật", "Security", Icons.shield, iconColor: const Color(0xFFA78BFA)),
-          _buildAdminListTile("Quản lý thiết bị", "Managed Devices", Icons.devices, iconColor: const Color(0xFFFB923C)),
-          _buildAdminListTile("Tải hợp đồng", "Download Contract", Icons.download, iconColor: const Color(0xFF2DDCB1), isLast: true),
+          _buildAdminListTile(
+            "Mật khẩu",
+            "Password",
+            Icons.lock,
+            iconColor: const Color(0xFF6382FF),
+          ),
+          _buildAdminListTile(
+            "Bảo mật",
+            "Security",
+            Icons.shield,
+            iconColor: const Color(0xFFA78BFA),
+          ),
+          _buildAdminListTile(
+            "Quản lý thiết bị",
+            "Managed Devices",
+            Icons.devices,
+            iconColor: const Color(0xFFFB923C),
+          ),
+          _buildAdminListTile(
+            "Tải hợp đồng",
+            "Download Contract",
+            Icons.download,
+            iconColor: const Color(0xFF2DDCB1),
+            isLast: true,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAdminListTile(String title, String subtitle, IconData icon, {Color iconColor = const Color(0xFF2DDCB1), bool showSwitch = false, bool isLast = false}) {
+  Widget _buildAdminListTile(
+    String title,
+    String subtitle,
+    IconData icon, {
+    Color iconColor = const Color(0xFF2DDCB1),
+    bool showSwitch = false,
+    bool isLast = false,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: isLast ? null : const Border(top: BorderSide(color: Color(0x142DDCB1)))),
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : const Border(top: BorderSide(color: Color(0x142DDCB1))),
+      ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: iconColor.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(icon, color: iconColor, size: 16),
           ),
           const SizedBox(width: 12),
@@ -279,18 +389,42 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.white54)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 11, color: Colors.white54),
+                ),
               ],
             ),
           ),
           if (showSwitch)
             Container(
-              width: 44, height: 24,
-              decoration: BoxDecoration(color: const Color(0xFF2DDCB1), borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Color(0x662DDCB1), blurRadius: 12)]),
+              width: 44,
+              height: 24,
+              decoration: BoxDecoration(
+                color: const Color(0xFF2DDCB1),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x662DDCB1), blurRadius: 12),
+                ],
+              ),
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.all(3),
-              child: Container(width: 18, height: 18, decoration: const BoxDecoration(color: Color(0xFF050A0F), shape: BoxShape.circle)),
+              child: Container(
+                width: 18,
+                height: 18,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF050A0F),
+                  shape: BoxShape.circle,
+                ),
+              ),
             )
           else
             const Icon(Icons.chevron_right, color: Color(0x662DDCB1)),
@@ -310,15 +444,24 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Giao diện", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          const Text(
+            "Giao diện",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _buildThemeOption("Sáng", Icons.light_mode, false)),
+              Expanded(
+                child: _buildThemeOption("Sáng", Icons.light_mode, false),
+              ),
               const SizedBox(width: 12),
               Expanded(child: _buildThemeOption("Tối", Icons.dark_mode, true)),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -330,20 +473,39 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       child: Container(
         height: 110,
         decoration: BoxDecoration(
-          color: isActive ? const Color(0x142DDCB1) : Colors.white.withOpacity(0.04),
+          color: isActive
+              ? const Color(0x142DDCB1)
+              : Colors.white.withOpacity(0.04),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? const Color(0xFF2DDCB1) : const Color(0x332DDCB1), width: 2),
+          border: Border.all(
+            color: isActive ? const Color(0xFF2DDCB1) : const Color(0x332DDCB1),
+            width: 2,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: isActive ? const Color(0xFF1A2535) : Colors.white10, shape: BoxShape.circle),
-              child: Icon(icon, color: isActive ? const Color(0xFF2DDCB1) : Colors.white54, size: 16),
+              decoration: BoxDecoration(
+                color: isActive ? const Color(0xFF1A2535) : Colors.white10,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isActive ? const Color(0xFF2DDCB1) : Colors.white54,
+                size: 16,
+              ),
             ),
             const SizedBox(height: 8),
-            Text(title, style: TextStyle(fontSize: 12, fontWeight: isActive ? FontWeight.bold : FontWeight.w500, color: isActive ? const Color(0xFF2DDCB1) : Colors.white54)),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? const Color(0xFF2DDCB1) : Colors.white54,
+              ),
+            ),
           ],
         ),
       ),
@@ -357,7 +519,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         color: const Color(0xCC6A3092),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: _buildAdminListTile("Tiếng Việt", "Vietnamese", Icons.language, iconColor: const Color(0xFFEF4444), isLast: true),
+      child: _buildAdminListTile(
+        "Tiếng Việt",
+        "Vietnamese",
+        Icons.language,
+        iconColor: const Color(0xFFEF4444),
+        isLast: true,
+      ),
     );
   }
 
@@ -366,7 +534,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 14),
       height: 54,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFC0392B), Color(0xFFE74C3C)]),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFC0392B), Color(0xFFE74C3C)],
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [BoxShadow(color: Color(0x66E74C3C), blurRadius: 20)],
       ),
@@ -375,7 +545,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         children: const [
           Icon(Icons.logout, color: Colors.white, size: 18),
           SizedBox(width: 8),
-          Text("Đăng xuất", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(
+            "Đăng xuất",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
         ],
       ),
     );

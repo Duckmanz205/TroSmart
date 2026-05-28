@@ -4,7 +4,8 @@ import '../../widgets/common/notification_card.dart';
 
 /// User Notification (Thông báo) screen.
 class UrThongBao extends StatelessWidget {
-  const UrThongBao({super.key});
+  final VoidCallback? onNavigateToPayment;
+  const UrThongBao({super.key, this.onNavigateToPayment});
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +64,7 @@ class UrThongBao extends StatelessWidget {
                       icon: Icons.payment_outlined,
                       isUrgent: true,
                       actionLabel: 'THANH TOÁN NGAY',
-                      onActionTap: () {
-                        // TODO: Navigate to payment
-                      },
+                      onActionTap: onNavigateToPayment,
                     ),
 
                     const SizedBox(height: 24),

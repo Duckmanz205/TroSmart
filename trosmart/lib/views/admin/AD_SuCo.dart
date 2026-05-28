@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../shared/app_colors.dart';
-import '../../widgets/common/admin/custom_app_bar.dart'; 
- 
+
 import '../../widgets/admin/incident_management_widgets.dart';
-import '../../widgets/admin/admin_drawer.dart';
-import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
 class AD_SuCo extends StatelessWidget {
   const AD_SuCo({super.key});
@@ -14,8 +11,6 @@ class AD_SuCo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundGray,
-      appBar: const CustomAppBar(),
-      drawer: const AdminDrawer(activeTitle: "Sự cố"),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -34,18 +29,15 @@ class AD_SuCo extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'Theo dõi và xử lý yêu cầu sửa chữa từ khách thuê',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: GoogleFonts.inter(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 24),
-              
+
               const IncidentStatsGrid(),
               const SizedBox(height: 24),
               const IncidentSearchAndFilter(),
               const SizedBox(height: 24),
-              
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -59,15 +51,12 @@ class AD_SuCo extends StatelessWidget {
                   ),
                   Text(
                     '67 sự cố',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Danh sách thẻ
               const IncidentCard(
                 code: 'SC089',
@@ -109,7 +98,6 @@ class AD_SuCo extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 0),
     );
   }
 }

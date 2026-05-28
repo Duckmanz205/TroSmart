@@ -18,14 +18,21 @@ public class InvoiceController : ControllerBase
         _invoiceService = invoiceService;
     }
 
+    /// <summary>
+    /// Lấy danh sách hóa đơn. Nếu không truyền month/year sẽ trả về tất cả.
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<InvoiceDto>>> GetInvoices([FromQuery] int month, [FromQuery] int year)
+    public async Task<ActionResult<List<InvoiceDto>>> GetInvoices([FromQuery] int? month, [FromQuery] int? year)
     {
         try
         {
-            if (month < 1 || month > 12 || year < 2000)
+            if (month.HasValue && (month < 1 || month > 12))
             {
-                return BadRequest(new { message = "Tháng hoặc năm không hợp lệ." });
+                return BadRequest(new { message = "Tháng không hợp lệ (1-12)." });
+            }
+            if (year.HasValue && year < 2000)
+            {
+                return BadRequest(new { message = "Năm không hợp lệ." });
             }
 
             var invoices = await _invoiceService.GetInvoicesAsync(month, year);
@@ -95,6 +102,25 @@ public class InvoiceController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Lỗi khi cập nhật trạng thái hóa đơn.", error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteInvoice(int id)
+    {
+        try
+        {
+            var success = await _invoiceService.DeleteInvoiceAsync(id);
+            if (!success)
+            {
+                return NotFound(new { message = "Không tìm thấy hóa đơn cần xóa." });
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi xóa hóa đơn.", error = ex.Message });
         }
     }
 }

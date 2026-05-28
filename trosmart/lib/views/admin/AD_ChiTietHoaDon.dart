@@ -29,7 +29,7 @@ class InvoiceDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       const BankTransferCard(),
                       SizedBox(height: 24),
-                      ActionButtons(),
+                      ActionButtons(invoice: invoice),
                       SizedBox(height: 120),
                     ],
                   ),

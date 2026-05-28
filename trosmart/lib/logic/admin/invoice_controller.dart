@@ -14,6 +14,12 @@ class InvoiceController extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  // Tháng/Năm đang xem
+  int _selectedMonth = DateTime.now().month;
+  int _selectedYear = DateTime.now().year;
+  int get selectedMonth => _selectedMonth;
+  int get selectedYear => _selectedYear;
+
   // Form State
   int? selectedRoomId;
   double soDienCu = 0;
@@ -21,9 +27,22 @@ class InvoiceController extends ChangeNotifier {
   double soNuocCu = 0;
   double soNuocMoi = 0;
   double tienPhong = 0;
-  double phuPhi = 0;
   double donGiaDien = 3500;
   double donGiaNuoc = 20000;
+
+  List<IncidentalFeeItem> incidentalItems = [IncidentalFeeItem()];
+
+  double get totalIncidentalAmount => 
+    incidentalItems.fold<double>(0, (sum, item) => sum + item.amount);
+
+  String get concatenatedIncidentalDescription =>
+    incidentalItems
+      .where((item) => item.name.trim().isNotEmpty)
+      .map((item) => "${item.name.trim()} (${item.amount.toStringAsFixed(0)}đ)")
+      .join(', ');
+
+  double get phuPhi => totalIncidentalAmount;
+  String get tenPhuPhi => concatenatedIncidentalDescription;
 
   double get tongTien => 
     tienPhong + 
@@ -33,10 +52,45 @@ class InvoiceController extends ChangeNotifier {
 
   List<Map<String, dynamic>> availableRooms = [];
 
+  // === THỐNG KÊ TÍNH TOÁN TỪ DANH SÁCH HÓA ĐƠN ===
+  double get totalDaThu {
+    double total = 0;
+    for (var inv in _invoices) {
+      if (inv.trangThai == 'Đã thanh toán') total += inv.tongTien;
+    }
+    return total;
+  }
+
+  double get totalChoThu {
+    double total = 0;
+    for (var inv in _invoices) {
+      if (inv.trangThai == 'Chưa thanh toán') total += inv.tongTien;
+    }
+    return total;
+  }
+
+  double get totalQuaHan {
+    double total = 0;
+    for (var inv in _invoices) {
+      if (inv.trangThai == 'Quá hạn') total += inv.tongTien;
+    }
+    return total;
+  }
+
+  int get countDaThu => _invoices.where((i) => i.trangThai == 'Đã thanh toán').length;
+  int get countChoThu => _invoices.where((i) => i.trangThai == 'Chưa thanh toán').length;
+  int get countQuaHan => _invoices.where((i) => i.trangThai == 'Quá hạn').length;
+
   InvoiceController() {
     fetchAvailableRooms();
-    final now = DateTime.now();
-    fetchInvoices(now.month, now.year);
+    fetchInvoices(_selectedMonth, _selectedYear);
+  }
+
+  /// Thay đổi tháng/năm đang xem và tải lại dữ liệu
+  void changeMonthYear(int month, int year) {
+    _selectedMonth = month;
+    _selectedYear = year;
+    fetchInvoices(month, year);
   }
 
   Future<void> fetchAvailableRooms() async {
@@ -61,7 +115,7 @@ class InvoiceController extends ChangeNotifier {
     // Reset chỉ số mới khi đổi phòng
     soDienMoi = 0;
     soNuocMoi = 0;
-    phuPhi = 0;
+    incidentalItems = [IncidentalFeeItem()];
     notifyListeners();
   }
 
@@ -75,9 +129,32 @@ class InvoiceController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updatePhuPhi(String value) {
-    phuPhi = double.tryParse(value) ?? 0;
+  void addIncidentalItem() {
+    incidentalItems.add(IncidentalFeeItem());
     notifyListeners();
+  }
+
+  void removeIncidentalItem(int index) {
+    if (incidentalItems.length > 1) {
+      incidentalItems.removeAt(index);
+    } else {
+      incidentalItems[0] = IncidentalFeeItem();
+    }
+    notifyListeners();
+  }
+
+  void updateIncidentalItemName(int index, String value) {
+    if (index >= 0 && index < incidentalItems.length) {
+      incidentalItems[index].name = value;
+      notifyListeners();
+    }
+  }
+
+  void updateIncidentalItemAmount(int index, String value) {
+    if (index >= 0 && index < incidentalItems.length) {
+      incidentalItems[index].amount = double.tryParse(value) ?? 0;
+      notifyListeners();
+    }
   }
 
   // Lấy danh sách hóa đơn theo tháng và năm
@@ -93,7 +170,7 @@ class InvoiceController extends ChangeNotifier {
     }
   }
 
-  // Lấy chi tiết hóa đơn (thường không cần lưu vào list mà trả về trực tiếp)
+  // Lấy chi tiết hóa đơn
   Future<InvoiceModel?> fetchInvoiceDetail(int id) async {
     _setLoading(true);
     _setError(null);
@@ -135,10 +212,13 @@ class InvoiceController extends ChangeNotifier {
         donGiaDien: donGiaDien,
         donGiaNuoc: donGiaNuoc,
         phuPhi: phuPhi,
+        moTaPhuPhi: tenPhuPhi.isNotEmpty ? tenPhuPhi : null,
       );
       
-      // Có thể thêm luôn vào danh sách nếu đang xem cùng tháng/năm
-      _invoices.add(newInvoice);
+      // Thêm luôn vào danh sách nếu đang xem cùng tháng/năm
+      if (thang == _selectedMonth && nam == _selectedYear) {
+        _invoices.add(newInvoice);
+      }
       notifyListeners();
       return true;
     } catch (e) {
@@ -163,20 +243,50 @@ class InvoiceController extends ChangeNotifier {
         _invoices[index] = InvoiceModel(
           maHoaDon: current.maHoaDon,
           maPhong: current.maPhong,
+          maKhach: current.maKhach,
           tenPhong: current.tenPhong,
+          tenCoSo: current.tenCoSo,
+          tenKhachThue: current.tenKhachThue,
           thang: current.thang,
           nam: current.nam,
           soDienCu: current.soDienCu,
           soDienMoi: current.soDienMoi,
           soNuocCu: current.soNuocCu,
           soNuocMoi: current.soNuocMoi,
+          donGiaDien: current.donGiaDien,
+          donGiaNuoc: current.donGiaNuoc,
           tienPhong: current.tienPhong,
+          tienDichVu: current.tienDichVu,
+          moTaDichVu: current.moTaDichVu,
           phuPhi: current.phuPhi,
+          moTaPhuPhi: current.moTaPhuPhi,
           tongTien: current.tongTien,
           trangThai: trangThai,
+          ngayLap: current.ngayLap,
+          hanThanhToan: current.hanThanhToan,
+          ngayThanhToan: trangThai == 'Đã thanh toán' 
+            ? DateTime.now().toIso8601String().substring(0, 10) 
+            : current.ngayThanhToan,
         );
         notifyListeners();
       }
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Xóa hóa đơn
+  Future<bool> deleteInvoice(int id) async {
+    _setLoading(true);
+    _setError(null);
+    try {
+      await _invoiceService.deleteInvoice(id);
+      _invoices.removeWhere((inv) => inv.maHoaDon == id);
+      notifyListeners();
       return true;
     } catch (e) {
       _setError(e.toString());
@@ -201,4 +311,10 @@ class InvoiceController extends ChangeNotifier {
     }
     notifyListeners();
   }
+}
+
+class IncidentalFeeItem {
+  String name;
+  double amount;
+  IncidentalFeeItem({this.name = '', this.amount = 0});
 }
