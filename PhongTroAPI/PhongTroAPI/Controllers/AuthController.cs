@@ -112,12 +112,14 @@ namespace PhongTroAPI.Controllers
             await using var conn = new SqlConnection(_connStr);
             await conn.OpenAsync();
 
-            // Bước 1: Query TaiKhoan JOIN KhachThue theo TenDangNhap
+            // Bước 1: Query TaiKhoan JOIN KhachThue / NguoiQuanLy theo TenDangNhap
             const string sql = @"
                 SELECT tk.MaTaiKhoan, tk.TenDangNhap, tk.MatKhau, tk.VaiTro,
-                       tk.TrangThai, tk.MaKhach, k.HoTen
+                       tk.TrangThai, tk.MaKhach, tk.MaQuanLy,
+                       COALESCE(k.HoTen, q.HoTen) AS HoTen
                 FROM TaiKhoan tk
                 LEFT JOIN KhachThue k ON tk.MaKhach = k.MaKhach
+                LEFT JOIN NguoiQuanLy q ON tk.MaQuanLy = q.MaQuanLy
                 WHERE tk.TenDangNhap = @TenDangNhap";
 
             await using var cmd = new SqlCommand(sql, conn);
@@ -141,6 +143,9 @@ namespace PhongTroAPI.Controllers
             int? maKhach = reader.IsDBNull(reader.GetOrdinal("MaKhach"))
                 ? null
                 : reader.GetInt32(reader.GetOrdinal("MaKhach"));
+            int? maQuanLy = reader.IsDBNull(reader.GetOrdinal("MaQuanLy"))
+                ? null
+                : reader.GetInt32(reader.GetOrdinal("MaQuanLy"));
             var hoTen = reader.IsDBNull(reader.GetOrdinal("HoTen"))
                 ? tenDangNhap
                 : reader.GetString(reader.GetOrdinal("HoTen"));
@@ -165,7 +170,8 @@ namespace PhongTroAPI.Controllers
                 TenDangNhap = tenDangNhap,
                 HoTen = hoTen,
                 VaiTro = vaiTro,
-                MaKhach = maKhach
+                MaKhach = maKhach,
+                MaQuanLy = maQuanLy
             });
         }
 

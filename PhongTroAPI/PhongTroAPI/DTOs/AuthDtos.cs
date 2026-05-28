@@ -38,5 +38,6 @@ namespace PhongTroAPI.DTOs
         public string HoTen { get; set; } = string.Empty;   // Lấy từ KhachThue.HoTen
         public string VaiTro { get; set; } = string.Empty;
         public int? MaKhach { get; set; }
+        public int? MaQuanLy { get; set; }
     }
 }

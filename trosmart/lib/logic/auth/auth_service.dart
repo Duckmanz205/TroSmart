@@ -12,6 +12,8 @@ class AuthService {
   static const String _keyToken = 'auth_token';
   static const String _keyVaiTro = 'vai_tro';
   static const String _keyMaKhach = 'ma_khach';
+  static const String _keyMaQuanLy = 'ma_quan_ly';
+  static const String _keyHoTen = 'ho_ten';
 
   // ────────────────────────────────────────
   // LOGIN
@@ -80,6 +82,8 @@ class AuthService {
     await prefs.remove(_keyToken);
     await prefs.remove(_keyVaiTro);
     await prefs.remove(_keyMaKhach);
+    await prefs.remove(_keyMaQuanLy);
+    await prefs.remove(_keyHoTen);
   }
 
   // ────────────────────────────────────────
@@ -97,8 +101,17 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyToken, auth.token);
     await prefs.setString(_keyVaiTro, auth.vaiTro);
+    await prefs.setString(_keyHoTen, auth.hoTen);
     if (auth.maKhach != null) {
       await prefs.setInt(_keyMaKhach, auth.maKhach!);
     }
+    if (auth.maQuanLy != null) {
+      await prefs.setInt(_keyMaQuanLy, auth.maQuanLy!);
+    }
+  }
+
+  Future<int?> getMaQuanLy() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keyMaQuanLy);
   }
 }

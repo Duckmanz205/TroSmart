@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../widgets/user/payment_widgets.dart';
 import '../../logic/user/user_payment_controller.dart';
 import '../../shared/app_theme.dart';
+import 'UR_ChiTietHoaDon.dart';
 
 class PaymentDetailsScreen extends StatelessWidget {
   const PaymentDetailsScreen({super.key});
@@ -50,29 +51,11 @@ class PaymentDetailsScreen extends StatelessWidget {
               );
             }
 
-            final activeInvoice = controller.activeInvoice;
+            final unpaidInvoices = controller.unpaidInvoices;
+            final paidInvoices = controller.paidInvoices;
 
-            if (activeInvoice == null) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.receipt_long_rounded, size: 64, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text(
-                      'Hiện tại bạn không có hóa đơn nào.',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            // Lấy danh sách lịch sử (các hóa đơn khác)
-            final historyInvoices = controller.allInvoices
-                .where((inv) => inv.maHoaDon != activeInvoice.maHoaDon)
-                .toList();
-            historyInvoices.sort((a, b) => b.maHoaDon.compareTo(a.maHoaDon));
+            // Hiển thị tối đa 2 hóa đơn chưa thanh toán
+            final displayUnpaid = unpaidInvoices.take(2).toList();
 
             return RefreshIndicator(
               onRefresh: () => controller.loadUserInvoices(),
@@ -82,17 +65,90 @@ class PaymentDetailsScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                 child: Column(
                   children: [
-                    BillBanner(invoice: activeInvoice),
-                    const SizedBox(height: 32),
-                    const SectionHeader(title: "CHI TIẾT HÓA ĐƠN"),
-                    const SizedBox(height: 16),
-                    BillDetailList(invoice: activeInvoice),
-                    const SizedBox(height: 32),
-                    SharedCostSection(invoice: activeInvoice),
-                    const SizedBox(height: 32),
+                    // 1. Phần hóa đơn chưa thanh toán
+                    if (displayUnpaid.isEmpty) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 24),
+                        padding: const EdgeInsets.all(24),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            )
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_circle_outline_rounded, size: 64, color: Colors.green),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Không có hóa đơn thanh toán',
+                              style: TextStyle(
+                                color: AppTheme.textPrimary, 
+                                fontSize: 16, 
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Tất cả các hóa đơn của bạn đã được thanh toán đầy đủ.',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ] else ...[
+                      ...displayUnpaid.map((inv) {
+                        final index = displayUnpaid.indexOf(inv);
+                        return Column(
+                          children: [
+                            if (displayUnpaid.length > 1) ...[
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryPurple.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'Hóa đơn chưa thanh toán #${index + 1}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.deepPurple,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            BillBanner(invoice: inv),
+                            const SizedBox(height: 24),
+                            const SectionHeader(title: "CHI TIẾT HÓA ĐƠN"),
+                            const SizedBox(height: 16),
+                            BillDetailList(invoice: inv),
+                            const SizedBox(height: 24),
+                            SharedCostSection(invoice: inv),
+                            const SizedBox(height: 32),
+                          ],
+                        );
+                      }),
+                    ],
+
+                    // 2. Phần lịch sử thanh toán
                     const SectionHeader(title: "LỊCH SỬ THANH TOÁN"),
                     const SizedBox(height: 16),
-                    if (historyInvoices.isEmpty)
+                    if (paidInvoices.isEmpty)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 24),
@@ -108,12 +164,22 @@ class PaymentDetailsScreen extends StatelessWidget {
                         ),
                       )
                     else
-                      ...historyInvoices.map((inv) {
-                        return PaymentHistoryItem(
-                          month: '${inv.thang.toString().padLeft(2, '0')}/${inv.nam}',
-                          amount: formatCurrency(inv.tongTien),
-                          date: inv.ngayThanhToan ?? inv.ngayLapDisplay,
-                          status: inv.trangThai,
+                      ...paidInvoices.map((inv) {
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => URChiTietHoaDonPage(invoice: inv),
+                              ),
+                            );
+                          },
+                          child: PaymentHistoryItem(
+                            month: '${inv.thang.toString().padLeft(2, '0')}/${inv.nam}',
+                            amount: formatCurrency(inv.tongTien),
+                            date: inv.ngayThanhToan ?? inv.ngayLapDisplay,
+                            status: inv.trangThai,
+                          ),
                         );
                       }),
                   ],

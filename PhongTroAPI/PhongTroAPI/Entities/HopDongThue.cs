@@ -21,10 +21,11 @@ public partial class HopDongThue
 
     public DateTime? NgayTao { get; set; }
 
+    public string? ChuKy { get; set; }
+
     public virtual ICollection<LichSuGiaHan> LichSuGiaHans { get; set; } = new List<LichSuGiaHan>();
 
     public virtual KhachThue MaKhachNavigation { get; set; } = null!;
 
     public virtual Phong MaPhongNavigation { get; set; } = null!;
-    public string ChuKy { get; internal set; }
 }

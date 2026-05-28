@@ -26,6 +26,12 @@ public class InvoiceDto
     public string? NgayLap { get; set; }
     public string? HanThanhToan { get; set; }
     public string? NgayThanhToan { get; set; }
+    
+    // Banking Details for payment
+    public string? SoTaiKhoan { get; set; }
+    public string? TenTaiKhoan { get; set; }
+    public string? MaBin { get; set; }
+    public string? TenVietTat { get; set; }
 }
 
 public class InvoiceCreateDto

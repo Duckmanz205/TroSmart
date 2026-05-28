@@ -17,9 +17,17 @@ public partial class NguoiQuanLy
 
     public DateTime? NgayTao { get; set; }
 
+    public string? SoTaiKhoan { get; set; }
+
+    public string? TenTaiKhoan { get; set; }
+
+    public int? MaNganHang { get; set; }
+
     public virtual ICollection<CoSo> CoSos { get; set; } = new List<CoSo>();
 
     public virtual ICollection<LichSuThanhToan> LichSuThanhToans { get; set; } = new List<LichSuThanhToan>();
+
+    public virtual NganHang? MaNganHangNavigation { get; set; }
 
     public virtual ICollection<TaiKhoan> TaiKhoans { get; set; } = new List<TaiKhoan>();
 }

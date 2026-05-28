@@ -12,6 +12,16 @@ GO
 -- 1. TẠO CÁC BẢNG (TABLES)
 -- =========================================================
 
+-- BẢNG MỚI: Ngân hàng
+CREATE TABLE [dbo].[NganHang](
+	[MaNganHang] [int] IDENTITY(1,1) NOT NULL,
+	[TenNganHang] [nvarchar](150) NOT NULL,
+	[TenVietTat] [nvarchar](50) NULL,
+	[MaBin] [nvarchar](20) NOT NULL,
+PRIMARY KEY CLUSTERED ([MaNganHang] ASC)
+) ON [PRIMARY]
+GO
+
 CREATE TABLE [dbo].[NguoiQuanLy](
 	[MaQuanLy] [int] IDENTITY(1,1) NOT NULL,
 	[HoTen] [nvarchar](100) NOT NULL,
@@ -19,6 +29,9 @@ CREATE TABLE [dbo].[NguoiQuanLy](
 	[Email] [varchar](100) NULL,
 	[TrangThai] [nvarchar](50) NULL,
 	[NgayTao] [datetime] NULL,
+	[SoTaiKhoan] [nvarchar](50) NULL,
+	[TenTaiKhoan] [nvarchar](150) NULL,
+	[MaNganHang] [int] NULL,
 PRIMARY KEY CLUSTERED ([MaQuanLy] ASC)
 ) ON [PRIMARY]
 GO
@@ -111,6 +124,7 @@ CREATE TABLE [dbo].[HopDongThue](
     [TienCoc] [decimal](18, 2) NULL,
     [TrangThai] [nvarchar](50) NULL,
     [NgayTao] [datetime] NULL,
+    [ChuKy] [nvarchar](max) NULL,
 PRIMARY KEY CLUSTERED ([MaHopDong] ASC)
 ) ON [PRIMARY]
 GO
@@ -630,11 +644,27 @@ ALTER TABLE [dbo].[LichSuGiaHan] WITH CHECK ADD FOREIGN KEY([MaHopDong]) REFEREN
 GO
 ALTER TABLE [dbo].[OGhep] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
 GO
+ALTER TABLE [dbo].[NguoiQuanLy] WITH CHECK ADD CONSTRAINT [FK_NguoiQuanLy_NganHang] FOREIGN KEY([MaNganHang]) REFERENCES [dbo].[NganHang] ([MaNganHang])
+GO
 
 -- Cập nhật TrangThai = N'Hoạt động' cho các dòng bị NULL
 UPDATE [dbo].[TaiKhoan]
 SET [TrangThai] = N'Hoạt động'
 WHERE [TrangThai] IS NULL OR [TrangThai] = ''
+GO
+
+-- Seed ngân hàng
+INSERT INTO [dbo].[NganHang] ([TenNganHang], [TenVietTat], [MaBin]) VALUES 
+(N'Ngân hàng TMCP Công Thương Việt Nam', N'VietinBank', N'970415'),
+(N'Ngân hàng TMCP Ngoại thương Việt Nam', N'Vietcombank', N'970436'),
+(N'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam', N'BIDV', N'970418'),
+(N'Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam', N'Agribank', N'970405'),
+(N'Ngân hàng TMCP Kỹ Thương Việt Nam', N'Techcombank', N'970407'),
+(N'Ngân hàng TMCP Quân đội', N'MBBank', N'970422'),
+(N'Ngân hàng TMCP Á Châu', N'ACB', N'970416'),
+(N'Ngân hàng TMCP Sài Gòn Thương Tín', N'Sacombank', N'970403'),
+(N'Ngân hàng TMCP Việt Nam Thịnh Vượng', N'VPBank', N'970432'),
+(N'Ngân hàng TMCP Tiên Phong', N'TPBank', N'970423')
 GO
 
 -- Kiểm tra kết quả

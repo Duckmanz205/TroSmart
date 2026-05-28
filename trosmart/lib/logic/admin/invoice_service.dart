@@ -34,6 +34,23 @@ class InvoiceService {
     }
   }
 
+  /// Lấy danh sách hóa đơn theo mã khách thuê (maKhach).
+  Future<List<InvoiceModel>> getInvoicesByCustomer(int maKhach) async {
+    try {
+      final response = await _dio.get('/Invoice/by-customer/$maKhach');
+
+      if (response.statusCode == 200) {
+        final List data = response.data;
+        return data.map((item) => InvoiceModel.fromJson(item)).toList();
+      }
+      throw Exception('Không tải được danh sách hóa đơn.');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Lỗi hệ thống: $e');
+    }
+  }
+
   Future<InvoiceModel> getInvoiceById(int id) async {
     try {
       final response = await _dio.get('/Invoice/$id');
@@ -166,6 +183,11 @@ class InvoiceService {
       } else if (statusCode == 404) {
         return Exception('Không tìm thấy dữ liệu: $errorMessage');
       } else if (statusCode == 500) {
+        final serverMsg = e.response?.data?['message'];
+        final serverErr = e.response?.data?['error'];
+        if (serverMsg != null || serverErr != null) {
+          return Exception('$serverMsg ${serverErr != null ? "\nChi tiết: $serverErr" : ""}');
+        }
         return Exception('Lỗi máy chủ (500). Vui lòng thử lại sau.');
       }
       return Exception('Lỗi hệ thống ($statusCode): $errorMessage');

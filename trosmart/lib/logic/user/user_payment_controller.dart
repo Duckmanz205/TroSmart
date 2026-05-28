@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/admin/invoice_model.dart';
 import '../admin/invoice_service.dart';
 
@@ -8,6 +9,20 @@ class UserPaymentController extends ChangeNotifier {
   List<InvoiceModel> _allInvoices = [];
   List<InvoiceModel> get allInvoices => _allInvoices;
 
+  /// Danh sách hóa đơn CHƯA thanh toán, sắp xếp theo mã hóa đơn giảm dần (mới nhất lên đầu)
+  List<InvoiceModel> get unpaidInvoices {
+    final list = _allInvoices.where((inv) => inv.trangThai != 'Đã thanh toán').toList();
+    list.sort((a, b) => b.maHoaDon.compareTo(a.maHoaDon));
+    return list;
+  }
+
+  /// Danh sách hóa đơn ĐÃ thanh toán, sắp xếp theo mã hóa đơn giảm dần (mới nhất lên đầu)
+  List<InvoiceModel> get paidInvoices {
+    final list = _allInvoices.where((inv) => inv.trangThai == 'Đã thanh toán').toList();
+    list.sort((a, b) => b.maHoaDon.compareTo(a.maHoaDon));
+    return list;
+  }
+
   InvoiceModel? _activeInvoice;
   InvoiceModel? get activeInvoice => _activeInvoice;
 
@@ -16,6 +31,14 @@ class UserPaymentController extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  /// Tên người dùng hiện tại (lấy từ SharedPreferences)
+  String _currentUserName = '';
+  String get currentUserName => _currentUserName;
+
+  /// Mã khách thuê hiện tại
+  int? _maKhach;
+  int? get maKhach => _maKhach;
 
   UserPaymentController() {
     loadUserInvoices();
@@ -27,8 +50,26 @@ class UserPaymentController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Lấy tất cả hóa đơn từ DB
-      final list = await _service.getInvoices(0, 0);
+      // Đọc maKhach từ SharedPreferences (đã lưu lúc đăng nhập)
+      final prefs = await SharedPreferences.getInstance();
+      _maKhach = prefs.getInt('ma_khach');
+      _currentUserName = prefs.getString('ho_ten') ?? '';
+
+      List<InvoiceModel> list;
+
+      if (_maKhach != null) {
+        // Lấy hóa đơn theo mã khách thuê (chỉ hóa đơn của user đang đăng nhập)
+        list = await _service.getInvoicesByCustomer(_maKhach!);
+      } else {
+        // Fallback: nếu không có maKhach thì thông báo lỗi
+        _allInvoices = [];
+        _activeInvoice = null;
+        _errorMessage = 'Không tìm thấy thông tin khách thuê. Vui lòng đăng nhập lại.';
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+
       _allInvoices = list;
       
       if (list.isNotEmpty) {

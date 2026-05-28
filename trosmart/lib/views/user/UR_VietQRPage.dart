@@ -20,9 +20,9 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
   bool _isUploading = false;
   String? _uploadedImagePath;
 
-  String get _bankId => 'vietinbank';
-  String get _accountNo => '102876543210';
-  String get _accountName => 'TROSMART ACADEMY';
+  String get _bankId => widget.invoice.maBin ?? '970415';
+  String get _accountNo => widget.invoice.soTaiKhoan ?? '102876543210';
+  String get _accountName => widget.invoice.tenTaiKhoan ?? 'TROSMART ACADEMY';
   
   String get _vietQRUrl {
     final amount = widget.invoice.tongTien.toInt();
@@ -282,7 +282,9 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                 children: [
                   _buildTransferDetailRow(
                     'Ngân hàng',
-                    'VietinBank (ICB)',
+                    widget.invoice.tenVietTat != null && widget.invoice.tenVietTat!.isNotEmpty
+                        ? widget.invoice.tenVietTat!
+                        : 'VietinBank (ICB)',
                     trailing: const Icon(LucideIcons.externalLink, size: 16, color: Colors.grey),
                   ),
                   const Divider(height: 24, thickness: 0.5),

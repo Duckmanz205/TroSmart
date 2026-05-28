@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PhongTroAPI.Entities;
 using System.Text;
+using PhongTroAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
