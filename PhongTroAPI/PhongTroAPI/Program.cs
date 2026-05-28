@@ -23,7 +23,7 @@ builder.Services.AddScoped<LichHenService>();
 // Services
 builder.Services.AddScoped<PhongTroAPI.Services.IInvoiceService, PhongTroAPI.Services.InvoiceService>();
 
-// JWT Authentication
+// ✅ JWT Authentication
 var jwtSecret = builder.Configuration["JwtSettings:SecretKey"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -71,4 +71,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+app.Run();

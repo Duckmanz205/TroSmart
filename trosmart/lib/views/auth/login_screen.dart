@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:trosmart/logic/auth/auth_service.dart';
 import 'package:trosmart/views/user/navigation_screen.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../admin/AD_TrangChu.dart';
@@ -30,53 +29,51 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() async {
-    String identifier = isLoginByEmail ? _emailController.text.trim() : _phoneController.text.trim();
-    String password = _passwordController.text.trim();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
-    if (identifier.isEmpty || password.isEmpty) {
+  void _handleLogin() async {
+    // Dùng email controller hoặc phone controller tùy tab — đều gửi lên với key tenDangNhap
+    final String tenDangNhap =
+        isLoginByEmail ? _emailController.text.trim() : _phoneController.text.trim();
+    final String matKhau = _passwordController.text.trim();
+
+    if (tenDangNhap.isEmpty || matKhau.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Vui lòng nhập đầy đủ thông tin'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
 
+    setState(() => _isLoading = true);
     try {
-      final url = Uri.parse('http://10.0.2.2:5137/api/auth/login');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'identifier': identifier, 'password': password}),
-      );
-
+      final authResponse = await _authService.login(tenDangNhap, matKhau);
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final user = data['user'];
-
-        if (user['role'] == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-          );
-        }
+      // Điều hướng theo VaiTro
+      if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
+        );
       } else {
-        final data = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Đăng nhập thất bại'), backgroundColor: Colors.red),
+        // KhachThue → màn hình home user
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
         );
       }
     } catch (e) {
       if (!mounted) return;
+      final message = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi kết nối: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -118,16 +115,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (isLoginByEmail) ...[
                     CustomTextField(
                       controller: _emailController,
-                      label: "Địa chỉ email",
-                      iconData: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
+                      label: "Tên đăng nhập",
+                      iconData: Icons.person_outline,
+                      keyboardType: TextInputType.text,
                     ),
                   ] else ...[
                     CustomTextField(
                       controller: _phoneController,
-                      label: "Số điện thoại",
-                      iconData: Icons.phone_android_outlined,
-                      keyboardType: TextInputType.phone,
+                      label: "Tên đăng nhập",
+                      iconData: Icons.person_outline,
+                      keyboardType: TextInputType.text,
                     ),
                   ],
                   const SizedBox(height: 16),
