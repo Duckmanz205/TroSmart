@@ -120,4 +120,8 @@ app.*.symbols
 
 .geminiignore
 .vs/
+**/[Vv]s/
 bin/
+**/[Bb]in/
+obj/
+**/[Oo]bj/
