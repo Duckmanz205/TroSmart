@@ -6,6 +6,7 @@ class AuthResponse {
   final String hoTen;
   final String vaiTro;
   final int? maKhach;
+  final int? maQuanLy;
 
   const AuthResponse({
     required this.token,
@@ -14,6 +15,7 @@ class AuthResponse {
     required this.hoTen,
     required this.vaiTro,
     this.maKhach,
+    this.maQuanLy,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,7 @@ class AuthResponse {
       hoTen: json['hoTen'] as String? ?? '',
       vaiTro: json['vaiTro'] as String? ?? '',
       maKhach: json['maKhach'] as int?,
+      maQuanLy: json['maQuanLy'] as int?,
     );
   }
 
@@ -34,5 +37,6 @@ class AuthResponse {
         'hoTen': hoTen,
         'vaiTro': vaiTro,
         'maKhach': maKhach,
+        'maQuanLy': maQuanLy,
       };
 }

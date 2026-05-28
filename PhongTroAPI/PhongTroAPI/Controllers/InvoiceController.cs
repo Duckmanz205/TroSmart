@@ -44,6 +44,23 @@ public class InvoiceController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Lấy danh sách hóa đơn theo mã khách thuê.
+    /// </summary>
+    [HttpGet("by-customer/{maKhach}")]
+    public async Task<ActionResult<List<InvoiceDto>>> GetInvoicesByCustomer(int maKhach)
+    {
+        try
+        {
+            var invoices = await _invoiceService.GetInvoicesByCustomerAsync(maKhach);
+            return Ok(invoices);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi lấy danh sách hóa đơn theo khách.", error = ex.Message });
+        }
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<InvoiceDto>> GetInvoice(int id)
     {

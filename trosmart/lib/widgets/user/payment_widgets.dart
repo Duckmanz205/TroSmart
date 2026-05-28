@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../views/user/UR_VietQRPage.dart';
@@ -246,69 +245,112 @@ class SharedCostSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final halfCost = invoice.tongTien / 2;
-    final costStr = formatCurrency(halfCost);
+    final costStr = formatCurrency(invoice.tongTien);
     final statusStr = invoice.trangThai == 'Đã thanh toán' ? 'ĐÃ THANH TOÁN' : 'ĐANG CHỜ';
+    final tenantName = invoice.tenKhachThue.isNotEmpty ? invoice.tenKhachThue : 'Khách thuê';
+    final roomInfo = invoice.tenPhong.isNotEmpty ? 'Phòng ${invoice.tenPhong}' : '';
+    final facilityInfo = invoice.tenCoSo.isNotEmpty ? invoice.tenCoSo : '';
 
     return Column(
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(LucideIcons.users, size: 16, color: Colors.grey),
-            SizedBox(width: 8),
-            Text("Chia sẻ chi phí", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
+            const Icon(LucideIcons.user, size: 16, color: Colors.grey),
+            const SizedBox(width: 8),
+            const Text("Thông tin người thuê", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
           ],
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            _PartnerCard(name: "Bình (Tôi)", amount: costStr, status: statusStr, isMe: true),
-            const SizedBox(width: 16),
-            _PartnerCard(name: "Sarah", amount: costStr, status: statusStr, isMe: false),
-          ],
-        )
-      ],
-    );
-  }
-}
-
-class _PartnerCard extends StatelessWidget {
-  final String name;
-  final String amount;
-  final String status;
-  final bool isMe;
-  const _PartnerCard({required this.name, required this.amount, required this.status, required this.isMe});
-
-  @override
-  Widget build(BuildContext context) {
-    final activeColor = status == 'ĐÃ THANH TOÁN' ? Colors.green : const Color(0xFFB794F4);
-
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.withOpacity(0.05)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(radius: 10, child: Text(name[0], style: const TextStyle(fontSize: 10))),
-                const SizedBox(width: 8),
-                Text(name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.withOpacity(0.05)),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: const Color(0xFFB794F4).withOpacity(0.15),
+                    child: Text(
+                      tenantName.isNotEmpty ? tenantName[0].toUpperCase() : '?',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFB794F4)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tenantName,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        if (roomInfo.isNotEmpty || facilityInfo.isNotEmpty)
+                          Text(
+                            [roomInfo, facilityInfo].where((s) => s.isNotEmpty).join(' • '),
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Tổng thanh toán', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                      const SizedBox(height: 4),
+                      Text(
+                        costStr,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFB794F4)),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: (invoice.trangThai == 'Đã thanh toán' ? Colors.green : const Color(0xFFB794F4)).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      statusStr,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: invoice.trangThai == 'Đã thanh toán' ? Colors.green : const Color(0xFFB794F4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (invoice.hanThanhToan != null) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(LucideIcons.calendar, size: 14, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Hạn thanh toán: ${invoice.hanThanhToanDisplay}',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(amount, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: isMe ? activeColor : null)),
-            const SizedBox(height: 4),
-            Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: isMe ? activeColor.withOpacity(0.5) : Colors.grey.withOpacity(0.5))),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

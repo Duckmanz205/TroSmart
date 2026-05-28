@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:trosmart/logic/auth/auth_service.dart';
+import 'package:trosmart/views/admin/navigation_screen_admin.dart';
 import 'package:trosmart/views/user/navigation_screen.dart';
 import '../../widgets/common/custom_text_field.dart';
-import '../admin/AD_TrangChu.dart';
-import '../user/UR_TrangChu.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -34,8 +33,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() async {
     // Dùng email controller hoặc phone controller tùy tab — đều gửi lên với key tenDangNhap
-    final String tenDangNhap =
-        isLoginByEmail ? _emailController.text.trim() : _phoneController.text.trim();
+    final String tenDangNhap = isLoginByEmail
+        ? _emailController.text.trim()
+        : _phoneController.text.trim();
     final String matKhau = _passwordController.text.trim();
 
     if (tenDangNhap.isEmpty || matKhau.isEmpty) {
@@ -57,7 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
+          MaterialPageRoute(
+            builder: (context) => const AdminNavigationScreen(),
+          ),
         );
       } else {
         // KhachThue → màn hình home user
@@ -87,7 +89,10 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             _buildHeader(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -106,11 +111,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Tab chuyển đổi
                   _buildTabSwitch(),
                   const SizedBox(height: 24),
-                  
+
                   // Input Fields
                   if (isLoginByEmail) ...[
                     CustomTextField(
@@ -135,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     isPassword: true,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Nhớ thiết bị & Quên MK
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -151,7 +156,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const Text(
                             "Nhớ thiết bị",
-                            style: TextStyle(fontSize: 14, color: Colors.black54),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
                           ),
                         ],
                       ),
@@ -168,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Nút Đăng nhập
                   SizedBox(
                     width: double.infinity,
@@ -194,40 +202,60 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Quick Login
                   Row(
                     children: [
-                      Expanded(child: _buildQuickLoginBtn(Icons.qr_code, "QR Code")),
+                      Expanded(
+                        child: _buildQuickLoginBtn(Icons.qr_code, "QR Code"),
+                      ),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildQuickLoginBtn(Icons.fingerprint, "Sinh trắc học")),
+                      Expanded(
+                        child: _buildQuickLoginBtn(
+                          Icons.fingerprint,
+                          "Sinh trắc học",
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Divider
                   Row(
                     children: const [
                       Expanded(child: Divider(color: Colors.black26)),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text("Hoặc tiếp tục với", style: TextStyle(fontSize: 12)),
+                        child: Text(
+                          "Hoặc tiếp tục với",
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                       Expanded(child: Divider(color: Colors.black26)),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Social Login
                   Row(
                     children: [
-                      Expanded(child: _buildSocialBtn("Google", "assets/images/login/google.png")),
+                      Expanded(
+                        child: _buildSocialBtn(
+                          "Google",
+                          "assets/images/login/google.png",
+                        ),
+                      ),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildSocialBtn("Facebook", "assets/images/login/facebook.png")),
+                      Expanded(
+                        child: _buildSocialBtn(
+                          "Facebook",
+                          "assets/images/login/facebook.png",
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Đăng ký
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -237,7 +265,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterScreen(),
+                            ),
                           );
                         },
                         child: const Text(
@@ -322,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -348,7 +378,9 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: isLoginByEmail ? const Color(0xFF6A3092) : Colors.transparent,
+                  color: isLoginByEmail
+                      ? const Color(0xFF6A3092)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
@@ -372,7 +404,9 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: !isLoginByEmail ? const Color(0xFF6A3092) : Colors.transparent,
+                  color: !isLoginByEmail
+                      ? const Color(0xFF6A3092)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
@@ -421,7 +455,10 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.circle, size: 20), // Thay bằng Image.asset(iconPath) sau khi có file ảnh
+          const Icon(
+            Icons.circle,
+            size: 20,
+          ), // Thay bằng Image.asset(iconPath) sau khi có file ảnh
           const SizedBox(width: 8),
           Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],

@@ -24,6 +24,12 @@ class InvoiceModel {
   final String? hanThanhToan;
   final String? ngayThanhToan;
 
+  // Banking Details
+  final String? soTaiKhoan;
+  final String? tenTaiKhoan;
+  final String? maBin;
+  final String? tenVietTat;
+
   InvoiceModel({
     required this.maHoaDon,
     required this.maPhong,
@@ -49,6 +55,10 @@ class InvoiceModel {
     this.ngayLap,
     this.hanThanhToan,
     this.ngayThanhToan,
+    this.soTaiKhoan,
+    this.tenTaiKhoan,
+    this.maBin,
+    this.tenVietTat,
   });
 
   /// Tiền điện tính toán
@@ -105,6 +115,10 @@ class InvoiceModel {
       ngayLap: json['ngayLap'],
       hanThanhToan: json['hanThanhToan'],
       ngayThanhToan: json['ngayThanhToan'],
+      soTaiKhoan: json['soTaiKhoan'] as String?,
+      tenTaiKhoan: json['tenTaiKhoan'] as String?,
+      maBin: json['maBin'] as String?,
+      tenVietTat: json['tenVietTat'] as String?,
     );
   }
 
@@ -134,6 +148,10 @@ class InvoiceModel {
       'ngayLap': ngayLap,
       'hanThanhToan': hanThanhToan,
       'ngayThanhToan': ngayThanhToan,
+      'soTaiKhoan': soTaiKhoan,
+      'tenTaiKhoan': tenTaiKhoan,
+      'maBin': maBin,
+      'tenVietTat': tenVietTat,
     };
   }
 }

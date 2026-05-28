@@ -64,6 +64,70 @@ public class InvoiceService : IInvoiceService
                 NgayLap = h.NgayLap.HasValue ? h.NgayLap.Value.ToString("yyyy-MM-dd") : null,
                 HanThanhToan = h.HanThanhToan.HasValue ? h.HanThanhToan.Value.ToString("yyyy-MM-dd") : null,
                 NgayThanhToan = h.NgayThanhToan.HasValue ? h.NgayThanhToan.Value.ToString("yyyy-MM-dd") : null,
+                
+                SoTaiKhoan = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.SoTaiKhoan : null,
+                TenTaiKhoan = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.TenTaiKhoan : null,
+                MaBin = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation.MaBin : null,
+                TenVietTat = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation.TenVietTat : null,
+            })
+            .ToListAsync();
+
+        return invoices;
+    }
+
+    /// <summary>
+    /// Lấy danh sách hóa đơn theo mã khách thuê.
+    /// </summary>
+    public async Task<List<InvoiceDto>> GetInvoicesByCustomerAsync(int maKhach)
+    {
+        var invoices = await _context.HoaDons
+            .Include(h => h.MaPhongNavigation)
+                .ThenInclude(p => p.MaCoSoNavigation)
+            .Include(h => h.MaKhachNavigation)
+            .Where(h => h.MaKhach == maKhach)
+            .OrderByDescending(h => h.Nam)
+            .ThenByDescending(h => h.Thang)
+            .ThenByDescending(h => h.MaHoaDon)
+            .Select(h => new InvoiceDto
+            {
+                MaHoaDon = h.MaHoaDon,
+                MaPhong = h.MaPhong,
+                MaKhach = h.MaKhach,
+                TenPhong = h.MaPhongNavigation != null ? h.MaPhongNavigation.SoPhong : string.Empty,
+                TenCoSo = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.TenCoSo : string.Empty,
+                TenKhachThue = h.MaKhachNavigation != null ? h.MaKhachNavigation.HoTen ?? string.Empty : string.Empty,
+                Thang = h.Thang,
+                Nam = h.Nam,
+                SoDienCu = h.ChiSoDienCu,
+                SoDienMoi = h.ChiSoDienMoi,
+                SoNuocCu = h.ChiSoNuocCu,
+                SoNuocMoi = h.ChiSoNuocMoi,
+                DonGiaDien = h.DonGiaDien,
+                DonGiaNuoc = h.DonGiaNuoc,
+                TienPhong = h.TienPhong,
+                TienDichVu = h.TienDichVu ?? 0,
+                MoTaDichVu = h.MoTaDichVu,
+                PhuPhi = h.PhuPhi ?? 0,
+                MoTaPhuPhi = h.MoTaPhuPhi,
+                TongTien = h.TongTien,
+                TrangThai = h.TrangThai ?? "Chưa thanh toán",
+                NgayLap = h.NgayLap.HasValue ? h.NgayLap.Value.ToString("yyyy-MM-dd") : null,
+                HanThanhToan = h.HanThanhToan.HasValue ? h.HanThanhToan.Value.ToString("yyyy-MM-dd") : null,
+                NgayThanhToan = h.NgayThanhToan.HasValue ? h.NgayThanhToan.Value.ToString("yyyy-MM-dd") : null,
+
+                SoTaiKhoan = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.SoTaiKhoan : null,
+                TenTaiKhoan = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.TenTaiKhoan : null,
+                MaBin = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation.MaBin : null,
+                TenVietTat = h.MaPhongNavigation != null && h.MaPhongNavigation.MaCoSoNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation != null
+                    ? h.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.MaNganHangNavigation.TenVietTat : null,
             })
             .ToListAsync();
 
@@ -107,6 +171,11 @@ public class InvoiceService : IInvoiceService
             NgayLap = invoice.NgayLap.HasValue ? invoice.NgayLap.Value.ToString("yyyy-MM-dd") : null,
             HanThanhToan = invoice.HanThanhToan.HasValue ? invoice.HanThanhToan.Value.ToString("yyyy-MM-dd") : null,
             NgayThanhToan = invoice.NgayThanhToan.HasValue ? invoice.NgayThanhToan.Value.ToString("yyyy-MM-dd") : null,
+
+            SoTaiKhoan = invoice.MaPhongNavigation?.MaCoSoNavigation?.MaQuanLyNavigation?.SoTaiKhoan,
+            TenTaiKhoan = invoice.MaPhongNavigation?.MaCoSoNavigation?.MaQuanLyNavigation?.TenTaiKhoan,
+            MaBin = invoice.MaPhongNavigation?.MaCoSoNavigation?.MaQuanLyNavigation?.MaNganHangNavigation?.MaBin,
+            TenVietTat = invoice.MaPhongNavigation?.MaCoSoNavigation?.MaQuanLyNavigation?.MaNganHangNavigation?.TenVietTat,
         };
     }
 
@@ -200,6 +269,11 @@ public class InvoiceService : IInvoiceService
             NgayLap = hoaDon.NgayLap.HasValue ? hoaDon.NgayLap.Value.ToString("yyyy-MM-dd") : null,
             HanThanhToan = hoaDon.HanThanhToan.HasValue ? hoaDon.HanThanhToan.Value.ToString("yyyy-MM-dd") : null,
             NgayThanhToan = null,
+
+            SoTaiKhoan = phong.MaCoSoNavigation?.MaQuanLyNavigation?.SoTaiKhoan,
+            TenTaiKhoan = phong.MaCoSoNavigation?.MaQuanLyNavigation?.TenTaiKhoan,
+            MaBin = phong.MaCoSoNavigation?.MaQuanLyNavigation?.MaNganHangNavigation?.MaBin,
+            TenVietTat = phong.MaCoSoNavigation?.MaQuanLyNavigation?.MaNganHangNavigation?.TenVietTat,
         };
     }
 
