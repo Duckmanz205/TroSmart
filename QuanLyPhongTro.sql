@@ -9,7 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 -- =========================================================
--- 1. TẠO CÁC BẢNG (TABLES)
+-- 1. Táº O CĂC Báº¢NG (TABLES)
 -- =========================================================
 
 CREATE TABLE [dbo].[NguoiQuanLy](
@@ -101,7 +101,7 @@ PRIMARY KEY CLUSTERED ([MaAnh] ASC)
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
--- BẢNG MỚI: Hợp đồng thuê
+-- Báº¢NG Má»I: Há»£p Ä‘á»“ng thuĂª
 CREATE TABLE [dbo].[HopDongThue](
     [MaHopDong] [int] IDENTITY(1,1) NOT NULL,
     [MaPhong] [int] NOT NULL,
@@ -115,7 +115,7 @@ PRIMARY KEY CLUSTERED ([MaHopDong] ASC)
 ) ON [PRIMARY]
 GO
 
--- BẢNG MỚI: Hóa Đơn
+-- Báº¢NG Má»I: HĂ³a ÄÆ¡n
 CREATE TABLE [dbo].[HoaDon](
     [MaHoaDon] [int] IDENTITY(1,1) NOT NULL,
     [MaPhong] [int] NOT NULL,
@@ -144,7 +144,7 @@ GO
 
 
 -- =========================================================
--- 2. TẠO CÁC VIEWS
+-- 2. Táº O CĂC VIEWS
 -- =========================================================
 
 CREATE VIEW [dbo].[View_CoSo_TongQuan] AS
@@ -153,9 +153,9 @@ SELECT
     cs.TenCoSo,
     cs.DiaChi,
     COUNT(p.MaPhong) AS TongPhong,
-    SUM(CASE WHEN p.TrangThai = N'Trống' THEN 1 ELSE 0 END) AS PhongTrong,
-    SUM(CASE WHEN p.TrangThai = N'Đang thuê' THEN 1 ELSE 0 END) AS DangThue,
-    SUM(CASE WHEN p.TrangThai = N'Bảo trì' THEN 1 ELSE 0 END) AS BaoTri
+    SUM(CASE WHEN p.TrangThai = N'Trá»‘ng' THEN 1 ELSE 0 END) AS PhongTrong,
+    SUM(CASE WHEN p.TrangThai = N'Äang thuĂª' THEN 1 ELSE 0 END) AS DangThue,
+    SUM(CASE WHEN p.TrangThai = N'Báº£o trĂ¬' THEN 1 ELSE 0 END) AS BaoTri
 FROM CoSo cs
 LEFT JOIN Phong p ON cs.MaCoSo = p.MaCoSo
 GROUP BY cs.MaCoSo, cs.TenCoSo, cs.DiaChi;
@@ -203,71 +203,71 @@ GO
 
 
 -- =========================================================
--- 3. INSERT DỮ LIỆU (DATA MẪU)
+-- 3. INSERT Dá»® LIá»†U (DATA MáºªU)
 -- =========================================================
 
--- Người quản lý
+-- NgÆ°á»i quáº£n lĂ½
 SET IDENTITY_INSERT [dbo].[NguoiQuanLy] ON 
-INSERT [dbo].[NguoiQuanLy] ([MaQuanLy], [HoTen], [SDT], [Email], [TrangThai], [NgayTao]) VALUES (1, N'Nguyễn Văn A', N'0900000001', N'a@gmail.com', N'Hoạt động', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[NguoiQuanLy] ([MaQuanLy], [HoTen], [SDT], [Email], [TrangThai], [NgayTao]) VALUES (2, N'Trần Văn B', N'0900000002', N'b@gmail.com', N'Hoạt động', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[NguoiQuanLy] ([MaQuanLy], [HoTen], [SDT], [Email], [TrangThai], [NgayTao]) VALUES (1, N'Nguyá»…n VÄƒn A', N'0900000001', N'a@gmail.com', N'Hoáº¡t Ä‘á»™ng', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[NguoiQuanLy] ([MaQuanLy], [HoTen], [SDT], [Email], [TrangThai], [NgayTao]) VALUES (2, N'Tráº§n VÄƒn B', N'0900000002', N'b@gmail.com', N'Hoáº¡t Ä‘á»™ng', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
 SET IDENTITY_INSERT [dbo].[NguoiQuanLy] OFF
 GO
 
--- Cơ sở
+-- CÆ¡ sá»Ÿ
 SET IDENTITY_INSERT [dbo].[CoSo] ON 
-INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (1, N'KTX Sinh Viên A', N'Quận 1', N'quy tac', N'KTX', 1, 10.759842459095909, 106.69904139371432, 4.5, N'Hoạt động', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (2, N'Nhà trọ Trung Tâm B', N'Quận 3', N'', N'Nhà trọ', 1, 10.7868, 106.6822, 4.2, N'Hoạt động', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (3, N'Chung cư mini C', N'Thủ Đức', NULL, N'Chung cư', 2, 10.8506, 106.7719, 4.7, N'Hoạt động', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (5, N't1', N'111', NULL, N'Nhà trọ', NULL, 10.775654529488586, 106.70153376752974, 0, N'Hoạt động', CAST(N'2026-05-07T14:10:36.947' AS DateTime))
+INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (1, N'KTX Sinh ViĂªn A', N'Quáº­n 1', N'quy tac', N'KTX', 1, 10.759842459095909, 106.69904139371432, 4.5, N'Hoáº¡t Ä‘á»™ng', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (2, N'NhĂ  trá» Trung TĂ¢m B', N'Quáº­n 3', N'', N'NhĂ  trá»', 1, 10.7868, 106.6822, 4.2, N'Hoáº¡t Ä‘á»™ng', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (3, N'Chung cÆ° mini C', N'Thá»§ Äá»©c', NULL, N'Chung cÆ°', 2, 10.8506, 106.7719, 4.7, N'Hoáº¡t Ä‘á»™ng', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[CoSo] ([MaCoSo], [TenCoSo], [DiaChi], [MoTa], [LoaiHinh], [MaQuanLy], [Latitude], [Longitude], [DanhGia], [TrangThai], [NgayTao]) VALUES (5, N't1', N'111', NULL, N'NhĂ  trá»', NULL, 10.775654529488586, 106.70153376752974, 0, N'Hoáº¡t Ä‘á»™ng', CAST(N'2026-05-07T14:10:36.947' AS DateTime))
 SET IDENTITY_INSERT [dbo].[CoSo] OFF
 GO
 
--- Tiện ích
+-- Tiá»‡n Ă­ch
 SET IDENTITY_INSERT [dbo].[TienIch] ON 
-INSERT [dbo].[TienIch] ([MaTienIch], [TenTienIch]) VALUES (1, N'Wifi'), (2, N'Máy lạnh'), (3, N'Chỗ để xe'), (4, N'Camera'), (5, N'Giặt đồ'), (6, N'Bếp'), (7, N'Tủ lạnh'), (8, N'Ban công'), (9, N'Nội thất'), (10, N'Bảo vệ'), (11, N'Gym')
+INSERT [dbo].[TienIch] ([MaTienIch], [TenTienIch]) VALUES (1, N'Wifi'), (2, N'MĂ¡y láº¡nh'), (3, N'Chá»— Ä‘á»ƒ xe'), (4, N'Camera'), (5, N'Giáº·t Ä‘á»“'), (6, N'Báº¿p'), (7, N'Tá»§ láº¡nh'), (8, N'Ban cĂ´ng'), (9, N'Ná»™i tháº¥t'), (10, N'Báº£o vá»‡'), (11, N'Gym')
 SET IDENTITY_INSERT [dbo].[TienIch] OFF
 GO
 
--- Cơ sở_Tiện Ích
+-- CÆ¡ sá»Ÿ_Tiá»‡n Ăch
 INSERT [dbo].[CoSo_TienIch] ([MaCoSo], [MaTienIch]) VALUES (1, 1), (1, 3), (1, 4), (1, 5), (1, 10), (2, 1), (2, 3), (2, 4), (3, 1), (3, 2), (3, 3), (3, 4), (3, 7), (3, 9), (3, 10), (5, 2), (5, 11)
 GO
 
--- Khách Thuê (Dữ liệu mới)
+-- KhĂ¡ch ThuĂª (Dá»¯ liá»‡u má»›i)
 SET IDENTITY_INSERT [dbo].[KhachThue] ON 
-INSERT [dbo].[KhachThue] ([MaKhach], [HoTen], [SDT], [CCCD]) VALUES (1, N'Nguyễn Văn An', '0901234567', '079099001122')
-INSERT [dbo].[KhachThue] ([MaKhach], [HoTen], [SDT], [CCCD]) VALUES (2, N'Trần Thị Bích', '0912345678', '079099001133')
-INSERT [dbo].[KhachThue] ([MaKhach], [HoTen], [SDT], [CCCD]) VALUES (3, N'Lê Minh Tuấn', '0923456789', '079099001144')
+INSERT [dbo].[KhachThue] ([MaKhach], [HoTen], [SDT], [CCCD]) VALUES (1, N'Nguyá»…n VÄƒn An', '0901234567', '079099001122')
+INSERT [dbo].[KhachThue] ([MaKhach], [HoTen], [SDT], [CCCD]) VALUES (2, N'Tráº§n Thá»‹ BĂ­ch', '0912345678', '079099001133')
+INSERT [dbo].[KhachThue] ([MaKhach], [HoTen], [SDT], [CCCD]) VALUES (3, N'LĂª Minh Tuáº¥n', '0923456789', '079099001144')
 SET IDENTITY_INSERT [dbo].[KhachThue] OFF
 GO
 
--- Phòng
+-- PhĂ²ng
 SET IDENTITY_INSERT [dbo].[Phong] ON 
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (1, 1, N'A101', 1, 20, CAST(2000000.00 AS Decimal(18, 2)), 2, N'Trống', N'oki', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (2, 1, N'A102', 1, 22, CAST(2200000.00 AS Decimal(18, 2)), 2, N'Đang thuê', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (3, 1, N'A103', 1, 25, CAST(2500000.00 AS Decimal(18, 2)), 3, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (4, 1, N'A104', 2, 30, CAST(3000000.00 AS Decimal(18, 2)), 4, N'Bảo trì', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (5, 1, N'A105', 2, 28, CAST(2800000.00 AS Decimal(18, 2)), 3, N'Đang thuê', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (6, 1, N'A106', 2, 18, CAST(1800000.00 AS Decimal(18, 2)), 2, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (7, 1, N'A107', 3, 35, CAST(3500000.00 AS Decimal(18, 2)), 4, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (8, 1, N'A108', 3, 40, CAST(4000000.00 AS Decimal(18, 2)), 5, N'Đang thuê', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (9, 1, N'A109', 3, 22, CAST(2200000.00 AS Decimal(18, 2)), 2, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (10, 1, N'A110', 4, 45, CAST(4500000.00 AS Decimal(18, 2)), 5, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (11, 2, N'B101', 1, 18, CAST(1800000.00 AS Decimal(18, 2)), 2, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (12, 2, N'B102', 1, 20, CAST(2000000.00 AS Decimal(18, 2)), 2, N'Đang thuê', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (13, 2, N'B103', 2, 22, CAST(2200000.00 AS Decimal(18, 2)), 2, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (14, 2, N'B104', 2, 25, CAST(2500000.00 AS Decimal(18, 2)), 3, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (15, 2, N'B105', 2, 27, CAST(2700000.00 AS Decimal(18, 2)), 3, N'Đang thuê', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (16, 2, N'B106', 3, 30, CAST(3000000.00 AS Decimal(18, 2)), 4, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (17, 2, N'B107', 3, 32, CAST(3200000.00 AS Decimal(18, 2)), 4, N'Bảo trì', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (18, 2, N'B108', 3, 35, CAST(3500000.00 AS Decimal(18, 2)), 4, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (19, 3, N'C101', 1, 20, CAST(2100000.00 AS Decimal(18, 2)), 2, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (20, 3, N'C102', 1, 22, CAST(2300000.00 AS Decimal(18, 2)), 2, N'Đang thuê', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (21, 3, N'C103', 2, 25, CAST(2600000.00 AS Decimal(18, 2)), 3, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (22, 3, N'C104', 2, 28, CAST(2900000.00 AS Decimal(18, 2)), 3, N'Đang thuê', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (23, 3, N'C105', 2, 30, CAST(3100000.00 AS Decimal(18, 2)), 4, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (24, 3, N'C106', 3, 35, CAST(3600000.00 AS Decimal(18, 2)), 4, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (25, 3, N'C107', 3, 38, CAST(3800000.00 AS Decimal(18, 2)), 4, N'Bảo trì', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
-INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (26, 3, N'C108', 3, 40, CAST(4000000.00 AS Decimal(18, 2)), 5, N'Trống', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (1, 1, N'A101', 1, 20, CAST(2000000.00 AS Decimal(18, 2)), 2, N'Trá»‘ng', N'oki', CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (2, 1, N'A102', 1, 22, CAST(2200000.00 AS Decimal(18, 2)), 2, N'Äang thuĂª', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (3, 1, N'A103', 1, 25, CAST(2500000.00 AS Decimal(18, 2)), 3, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (4, 1, N'A104', 2, 30, CAST(3000000.00 AS Decimal(18, 2)), 4, N'Báº£o trĂ¬', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (5, 1, N'A105', 2, 28, CAST(2800000.00 AS Decimal(18, 2)), 3, N'Äang thuĂª', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (6, 1, N'A106', 2, 18, CAST(1800000.00 AS Decimal(18, 2)), 2, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (7, 1, N'A107', 3, 35, CAST(3500000.00 AS Decimal(18, 2)), 4, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (8, 1, N'A108', 3, 40, CAST(4000000.00 AS Decimal(18, 2)), 5, N'Äang thuĂª', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (9, 1, N'A109', 3, 22, CAST(2200000.00 AS Decimal(18, 2)), 2, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (10, 1, N'A110', 4, 45, CAST(4500000.00 AS Decimal(18, 2)), 5, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.920' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (11, 2, N'B101', 1, 18, CAST(1800000.00 AS Decimal(18, 2)), 2, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (12, 2, N'B102', 1, 20, CAST(2000000.00 AS Decimal(18, 2)), 2, N'Äang thuĂª', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (13, 2, N'B103', 2, 22, CAST(2200000.00 AS Decimal(18, 2)), 2, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (14, 2, N'B104', 2, 25, CAST(2500000.00 AS Decimal(18, 2)), 3, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (15, 2, N'B105', 2, 27, CAST(2700000.00 AS Decimal(18, 2)), 3, N'Äang thuĂª', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (16, 2, N'B106', 3, 30, CAST(3000000.00 AS Decimal(18, 2)), 4, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (17, 2, N'B107', 3, 32, CAST(3200000.00 AS Decimal(18, 2)), 4, N'Báº£o trĂ¬', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (18, 2, N'B108', 3, 35, CAST(3500000.00 AS Decimal(18, 2)), 4, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (19, 3, N'C101', 1, 20, CAST(2100000.00 AS Decimal(18, 2)), 2, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (20, 3, N'C102', 1, 22, CAST(2300000.00 AS Decimal(18, 2)), 2, N'Äang thuĂª', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (21, 3, N'C103', 2, 25, CAST(2600000.00 AS Decimal(18, 2)), 3, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (22, 3, N'C104', 2, 28, CAST(2900000.00 AS Decimal(18, 2)), 3, N'Äang thuĂª', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (23, 3, N'C105', 2, 30, CAST(3100000.00 AS Decimal(18, 2)), 4, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (24, 3, N'C106', 3, 35, CAST(3600000.00 AS Decimal(18, 2)), 4, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (25, 3, N'C107', 3, 38, CAST(3800000.00 AS Decimal(18, 2)), 4, N'Báº£o trĂ¬', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
+INSERT [dbo].[Phong] ([MaPhong], [MaCoSo], [SoPhong], [Tang], [DienTich], [GiaThue], [SoNguoiToiDa], [TrangThai], [MoTa], [NgayTao]) VALUES (26, 3, N'C108', 3, 40, CAST(4000000.00 AS Decimal(18, 2)), 5, N'Trá»‘ng', NULL, CAST(N'2026-05-05T15:11:41.923' AS DateTime))
 SET IDENTITY_INSERT [dbo].[Phong] OFF
 GO
 
@@ -275,7 +275,7 @@ GO
 INSERT [dbo].[Phong_TienIch] ([MaPhong], [MaTienIch]) VALUES (1, 1), (1, 2), (1, 8), (1, 9), (2, 1), (3, 2), (4, 3), (5, 4), (6, 5), (7, 6), (8, 7), (9, 8), (10, 9)
 GO
 
--- Hình Ảnh Cơ Sở
+-- HĂ¬nh áº¢nh CÆ¡ Sá»Ÿ
 SET IDENTITY_INSERT [dbo].[HinhAnhCoSo] ON 
 INSERT [dbo].[HinhAnhCoSo] ([MaAnh], [MaCoSo], [UrlAnh], [IsMain]) VALUES (1, 1, N'assets/images/co_so/co_so_1.jpg', 0)
 INSERT [dbo].[HinhAnhCoSo] ([MaAnh], [MaCoSo], [UrlAnh], [IsMain]) VALUES (2, 1, N'assets/images/co_so/co_so_1_2.jpg', 0)
@@ -291,7 +291,7 @@ INSERT [dbo].[HinhAnhCoSo] ([MaAnh], [MaCoSo], [UrlAnh], [IsMain]) VALUES (12, 1
 SET IDENTITY_INSERT [dbo].[HinhAnhCoSo] OFF
 GO
 
--- Hình Ảnh Phòng
+-- HĂ¬nh áº¢nh PhĂ²ng
 SET IDENTITY_INSERT [dbo].[HinhAnhPhong] ON 
 INSERT [dbo].[HinhAnhPhong] ([MaAnh], [MaPhong], [UrlAnh]) VALUES (2, 2, N'assets/images/phong/a102.jpg')
 INSERT [dbo].[HinhAnhPhong] ([MaAnh], [MaPhong], [UrlAnh]) VALUES (3, 3, N'assets/images/phong/a103.jpg')
@@ -323,69 +323,69 @@ SET IDENTITY_INSERT [dbo].[HinhAnhPhong] OFF
 GO
 
 
--- Hợp Đồng Thuê (Dữ liệu mới)
+-- Há»£p Äá»“ng ThuĂª (Dá»¯ liá»‡u má»›i)
 SET IDENTITY_INSERT [dbo].[HopDongThue] ON 
-INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [TienCoc], [TrangThai], [NgayTao]) VALUES (1, 2, 1, CAST(N'2023-01-01' AS Date), CAST(2200000.00 AS Decimal(18, 2)), N'Đang hiệu lực', GETDATE())
-INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [TienCoc], [TrangThai], [NgayTao]) VALUES (2, 12, 2, CAST(N'2023-05-15' AS Date), CAST(2000000.00 AS Decimal(18, 2)), N'Đang hiệu lực', GETDATE())
-INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [TienCoc], [TrangThai], [NgayTao]) VALUES (3, 24, 3, CAST(N'2024-02-10' AS Date), CAST(2900000.00 AS Decimal(18, 2)), N'Đang hiệu lực', GETDATE())
+INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [TienCoc], [TrangThai], [NgayTao]) VALUES (1, 2, 1, CAST(N'2023-01-01' AS Date), CAST(2200000.00 AS Decimal(18, 2)), N'Äang hiá»‡u lá»±c', GETDATE())
+INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [TienCoc], [TrangThai], [NgayTao]) VALUES (2, 12, 2, CAST(N'2023-05-15' AS Date), CAST(2000000.00 AS Decimal(18, 2)), N'Äang hiá»‡u lá»±c', GETDATE())
+INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [TienCoc], [TrangThai], [NgayTao]) VALUES (3, 24, 3, CAST(N'2024-02-10' AS Date), CAST(2900000.00 AS Decimal(18, 2)), N'Äang hiá»‡u lá»±c', GETDATE())
 SET IDENTITY_INSERT [dbo].[HopDongThue] OFF
 GO
 
--- Hóa Đơn (Dữ liệu mới)
+-- HĂ³a ÄÆ¡n (Dá»¯ liá»‡u má»›i)
 SET IDENTITY_INSERT [dbo].[HoaDon] ON 
 INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
-VALUES (1, 2, 1, 10, 2024, CAST(2200000.00 AS Decimal(18,2)), 1250, 1342, CAST(3500.00 AS Decimal(18,2)), 430, 438, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi: 100.000đ', CAST(0.00 AS Decimal(18,2)), NULL, CAST(2782000.00 AS Decimal(18,2)), N'Đã thanh toán', GETDATE(), CAST(N'2024-10-05' AS Date), CAST(N'2024-10-04' AS Date))
+VALUES (1, 2, 1, 10, 2024, CAST(2200000.00 AS Decimal(18,2)), 1250, 1342, CAST(3500.00 AS Decimal(18,2)), 430, 438, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi: 100.000Ä‘', CAST(0.00 AS Decimal(18,2)), NULL, CAST(2782000.00 AS Decimal(18,2)), N'ÄĂ£ thanh toĂ¡n', GETDATE(), CAST(N'2024-10-05' AS Date), CAST(N'2024-10-04' AS Date))
 
 INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
-VALUES (2, 12, 2, 10, 2024, CAST(2000000.00 AS Decimal(18,2)), 2100, 2185, CAST(3500.00 AS Decimal(18,2)), 150, 156, CAST(20000.00 AS Decimal(18,2)), CAST(150000.00 AS Decimal(18,2)), N'Wifi: 100k, Rác: 50k', CAST(50000.00 AS Decimal(18,2)), N'Phạt vứt rác sai quy định', CAST(2617500.00 AS Decimal(18,2)), N'Chưa thanh toán', GETDATE(), CAST(N'2024-10-05' AS Date), NULL)
+VALUES (2, 12, 2, 10, 2024, CAST(2000000.00 AS Decimal(18,2)), 2100, 2185, CAST(3500.00 AS Decimal(18,2)), 150, 156, CAST(20000.00 AS Decimal(18,2)), CAST(150000.00 AS Decimal(18,2)), N'Wifi: 100k, RĂ¡c: 50k', CAST(50000.00 AS Decimal(18,2)), N'Pháº¡t vá»©t rĂ¡c sai quy Ä‘á»‹nh', CAST(2617500.00 AS Decimal(18,2)), N'ChÆ°a thanh toĂ¡n', GETDATE(), CAST(N'2024-10-05' AS Date), NULL)
 
 INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
-VALUES (3, 24, 3, 9, 2024, CAST(2900000.00 AS Decimal(18,2)), 300, 450, CAST(3500.00 AS Decimal(18,2)), 80, 92, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi', CAST(0.00 AS Decimal(18,2)), NULL, CAST(3765000.00 AS Decimal(18,2)), N'Quá hạn', GETDATE(), CAST(N'2024-09-05' AS Date), NULL)
+VALUES (3, 24, 3, 9, 2024, CAST(2900000.00 AS Decimal(18,2)), 300, 450, CAST(3500.00 AS Decimal(18,2)), 80, 92, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi', CAST(0.00 AS Decimal(18,2)), NULL, CAST(3765000.00 AS Decimal(18,2)), N'QuĂ¡ háº¡n', GETDATE(), CAST(N'2024-09-05' AS Date), NULL)
 SET IDENTITY_INSERT [dbo].[HoaDon] OFF
 GO
 
 -- =========================================================
--- 4. TẠO CONSTRAINTS, MẶC ĐỊNH VÀ FOREIGN KEYS
+-- 4. Táº O CONSTRAINTS, Máº¶C Äá»NH VĂ€ FOREIGN KEYS
 -- =========================================================
 
 ALTER TABLE [dbo].[NguoiQuanLy] ADD UNIQUE NONCLUSTERED ([SDT] ASC)
 GO
 ALTER TABLE [dbo].[CoSo] ADD  DEFAULT ((0)) FOR [DanhGia]
 GO
-ALTER TABLE [dbo].[CoSo] ADD  DEFAULT (N'Hoạt động') FOR [TrangThai]
+ALTER TABLE [dbo].[CoSo] ADD  DEFAULT (N'Hoáº¡t Ä‘á»™ng') FOR [TrangThai]
 GO
 ALTER TABLE [dbo].[CoSo] ADD  DEFAULT (getdate()) FOR [NgayTao]
 GO
 ALTER TABLE [dbo].[HinhAnhCoSo] ADD  CONSTRAINT [DF_HinhAnhCoSo_IsMain]  DEFAULT ((0)) FOR [IsMain]
 GO
-ALTER TABLE [dbo].[NguoiQuanLy] ADD  DEFAULT (N'Hoạt động') FOR [TrangThai]
+ALTER TABLE [dbo].[NguoiQuanLy] ADD  DEFAULT (N'Hoáº¡t Ä‘á»™ng') FOR [TrangThai]
 GO
 ALTER TABLE [dbo].[NguoiQuanLy] ADD  DEFAULT (getdate()) FOR [NgayTao]
 GO
-ALTER TABLE [dbo].[Phong] ADD  DEFAULT (N'Trống') FOR [TrangThai]
+ALTER TABLE [dbo].[Phong] ADD  DEFAULT (N'Trá»‘ng') FOR [TrangThai]
 GO
 ALTER TABLE [dbo].[Phong] ADD  DEFAULT (getdate()) FOR [NgayTao]
 GO
 
--- Defaults MỚI cho Hợp Đồng Thuê
+-- Defaults Má»I cho Há»£p Äá»“ng ThuĂª
 ALTER TABLE [dbo].[HopDongThue] ADD DEFAULT ((0)) FOR [TienCoc]
 GO
-ALTER TABLE [dbo].[HopDongThue] ADD DEFAULT (N'Đang hiệu lực') FOR [TrangThai]
+ALTER TABLE [dbo].[HopDongThue] ADD DEFAULT (N'Äang hiá»‡u lá»±c') FOR [TrangThai]
 GO
 ALTER TABLE [dbo].[HopDongThue] ADD DEFAULT (getdate()) FOR [NgayTao]
 GO
 
--- Defaults MỚI cho Hóa Đơn
+-- Defaults Má»I cho HĂ³a ÄÆ¡n
 ALTER TABLE [dbo].[HoaDon] ADD DEFAULT ((0)) FOR [TienDichVu]
 GO
 ALTER TABLE [dbo].[HoaDon] ADD DEFAULT ((0)) FOR [PhuPhi]
 GO
-ALTER TABLE [dbo].[HoaDon] ADD DEFAULT (N'Chưa thanh toán') FOR [TrangThai]
+ALTER TABLE [dbo].[HoaDon] ADD DEFAULT (N'ChÆ°a thanh toĂ¡n') FOR [TrangThai]
 GO
 ALTER TABLE [dbo].[HoaDon] ADD DEFAULT (getdate()) FOR [NgayLap]
 GO
 
--- KHÓA NGOẠI (Foreign Keys)
+-- KHĂ“A NGOáº I (Foreign Keys)
 ALTER TABLE [dbo].[CoSo]  WITH CHECK ADD FOREIGN KEY([MaQuanLy]) REFERENCES [dbo].[NguoiQuanLy] ([MaQuanLy])
 GO
 ALTER TABLE [dbo].[CoSo_TienIch]  WITH CHECK ADD FOREIGN KEY([MaCoSo]) REFERENCES [dbo].[CoSo] ([MaCoSo])
@@ -402,12 +402,12 @@ ALTER TABLE [dbo].[Phong_TienIch]  WITH CHECK ADD FOREIGN KEY([MaPhong]) REFEREN
 GO
 ALTER TABLE [dbo].[Phong_TienIch]  WITH CHECK ADD FOREIGN KEY([MaTienIch]) REFERENCES [dbo].[TienIch] ([MaTienIch])
 GO
-ALTER TABLE [dbo].[Phong]  WITH CHECK ADD  CONSTRAINT [CK_TrangThai] CHECK  (([TrangThai]=N'Bảo trì' OR [TrangThai]=N'Đang thuê' OR [TrangThai]=N'Trống'))
+ALTER TABLE [dbo].[Phong]  WITH CHECK ADD  CONSTRAINT [CK_TrangThai] CHECK  (([TrangThai]=N'Báº£o trĂ¬' OR [TrangThai]=N'Äang thuĂª' OR [TrangThai]=N'Trá»‘ng'))
 GO
 ALTER TABLE [dbo].[Phong] CHECK CONSTRAINT [CK_TrangThai]
 GO
 
--- KHÓA NGOẠI MỚI 
+-- KHĂ“A NGOáº I Má»I 
 ALTER TABLE [dbo].[HopDongThue] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
 GO
 ALTER TABLE [dbo].[HopDongThue] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
@@ -415,4 +415,35 @@ GO
 ALTER TABLE [dbo].[HoaDon] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
 GO
 ALTER TABLE [dbo].[HoaDon] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
+GO
+-- Bảng Thông Báo
+CREATE TABLE [dbo].[ThongBao] (
+    [MaThongBao] INT IDENTITY(1,1) PRIMARY KEY,
+    [TieuDe] NVARCHAR(255) NOT NULL,
+    [NoiDung] NVARCHAR(MAX) NOT NULL,
+    [LoaiThongBao] NVARCHAR(50) DEFAULT N'Hệ thống',
+    [NgayTao] DATETIME DEFAULT GETDATE(),
+    [MaKhachNhan] INT NULL,
+    [TrangThai] NVARCHAR(50) DEFAULT N'Đã gửi'
+);
+GO
+
+-- Bảng Tin Nhắn
+CREATE TABLE [dbo].[TinNhan] (
+    [MaTinNhan] INT IDENTITY(1,1) PRIMARY KEY,
+    [MaNguoiGui] INT NULL,
+    [VaiTroNguoiGui] NVARCHAR(50) NOT NULL,
+    [MaNguoiNhan] INT NULL,
+    [VaiTroNguoiNhan] NVARCHAR(50) NOT NULL,
+    [NoiDung] NVARCHAR(MAX) NOT NULL,
+    [NgayGui] DATETIME DEFAULT GETDATE(),
+    [DaDoc] BIT DEFAULT 0
+);
+GO
+
+-- Thêm thông tin tài khoản ngân hàng cho Admin
+ALTER TABLE [dbo].[NguoiQuanLy] ADD 
+    [TenNganHang] NVARCHAR(100) NULL,
+    [SoTaiKhoan] VARCHAR(50) NULL,
+    [ChuTaiKhoan] NVARCHAR(100) NULL;
 GO

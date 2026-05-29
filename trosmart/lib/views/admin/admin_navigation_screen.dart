@@ -4,6 +4,7 @@ import 'statistics_screen.dart';
 
 import 'utility_management_view.dart';
 import 'admin_sidebar.dart';
+import 'admin_profile_screen.dart';
 import '../../widgets/common/admin/custom_app_bar.dart';
 
 class AdminNavigationScreen extends StatefulWidget {
@@ -21,8 +22,7 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
     const StatisticsScreen(),          // 0 - Trang chủ
     const InvoiceScreen(),             // 1 - Hóa đơn
     const UtilityManagementView(),   // 2 - Phòng / Điện nước
-    const Center(child: Text("Tài khoản – đang phát triển",
-      style: TextStyle(fontSize: 16, color: Colors.black45))), // 3 - Tài khoản
+    const AdminProfileScreen(),        // 3 - Tài khoản
   ];
 
   @override

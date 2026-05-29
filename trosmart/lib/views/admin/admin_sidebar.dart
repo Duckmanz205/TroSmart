@@ -26,6 +26,7 @@ class AdminSidebar extends StatelessWidget {
                 _adminItem(Icons.report_problem_outlined, 'Sự cố'),
                 _adminItem(Icons.calendar_today_outlined, 'Lịch & Công việc'),
                 _adminItem(Icons.bar_chart_outlined, 'Báo cáo'),
+                _adminItem(Icons.notifications_outlined, 'Thông báo', badge: '5'),
                 _adminItem(Icons.chat_outlined, 'Chat', isActive: true, badge: '3'),
                 _adminItem(Icons.settings_outlined, 'Cài đặt'),
               ],

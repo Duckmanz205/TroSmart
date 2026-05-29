@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,6 +38,9 @@ public partial class QuanLyPhongTroContext : DbContext
     public virtual DbSet<ViewHoaDonUi> ViewHoaDonUis { get; set; }
 
     public virtual DbSet<ViewPhongUi> ViewPhongUis { get; set; }
+
+    public virtual DbSet<ThongBao> ThongBaos { get; set; }
+    public virtual DbSet<TinNhan> TinNhans { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Server=.;Database=QuanLyPhongTro;Integrated Security=True;TrustServerCertificate=True");
@@ -206,6 +209,12 @@ public partial class QuanLyPhongTroContext : DbContext
             entity.Property(e => e.TrangThai)
                 .HasMaxLength(50)
                 .HasDefaultValue("Hoạt động");
+                
+            entity.Property(e => e.TenNganHang).HasMaxLength(100);
+            entity.Property(e => e.SoTaiKhoan)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ChuTaiKhoan).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Phong>(entity =>
@@ -295,6 +304,25 @@ public partial class QuanLyPhongTroContext : DbContext
             entity.Property(e => e.TenCoSo).HasMaxLength(150);
             entity.Property(e => e.TrangThai).HasMaxLength(50);
             entity.Property(e => e.TrangThaiHienThi).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<ThongBao>(entity =>
+        {
+            entity.HasKey(e => e.MaThongBao);
+            entity.ToTable("ThongBao");
+            entity.Property(e => e.TieuDe).HasMaxLength(255);
+            entity.Property(e => e.LoaiThongBao).HasMaxLength(50);
+            entity.Property(e => e.TrangThai).HasMaxLength(50);
+            entity.Property(e => e.NgayTao).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TinNhan>(entity =>
+        {
+            entity.HasKey(e => e.MaTinNhan);
+            entity.ToTable("TinNhan");
+            entity.Property(e => e.VaiTroNguoiGui).HasMaxLength(50);
+            entity.Property(e => e.VaiTroNguoiNhan).HasMaxLength(50);
+            entity.Property(e => e.NgayGui).HasColumnType("datetime");
         });
 
         OnModelCreatingPartial(modelBuilder);

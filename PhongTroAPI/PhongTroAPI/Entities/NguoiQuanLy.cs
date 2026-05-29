@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PhongTroAPI.Entities;
@@ -14,6 +14,10 @@ public partial class NguoiQuanLy
     public string? Email { get; set; }
 
     public string? TrangThai { get; set; }
+
+    public string? TenNganHang { get; set; }
+    public string? SoTaiKhoan { get; set; }
+    public string? ChuTaiKhoan { get; set; }
 
     public DateTime? NgayTao { get; set; }
 
