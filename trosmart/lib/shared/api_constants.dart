@@ -4,12 +4,12 @@ class ApiConstants {
   static String get baseUrl {
     try {
       if (Platform.isAndroid) {
-        return 'https://10.0.2.2:7083/api';
+        return 'http://10.0.2.2:5137/api';
       }
     } catch (e) {
       // Ignore if on web
     }
-    return 'https://localhost:7083/api';
+    return 'http://localhost:5137/api';
   }
 }
 

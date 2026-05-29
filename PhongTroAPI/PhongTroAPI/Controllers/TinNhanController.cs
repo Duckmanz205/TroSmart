@@ -46,5 +46,58 @@ namespace PhongTroAPI.Controllers
 
             return Ok(tinNhan);
         }
+
+        // GET: api/TinNhan/Admin/1/Recent
+        [HttpGet("Admin/{maAdmin}/Recent")]
+        public async Task<ActionResult<IEnumerable<object>>> GetRecentChatsForAdmin(int maAdmin)
+        {
+            var messages = await _context.TinNhans
+                .Where(t => (t.MaNguoiGui == maAdmin && t.VaiTroNguoiGui == "Admin") ||
+                            (t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin"))
+                .ToListAsync();
+
+            var userIds = messages
+                .Select(t => t.VaiTroNguoiGui == "User" ? t.MaNguoiGui : t.MaNguoiNhan)
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .Distinct()
+                .ToList();
+
+            var recentChats = new List<object>();
+
+            foreach (var userId in userIds)
+            {
+                var userMessages = messages
+                    .Where(t => (t.MaNguoiGui == userId && t.VaiTroNguoiGui == "User") ||
+                                (t.MaNguoiNhan == userId && t.VaiTroNguoiNhan == "User"))
+                    .OrderByDescending(t => t.NgayGui)
+                    .ToList();
+
+                var lastMessage = userMessages.FirstOrDefault();
+                if (lastMessage != null)
+                {
+                    var khachThue = await _context.KhachThues.FindAsync(userId);
+                    var hopDong = await _context.HopDongThues
+                        .Include(h => h.MaPhongNavigation)
+                        .Where(h => h.MaKhach == userId && h.TrangThai == "Đang hiệu lực")
+                        .FirstOrDefaultAsync();
+
+                    var unreadCount = userMessages.Count(t => t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin" && t.DaDoc == false);
+
+                    recentChats.Add(new
+                    {
+                        MaKhach = userId,
+                        TenKhach = khachThue?.HoTen ?? "Khách " + userId,
+                        SoPhong = hopDong?.MaPhongNavigation?.SoPhong ?? "N/A",
+                        LastMessage = lastMessage.NoiDung,
+                        NgayGui = lastMessage.NgayGui,
+                        IsUnread = unreadCount > 0,
+                        UnreadCount = unreadCount
+                    });
+                }
+            }
+
+            return Ok(recentChats.OrderByDescending(c => ((dynamic)c).NgayGui));
+        }
     }
 }
