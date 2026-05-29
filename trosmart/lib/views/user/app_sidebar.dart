@@ -32,7 +32,7 @@ class AppSidebar extends StatelessWidget {
                 _item(LucideIcons.fileText, AppPages.contract),
                 _item(LucideIcons.search, AppPages.searchroom),
                 _item(LucideIcons.alertTriangle, AppPages.reportIssue),
-                _item(LucideIcons.messageCircle, AppPages.chat, badge: '3'),
+                _item(LucideIcons.messageCircle, AppPages.chat),
                 _item(LucideIcons.bell, AppPages.notifications, hasDot: true),
                 const Divider(height: 32),
                 _item(LucideIcons.users, AppPages.accommodationShare),

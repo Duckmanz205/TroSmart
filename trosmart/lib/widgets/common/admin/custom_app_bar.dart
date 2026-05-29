@@ -16,7 +16,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
       elevation: 0,
       centerTitle: false,
       leading: IconButton(
-        icon: const Icon(LucideIcons.menu, color: AppColors.textDark), // Đã đồng bộ màu
+        icon: const Icon(LucideIcons.menu, color: AppColors.textDark),
         onPressed: () {
           Scaffold.of(context).openDrawer();
         },

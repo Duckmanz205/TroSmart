@@ -1,105 +1,137 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../widgets/common/app_header.dart';
-import '../../widgets/common/chat_bubble.dart';
-import '../../widgets/common/chat_input_bar.dart';
+import '../../widgets/chat_widgets.dart';
+import '../../logic/admin/chat_controller.dart';
+import '../../models/tin_nhan.dart';
 
-/// Admin Chat Detail screen – conversation with a specific tenant.
-class AdChiTietChat extends StatelessWidget {
-  const AdChiTietChat({super.key});
+class AdChiTietChat extends StatefulWidget {
+  final int maKhach;
+  final String tenKhach;
+  final String soPhong;
+
+  const AdChiTietChat({
+    super.key,
+    required this.maKhach,
+    required this.tenKhach,
+    required this.soPhong,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.bgWhite,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Header ──
-            const AppGradientHeader(
-              roleLabel: 'Chủ trọ',
-              isDarkText: true,
-            ),
-
-            // ── Contact Info Bar ──
-            const AppDetailHeader(title: 'Lê Hùng (P103)'),
-
-            // ── Chat Messages ──
-            Expanded(
-              child: Container(
-                color: AppTheme.bgLight,
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    // Date label
-                    _DateLabel(label: 'Hôm nay'),
-                    const SizedBox(height: 20),
-
-                    // Tenant message (received)
-                    const ChatBubble(
-                      message:
-                          'Anh ơi, tháng này tiền điện bao nhiêu ạ?',
-                      time: '10:30',
-                      isSent: false,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Admin reply (sent)
-                    const ChatBubble(
-                      message:
-                          'Chào em, tiền điện tháng này của phòng 103 là 250k nhé. Em xem chỉ số chi tiết trên app nha.',
-                      time: '10:35',
-                      isSent: true,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Tenant reply
-                    const ChatBubble(
-                      message:
-                          'Vâng, để chiều em chuyển khoản luôn cùng tiền phòng nhé.',
-                      time: '10:40',
-                      isSent: false,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Admin reply
-                    const ChatBubble(
-                      message:
-                          'Được em, cảm ơn em nhé. Nhớ chụp lại biên lai gửi anh xác nhận nha!',
-                      time: '10:42',
-                      isSent: true,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Input Bar ──
-            const ChatInputBar(),
-          ],
-        ),
-      ),
-    );
-  }
+  State<AdChiTietChat> createState() => _AdChiTietChatState();
 }
 
-/// Date separator label in chat.
-class _DateLabel extends StatelessWidget {
-  final String label;
-  const _DateLabel({required this.label});
+class _AdChiTietChatState extends State<AdChiTietChat> {
+  final ChatController _chatController = ChatController();
+  final TextEditingController _msgController = TextEditingController();
+  final int _maAdmin = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _chatController.fetchChatHistory(_maAdmin, widget.maKhach);
+  }
+
+  @override
+  void dispose() {
+    _msgController.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage() async {
+    if (_msgController.text.trim().isEmpty) return;
+    
+    final newMsg = TinNhan(
+      maTinNhan: 0,
+      maNguoiGui: _maAdmin,
+      vaiTroNguoiGui: 'Admin',
+      maNguoiNhan: widget.maKhach,
+      vaiTroNguoiNhan: 'User',
+      noiDung: _msgController.text.trim(),
+      ngayGui: DateTime.now().toIso8601String(),
+      daDoc: false,
+    );
+
+    _msgController.clear();
+    await _chatController.sendMessage(newMsg);
+  }
+
+  String _formatTime(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final DateTime date = DateTime.parse(dateStr).toLocal();
+      return DateFormat('HH:mm').format(date);
+    } catch (e) {
+      return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: ShapeDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(9999),
+    return ChangeNotifierProvider.value(
+      value: _chatController,
+      child: Scaffold(
+        backgroundColor: AppTheme.bgWhite,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const AppGradientHeader(
+                roleLabel: 'Chủ trọ',
+                isDarkText: true,
+              ),
+              AppDetailHeader(title: '${widget.tenKhach} (P.${widget.soPhong})'),
+              Expanded(
+                child: Container(
+                  color: AppTheme.bgLight,
+                  child: Consumer<ChatController>(
+                    builder: (context, controller, child) {
+                      if (controller.isLoading && controller.currentChatHistory.isEmpty) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (controller.errorMessage != null) {
+                        return Center(
+                          child: Text(
+                            'Lỗi: ${controller.errorMessage}',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        );
+                      }
+
+                      final history = controller.currentChatHistory;
+                      if (history.isEmpty) {
+                        return const Center(child: Text('Chưa có tin nhắn nào.'));
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: history.length,
+                        itemBuilder: (context, index) {
+                          final msg = history[index];
+                          final isSentByAdmin = msg.vaiTroNguoiGui == 'Admin' && msg.maNguoiGui == _maAdmin;
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: ChatBubble(
+                              message: msg.noiDung,
+                              time: _formatTime(msg.ngayGui),
+                              isSent: isSentByAdmin,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+              ChatInputBar(
+                controller: _msgController,
+                onSend: _sendMessage,
+              ),
+            ],
           ),
         ),
-        child: Text(label, style: AppTheme.timestamp),
       ),
     );
   }

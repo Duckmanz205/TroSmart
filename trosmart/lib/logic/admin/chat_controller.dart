@@ -1,0 +1,59 @@
+import 'package:flutter/material.dart';
+import '../../services/chat_service.dart';
+import '../../models/tin_nhan.dart';
+
+class ChatController extends ChangeNotifier {
+  final ChatService _chatService = ChatService();
+
+  List<Map<String, dynamic>> recentChats = [];
+  List<TinNhan> currentChatHistory = [];
+  bool isLoading = false;
+  String? errorMessage;
+
+  Future<void> fetchRecentChats(int maAdmin) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      recentChats = await _chatService.getRecentChats(maAdmin);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchChatHistory(int maAdmin, int maKhach) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      currentChatHistory = await _chatService.getChatHistory(maAdmin, maKhach);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> sendMessage(TinNhan tinNhan) async {
+    try {
+      final success = await _chatService.sendMessage(tinNhan);
+      if (success) {
+        // Sau khi gửi, tự động thêm vào lịch sử hiện tại và render lại
+        currentChatHistory.add(tinNhan);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+}

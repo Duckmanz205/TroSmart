@@ -1,83 +1,132 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
-import '../../widgets/common/chat_bubble.dart';
-import '../../widgets/common/chat_input_bar.dart';
+import '../../widgets/chat_widgets.dart';
+import '../../logic/admin/chat_controller.dart';
+import '../../models/tin_nhan.dart';
 
-/// User Chat screen – chatbot-style conversation with TroSmart AI assistant.
-class UrChat extends StatelessWidget {
+class UrChat extends StatefulWidget {
   const UrChat({super.key});
 
   @override
+  State<UrChat> createState() => _UrChatState();
+}
+
+class _UrChatState extends State<UrChat> {
+  final ChatController _chatController = ChatController();
+  final TextEditingController _msgController = TextEditingController();
+  final int _maKhach = 1; // Khách mặc định
+  final int _maAdmin = 1; // Admin mặc định
+
+  @override
+  void initState() {
+    super.initState();
+    _chatController.fetchChatHistory(_maAdmin, _maKhach);
+  }
+
+  @override
+  void dispose() {
+    _msgController.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage() async {
+    if (_msgController.text.trim().isEmpty) return;
+    
+    final newMsg = TinNhan(
+      maTinNhan: 0,
+      maNguoiGui: _maKhach,
+      vaiTroNguoiGui: 'User',
+      maNguoiNhan: _maAdmin,
+      vaiTroNguoiNhan: 'Admin',
+      noiDung: _msgController.text.trim(),
+      ngayGui: DateTime.now().toIso8601String(),
+      daDoc: false,
+    );
+
+    _msgController.clear();
+    await _chatController.sendMessage(newMsg);
+  }
+
+  String _formatTime(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final DateTime date = DateTime.parse(dateStr).toLocal();
+      return DateFormat('HH:mm').format(date);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.bgWhite,
-      body: SafeArea(
-        child: Column(
-          children: [
+    return ChangeNotifierProvider.value(
+      value: _chatController,
+      child: Scaffold(
+        backgroundColor: AppTheme.bgWhite,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _ContactInfoBar(),
+              Expanded(
+                child: Container(
+                  color: AppTheme.bgLight,
+                  child: Consumer<ChatController>(
+                    builder: (context, controller, child) {
+                      if (controller.isLoading && controller.currentChatHistory.isEmpty) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (controller.errorMessage != null) {
+                        return Center(
+                          child: Text(
+                            'Lỗi: ${controller.errorMessage}',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        );
+                      }
 
-            // ── Contact Info ──
-            _ContactInfoBar(),
+                      final history = controller.currentChatHistory;
+                      if (history.isEmpty) {
+                        return const Center(child: Text('Hãy gửi lời chào đến chủ trọ!'));
+                      }
 
-            // ── Messages ──
-            Expanded(
-              child: Container(
-                color: AppTheme.bgLight,
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // Date label
-                    _DateLabel(label: 'HÔM NAY'),
-                    const SizedBox(height: 16),
-
-                    // Bot message
-                    _BotMessage(
-                      message:
-                          'Chào bạn! Mình là trợ lý ảo của TroSmart. Bạn cần tìm phòng trọ ở khu vực nào ạ?',
-                      time: '08:00',
-                    ),
-                    const SizedBox(height: 16),
-
-                    // User message
-                    const ChatBubble(
-                      message:
-                          'Chào bạn, mình đang tìm phòng ở khu vực Quận 1, giá khoảng 3-5 triệu.',
-                      time: '08:02',
-                      isSent: true,
-                      backgroundColor: Color(0xFF8B5CF6),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Bot response with room card
-                    _BotMessage(
-                      message:
-                          'Mình đã tìm thấy 3 phòng phù hợp với yêu cầu của bạn tại Quận 1. Bạn có muốn xem chi tiết không?',
-                      time: '08:05',
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Room suggestion card
-                    _RoomSuggestionCard(
-                      imageUrl: 'https://placehold.co/300x160',
-                      title: 'Phòng trọ Quận 1 - Gần chợ Bến Thành',
-                      price: '3.500.000đ/tháng',
-                      area: '25m²',
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: history.length,
+                        itemBuilder: (context, index) {
+                          final msg = history[index];
+                          final isSentByUser = msg.vaiTroNguoiGui == 'User' && msg.maNguoiGui == _maKhach;
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: ChatBubble(
+                              message: msg.noiDung,
+                              time: _formatTime(msg.ngayGui),
+                              isSent: isSentByUser,
+                              backgroundColor: isSentByUser ? const Color(0xFF8B5CF6) : Colors.white,
+                              textColor: isSentByUser ? Colors.white : const Color(0xFF1F2937),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-
-            // ── Chat Input ──
-            const ChatInputBar(hintText: 'Nhập tin nhắn...'),
-          ],
+              ChatInputBar(
+                controller: _msgController,
+                hintText: 'Nhập tin nhắn...',
+                onSend: _sendMessage,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Contact info bar showing chat partner.
 class _ContactInfoBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -92,7 +141,6 @@ class _ContactInfoBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar with online indicator
           Stack(
             children: [
               Container(
@@ -130,7 +178,6 @@ class _ContactInfoBar extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 12),
-          // Name and status
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,199 +198,11 @@ class _ContactInfoBar extends StatelessWidget {
               ],
             ),
           ),
-          // Info button
           const Padding(
             padding: EdgeInsets.all(8),
             child: Icon(Icons.info_outline, size: 24, color: AppTheme.textMuted),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Date separator label.
-class _DateLabel extends StatelessWidget {
-  final String label;
-  const _DateLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: ShapeDecoration(
-          color: AppTheme.bgGray200,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(9999),
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTheme.labelSm.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Bot (received) message with avatar icon.
-class _BotMessage extends StatelessWidget {
-  final String message;
-  final String time;
-
-  const _BotMessage({required this.message, required this.time});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Bot avatar
-        Container(
-          width: 32,
-          height: 32,
-          decoration: ShapeDecoration(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              side: BorderSide(width: 1, color: AppTheme.bgGray200),
-              borderRadius: BorderRadius.circular(9999),
-            ),
-            shadows: AppTheme.cardShadow,
-          ),
-          child: const Icon(
-            Icons.smart_toy_outlined,
-            size: 16,
-            color: AppTheme.deepPurple,
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Message bubble
-        Expanded(
-          child: ChatBubble(
-            message: message,
-            time: time,
-            isSent: false,
-            backgroundColor: Colors.white,
-            textColor: const Color(0xFF1F2937),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Room suggestion card shown inside chat.
-class _RoomSuggestionCard extends StatelessWidget {
-  final String imageUrl;
-  final String title;
-  final String price;
-  final String area;
-
-  const _RoomSuggestionCard({
-    required this.imageUrl,
-    required this.title,
-    required this.price,
-    required this.area,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 40),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 280),
-        clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(width: 1, color: AppTheme.bgGray200),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          shadows: AppTheme.cardShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image
-            Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 160,
-                  color: AppTheme.bgGray100,
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.image_outlined,
-                      size: 48,
-                      color: AppTheme.textMuted,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: ShapeDecoration(
-                      color: const Color(0xFF8B5CF6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: Text(
-                      'Phù hợp 95%',
-                      style: AppTheme.labelSm.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Details
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTheme.bodyMd.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF111827),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
-                        price,
-                        style: AppTheme.bodyMd.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF8B5CF6),
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(Icons.square_foot, size: 14, color: AppTheme.textMuted),
-                      const SizedBox(width: 4),
-                      Text(area, style: AppTheme.caption),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

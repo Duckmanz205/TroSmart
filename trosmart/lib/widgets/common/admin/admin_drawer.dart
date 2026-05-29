@@ -43,7 +43,7 @@ class AdminDrawer extends StatelessWidget {
                   _item(LucideIcons.alertTriangle, AdminPages.suCo),
                   _item(LucideIcons.calendar, AdminPages.lichCongViec),
                   _item(LucideIcons.barChart2, AdminPages.baoCao),
-                  _item(LucideIcons.messageCircle, AdminPages.chat, badge: '3'),
+                  _item(LucideIcons.messageCircle, AdminPages.chat),
                   _item(LucideIcons.settings, AdminPages.caiDat),
                 ],
               ),
