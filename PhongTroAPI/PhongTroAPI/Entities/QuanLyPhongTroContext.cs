@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,6 +48,8 @@ public partial class QuanLyPhongTroContext : DbContext
     public virtual DbSet<TaiKhoan> TaiKhoans { get; set; }
 
     public virtual DbSet<ThongBao> ThongBaos { get; set; }
+
+    public virtual DbSet<TinNhan> TinNhans { get; set; }
 
     public virtual DbSet<TienIch> TienIches { get; set; }
 
@@ -480,6 +482,15 @@ public partial class QuanLyPhongTroContext : DbContext
                 .HasForeignKey(d => d.MaKhach)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__ThongBao__MaKhac__07C12930");
+        });
+
+        modelBuilder.Entity<TinNhan>(entity =>
+        {
+            entity.HasKey(e => e.MaTinNhan);
+            entity.ToTable("TinNhan");
+            entity.Property(e => e.VaiTroNguoiGui).HasMaxLength(50);
+            entity.Property(e => e.VaiTroNguoiNhan).HasMaxLength(50);
+            entity.Property(e => e.NgayGui).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<TienIch>(entity =>

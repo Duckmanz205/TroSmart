@@ -50,9 +50,9 @@ namespace PhongTroAPI.Controllers
             existingManager.HoTen = nguoiQuanLy.HoTen;
             existingManager.Sdt = nguoiQuanLy.Sdt;
             existingManager.Email = nguoiQuanLy.Email;
-            existingManager.TenNganHang = nguoiQuanLy.TenNganHang;
             existingManager.SoTaiKhoan = nguoiQuanLy.SoTaiKhoan;
-            existingManager.ChuTaiKhoan = nguoiQuanLy.ChuTaiKhoan;
+            existingManager.TenTaiKhoan = nguoiQuanLy.TenTaiKhoan;
+            existingManager.MaNganHang = nguoiQuanLy.MaNganHang;
 
             try
             {

@@ -22,7 +22,7 @@ namespace PhongTroAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ThongBao>>> GetThongBaos()
         {
-            return await _context.ThongBaos.OrderByDescending(t => t.NgayTao).ToListAsync();
+            return await _context.ThongBaos.OrderByDescending(t => t.NgayGui).ToListAsync();
         }
 
         // GET: api/ThongBao/user/5
@@ -30,8 +30,8 @@ namespace PhongTroAPI.Controllers
         public async Task<ActionResult<IEnumerable<ThongBao>>> GetThongBaoForUser(int maKhach)
         {
             return await _context.ThongBaos
-                .Where(t => t.MaKhachNhan == maKhach || t.MaKhachNhan == null)
-                .OrderByDescending(t => t.NgayTao)
+                .Where(t => t.MaKhach == maKhach)
+                .OrderByDescending(t => t.NgayGui)
                 .ToListAsync();
         }
 
@@ -39,7 +39,7 @@ namespace PhongTroAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<ThongBao>> PostThongBao(ThongBao thongBao)
         {
-            thongBao.NgayTao = System.DateTime.Now;
+            thongBao.NgayGui = System.DateTime.Now;
             _context.ThongBaos.Add(thongBao);
             await _context.SaveChangesAsync();
 
