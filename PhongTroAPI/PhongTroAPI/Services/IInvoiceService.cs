@@ -11,5 +11,6 @@ public interface IInvoiceService
     Task<InvoiceDto?> GetInvoiceByIdAsync(int id);
     Task<InvoiceDto> CreateInvoiceAsync(InvoiceCreateDto createDto);
     Task<bool> UpdateInvoiceStatusAsync(int id, InvoiceUpdateStatusDto updateDto);
+    Task<bool> UpdateInvoiceAsync(int id, InvoiceUpdateDto updateDto);
     Task<bool> DeleteInvoiceAsync(int id);
 }
