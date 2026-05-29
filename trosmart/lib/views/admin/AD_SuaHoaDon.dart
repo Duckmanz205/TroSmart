@@ -14,15 +14,11 @@ class EditInvoiceScreen extends StatefulWidget {
   State<EditInvoiceScreen> createState() => _EditInvoiceScreenState();
 }
 
-class RoomServiceItem {
-  String name;
-  double amount;
-  RoomServiceItem({this.name = '', this.amount = 0});
-}
-
 class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
   late TextEditingController _dienMoiCtrl;
   late TextEditingController _nuocMoiCtrl;
+  late TextEditingController _phuPhiCtrl;
+  late TextEditingController _tenPhuPhiCtrl;
   bool sendNotify = true;
 
   int? maQuanLy;
@@ -30,8 +26,40 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
   List<BankModel> banks = [];
   bool isLoadingBank = false;
 
-  List<IncidentalFeeItem> _editIncidentalItems = [];
-  List<RoomServiceItem> _editServiceItems = [];
+  List<IncidentalFeeItem> parseIncidentalFees(String? description, double totalAmount) {
+    if (description == null || description.isEmpty) {
+      if (totalAmount > 0) {
+        return [IncidentalFeeItem(name: 'Phí phát sinh', amount: totalAmount)];
+      }
+      return [IncidentalFeeItem()];
+    }
+    
+    try {
+      final items = <IncidentalFeeItem>[];
+      final parts = description.split(',');
+      for (var part in parts) {
+        part = part.trim();
+        if (part.isEmpty) continue;
+        
+        final regex = RegExp(r'^(.*?)\s*\(([\d\.]+)[đVNDvnd\s]*\)$');
+        final match = regex.firstMatch(part);
+        if (match != null) {
+          final name = match.group(1)?.trim() ?? '';
+          final amtStr = (match.group(2) ?? '0').replaceAll('.', '');
+          final amount = double.tryParse(amtStr) ?? 0.0;
+          items.add(IncidentalFeeItem(name: name, amount: amount));
+        } else {
+          items.add(IncidentalFeeItem(name: part, amount: 0.0));
+        }
+      }
+      if (items.isEmpty) {
+        return [IncidentalFeeItem(name: description, amount: totalAmount)];
+      }
+      return items;
+    } catch (_) {
+      return [IncidentalFeeItem(name: description, amount: totalAmount)];
+    }
+  }
 
   @override
   void initState() {
@@ -42,62 +70,21 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
     _nuocMoiCtrl = TextEditingController(
       text: widget.invoice.soNuocMoi.toInt().toString(),
     );
-
-    // Parse Incidental Fees
-    final desc = widget.invoice.moTaPhuPhi ?? '';
-    _editIncidentalItems = [];
-    if (desc.isNotEmpty) {
-      final parts = desc.split(', ');
-      for (var part in parts) {
-        final regExp = RegExp(r'^(.*?)\s*\((\d+)đ\)$');
-        final match = regExp.firstMatch(part);
-        if (match != null) {
-          final name = match.group(1) ?? '';
-          final amount = double.tryParse(match.group(2) ?? '0') ?? 0.0;
-          _editIncidentalItems.add(IncidentalFeeItem(name: name, amount: amount));
-        } else {
-          _editIncidentalItems.add(IncidentalFeeItem(name: part, amount: 0));
-        }
-      }
-    }
-    if (_editIncidentalItems.isEmpty) {
-      if (widget.invoice.phuPhi > 0) {
-        _editIncidentalItems.add(IncidentalFeeItem(
-          name: desc.isNotEmpty ? desc : 'Chi phí phát sinh',
-          amount: widget.invoice.phuPhi,
-        ));
-      } else {
-        _editIncidentalItems.add(IncidentalFeeItem());
-      }
-    }
-
-    // Parse Room Services
-    final svcDesc = widget.invoice.moTaDichVu ?? '';
-    _editServiceItems = [];
-    if (svcDesc.isNotEmpty) {
-      final parts = svcDesc.split(', ');
-      for (var part in parts) {
-        final regExp = RegExp(r'^(.*?)\s*\((\d+)đ\)$');
-        final match = regExp.firstMatch(part);
-        if (match != null) {
-          final name = match.group(1) ?? '';
-          final amount = double.tryParse(match.group(2) ?? '0') ?? 0.0;
-          _editServiceItems.add(RoomServiceItem(name: name, amount: amount));
-        } else {
-          _editServiceItems.add(RoomServiceItem(name: part, amount: 0));
-        }
-      }
-    }
-    if (_editServiceItems.isEmpty) {
-      if (widget.invoice.tienDichVu > 0) {
-        _editServiceItems.add(RoomServiceItem(
-          name: svcDesc.isNotEmpty ? svcDesc : 'Dịch vụ phòng',
-          amount: widget.invoice.tienDichVu,
-        ));
-      } else {
-        _editServiceItems.add(RoomServiceItem());
-      }
-    }
+    _phuPhiCtrl = TextEditingController(
+      text: widget.invoice.phuPhi > 0
+          ? widget.invoice.phuPhi.toStringAsFixed(0)
+          : '',
+    );
+    _tenPhuPhiCtrl = TextEditingController(
+      text: widget.invoice.moTaPhuPhi ?? '',
+    );
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final controller = Provider.of<InvoiceController>(context, listen: false);
+      controller.incidentalItems = parseIncidentalFees(widget.invoice.moTaPhuPhi, widget.invoice.phuPhi);
+      setState(() {});
+    });
 
     _loadManagerAndBankInfo();
   }
@@ -106,6 +93,8 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
   void dispose() {
     _dienMoiCtrl.dispose();
     _nuocMoiCtrl.dispose();
+    _phuPhiCtrl.dispose();
+    _tenPhuPhiCtrl.dispose();
     super.dispose();
   }
 
@@ -128,14 +117,14 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
     return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
   }
 
-  double get _calculatedTotal {
+  double _calculatedTotal(BuildContext ctx) {
     final dienMoi =
         double.tryParse(_dienMoiCtrl.text) ?? widget.invoice.soDienMoi;
     final nuocMoi =
         double.tryParse(_nuocMoiCtrl.text) ?? widget.invoice.soNuocMoi;
     
-    final phuPhiTotal = _editIncidentalItems.fold<double>(0, (sum, item) => sum + item.amount);
-    final serviceTotal = _editServiceItems.fold<double>(0, (sum, item) => sum + item.amount);
+    final controller = ctx.read<InvoiceController>();
+    final phuPhi = controller.incidentalItems.fold<double>(0, (sum, item) => sum + item.amount);
 
     final tienDien =
         (dienMoi - widget.invoice.soDienCu) * widget.invoice.donGiaDien;
@@ -144,8 +133,8 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
     return widget.invoice.tienPhong +
         tienDien +
         tienNuoc +
-        phuPhiTotal +
-        serviceTotal;
+        phuPhi +
+        widget.invoice.tienDichVu;
   }
 
   void _showEditBankSheet() {
@@ -524,226 +513,134 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
                             ),
 
                             const SizedBox(height: 24),
-                            const FormLabel(label: 'TIỀN PHÒNG CỐ ĐỊNH'),
+                              const FormLabel(label: 'TIỀN PHÒNG & DỊCH VỤ'),
                             const SizedBox(height: 8),
                             FeeDisplay(
-                              text: 'Phòng: ${formatCurrency(inv.tienPhong)}',
-                            ),
-
-                            const SizedBox(height: 16),
-                            const FormLabel(label: 'DỊCH VỤ PHÒNG'),
-                            const SizedBox(height: 8),
-                            ...List.generate(_editServiceItems.length, (index) {
-                              final item = _editServiceItems[index];
-                              return Padding(
-                                key: ValueKey('svc_$index'),
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextFormField(
-                                        initialValue: item.name,
-                                        onChanged: (val) {
-                                          item.name = val;
-                                          setInnerState(() {});
-                                        },
-                                        decoration: InputDecoration(
-                                          hintText: 'Tên dịch vụ phòng (VD: Wifi...)',
-                                          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Color(0xFF6A3092)),
-                                          ),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                        ),
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      flex: 2,
-                                      child: TextFormField(
-                                        initialValue: item.amount > 0 ? item.amount.toStringAsFixed(0) : '',
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (val) {
-                                          item.amount = double.tryParse(val) ?? 0;
-                                          setInnerState(() {});
-                                        },
-                                        decoration: InputDecoration(
-                                          hintText: 'Thành tiền',
-                                          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                                          suffixText: 'đ',
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Color(0xFF6A3092)),
-                                          ),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                        ),
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                    if (_editServiceItems.length > 1) ...[
-                                      const SizedBox(width: 4),
-                                      IconButton(
-                                        icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
-                                        onPressed: () {
-                                          _editServiceItems.removeAt(index);
-                                          setInnerState(() {});
-                                        },
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              );
-                            }),
-                            GestureDetector(
-                              onTap: () {
-                                _editServiceItems.add(RoomServiceItem());
-                                setInnerState(() {});
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(Icons.add_circle_outline, size: 16, color: Color(0xFF6A3092)),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Thêm dịch vụ phòng',
-                                      style: TextStyle(
-                                        color: Color(0xFF6A3092),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              text:
+                                  'Phòng: ${formatCurrency(inv.tienPhong)}' +
+                                  (inv.tienDichVu > 0
+                                      ? ' | Dịch vụ: ${formatCurrency(inv.tienDichVu)}'
+                                      : ''),
                             ),
 
                             const SizedBox(height: 16),
                             const FormLabel(label: 'PHÍ PHÁT SINH'),
                             const SizedBox(height: 8),
-                            ...List.generate(_editIncidentalItems.length, (index) {
-                              final item = _editIncidentalItems[index];
-                              return Padding(
-                                key: ValueKey('inc_$index'),
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Row(
+                            
+                            // Retrieve the shared controller instance
+                            Builder(
+                              builder: (childCtx) {
+                                final controller = Provider.of<InvoiceController>(childCtx);
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextFormField(
-                                        initialValue: item.name,
-                                        onChanged: (val) {
-                                          item.name = val;
-                                          setInnerState(() {});
-                                        },
-                                        decoration: InputDecoration(
-                                          hintText: 'Tên dịch vụ/phí',
-                                          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Color(0xFF6A3092)),
-                                          ),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                    ...List.generate(controller.incidentalItems.length, (index) {
+                                      final item = controller.incidentalItems[index];
+                                      return Padding(
+                                        key: ValueKey('incidental_edit_${index}_${controller.incidentalItems.length}'),
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 3,
+                                              child: TextFormField(
+                                                initialValue: item.name,
+                                                onChanged: (val) {
+                                                  controller.updateIncidentalItemName(index, val);
+                                                  setInnerState(() {});
+                                                },
+                                                decoration: InputDecoration(
+                                                  hintText: 'Tên dịch vụ/phí',
+                                                  hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    borderSide: const BorderSide(color: Colors.black12),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    borderSide: const BorderSide(color: Colors.black12),
+                                                  ),
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    borderSide: const BorderSide(color: Color(0xFF6A3092)),
+                                                  ),
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                                ),
+                                                style: const TextStyle(fontSize: 14),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              flex: 2,
+                                              child: TextFormField(
+                                                initialValue: item.amount > 0 ? item.amount.toStringAsFixed(0) : '',
+                                                keyboardType: TextInputType.number,
+                                                onChanged: (val) {
+                                                  controller.updateIncidentalItemAmount(index, val);
+                                                  setInnerState(() {});
+                                                },
+                                                decoration: InputDecoration(
+                                                  hintText: 'Thành tiền',
+                                                  hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                                                  suffixText: 'đ',
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    borderSide: const BorderSide(color: Colors.black12),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    borderSide: const BorderSide(color: Colors.black12),
+                                                  ),
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    borderSide: const BorderSide(color: Color(0xFF6A3092)),
+                                                  ),
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                                ),
+                                                style: const TextStyle(fontSize: 14),
+                                              ),
+                                            ),
+                                            if (controller.incidentalItems.length > 1) ...[
+                                              const SizedBox(width: 4),
+                                              IconButton(
+                                                icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
+                                                onPressed: () {
+                                                  controller.removeIncidentalItem(index);
+                                                  setInnerState(() {});
+                                                },
+                                              ),
+                                            ],
+                                          ],
                                         ),
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      flex: 2,
-                                      child: TextFormField(
-                                        initialValue: item.amount > 0 ? item.amount.toStringAsFixed(0) : '',
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (val) {
-                                          item.amount = double.tryParse(val) ?? 0;
-                                          setInnerState(() {});
-                                        },
-                                        decoration: InputDecoration(
-                                          hintText: 'Thành tiền',
-                                          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                                          suffixText: 'đ',
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Colors.black12),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                            borderSide: const BorderSide(color: Color(0xFF6A3092)),
-                                          ),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                      );
+                                    }),
+                                    GestureDetector(
+                                      onTap: () {
+                                        controller.addIncidentalItem();
+                                        setInnerState(() {});
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: const [
+                                            Icon(Icons.add_circle_outline, size: 16, color: Color(0xFF6A3092)),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'Thêm chi phí phát sinh',
+                                              style: TextStyle(
+                                                color: Color(0xFF6A3092),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                    if (_editIncidentalItems.length > 1) ...[
-                                      const SizedBox(width: 4),
-                                      IconButton(
-                                        icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
-                                        onPressed: () {
-                                          _editIncidentalItems.removeAt(index);
-                                          setInnerState(() {});
-                                        },
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              );
-                            }),
-                            GestureDetector(
-                              onTap: () {
-                                _editIncidentalItems.add(IncidentalFeeItem());
-                                setInnerState(() {});
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(Icons.add_circle_outline, size: 16, color: Color(0xFF6A3092)),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Thêm chi phí phát sinh',
-                                      style: TextStyle(
-                                        color: Color(0xFF6A3092),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
-                                ),
-                              ),
+                                );
+                              }
                             ),
 
                             const SizedBox(height: 24),
@@ -772,7 +669,7 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    formatCurrency(_calculatedTotal),
+                                    formatCurrency(_calculatedTotal(context)),
                                     style: const TextStyle(
                                       color: Color(0xFF6A3092),
                                       fontSize: 32,
@@ -795,8 +692,6 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 30),
-
                   // Textbox chỉnh sửa tài khoản chuyển khoản
                   InkWell(
                     onTap: isLoadingBank ? null : _showEditBankSheet,
@@ -917,17 +812,8 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
                               btnCtx,
                               listen: false,
                             );
-                            final phuPhiVal = _editIncidentalItems.fold<double>(0, (sum, item) => sum + item.amount);
-                            final moTaPhuPhiVal = _editIncidentalItems
-                                .where((item) => item.name.trim().isNotEmpty)
-                                .map((item) => "${item.name.trim()} (${item.amount.toStringAsFixed(0)}đ)")
-                                .join(', ');
-
-                            final tienDichVuVal = _editServiceItems.fold<double>(0, (sum, item) => sum + item.amount);
-                            final moTaDichVuVal = _editServiceItems
-                                .where((item) => item.name.trim().isNotEmpty)
-                                .map((item) => "${item.name.trim()} (${item.amount.toStringAsFixed(0)}đ)")
-                                .join(', ');
+                            final calculatedPhuPhi = controller.incidentalItems.fold<double>(0, (sum, item) => sum + item.amount);
+                            final calculatedMoTa = controller.concatenatedIncidentalDescription;
 
                             final success = await controller.updateInvoice(
                               maHoaDon: inv.maHoaDon,
@@ -937,10 +823,8 @@ class _EditInvoiceScreenState extends State<EditInvoiceScreen> {
                               soNuocMoi:
                                   double.tryParse(_nuocMoiCtrl.text) ??
                                   inv.soNuocMoi,
-                              phuPhi: phuPhiVal,
-                              moTaPhuPhi: moTaPhuPhiVal,
-                              tienDichVu: tienDichVuVal,
-                              moTaDichVu: moTaDichVuVal,
+                              phuPhi: calculatedPhuPhi,
+                              moTaPhuPhi: calculatedMoTa,
                             );
 
                             if (success) {

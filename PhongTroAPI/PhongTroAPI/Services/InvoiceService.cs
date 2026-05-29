@@ -303,8 +303,6 @@ public class InvoiceService : IInvoiceService
         invoice.ChiSoNuocMoi = (int)updateDto.SoNuocMoi;
         invoice.PhuPhi = updateDto.PhuPhi;
         invoice.MoTaPhuPhi = updateDto.MoTaPhuPhi;
-        invoice.TienDichVu = updateDto.TienDichVu;
-        invoice.MoTaDichVu = updateDto.MoTaDichVu;
 
         // Recalculate total amount
         int soDienTieuThu = invoice.ChiSoDienMoi - invoice.ChiSoDienCu;

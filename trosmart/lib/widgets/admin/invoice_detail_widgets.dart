@@ -404,15 +404,19 @@ class ActionButtons extends StatelessWidget {
                   },
             style: OutlinedButton.styleFrom(
               side: BorderSide(
-                color: invoice.trangThai == 'Đã thanh toán' ? Colors.grey : AppColors.adminDarkPurple,
+                color: invoice.trangThai == 'Đã thanh toán'
+                    ? Colors.grey.shade300
+                    : AppColors.adminDarkPurple,
                 width: 2,
               ),
-              foregroundColor: invoice.trangThai == 'Đã thanh toán' ? Colors.grey : AppColors.adminDarkPurple,
+              foregroundColor: invoice.trangThai == 'Đã thanh toán'
+                  ? Colors.grey
+                  : AppColors.adminDarkPurple,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(
-              invoice.trangThai == 'Đã thanh toán' ? 'Đã khóa sửa' : 'Sửa dữ liệu',
+              invoice.trangThai == 'Đã thanh toán' ? 'Không thể sửa' : 'Sửa dữ liệu',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),

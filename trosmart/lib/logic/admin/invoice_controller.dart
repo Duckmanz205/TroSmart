@@ -106,17 +106,39 @@ class InvoiceController extends ChangeNotifier {
     }
   }
 
-  void selectRoom(int roomId) {
+  Future<void> selectRoom(int roomId) async {
     selectedRoomId = roomId;
     final room = availableRooms.firstWhere((r) => r['id'] == roomId);
-    soDienCu = room['soDienCu'] ?? 0.0;
-    soNuocCu = room['soNuocCu'] ?? 0.0;
     tienPhong = room['tienPhong'] ?? 0.0;
-    // Reset chỉ số mới khi đổi phòng
+    
+    // Set default initial values first
+    soDienCu = 0.0;
+    soNuocCu = 0.0;
     soDienMoi = 0;
     soNuocMoi = 0;
     incidentalItems = [IncidentalFeeItem()];
     notifyListeners();
+
+    try {
+      final allInvoices = await _invoiceService.getInvoices(0, 0);
+      final roomInvoices = allInvoices.where((inv) => inv.maPhong == roomId).toList();
+      if (roomInvoices.isNotEmpty) {
+        // Sort by year, then month descending to find the latest invoice
+        roomInvoices.sort((a, b) {
+          if (a.nam != b.nam) {
+            return b.nam.compareTo(a.nam);
+          }
+          return b.thang.compareTo(a.thang);
+        });
+        
+        final latestInvoice = roomInvoices.first;
+        soDienCu = latestInvoice.soDienMoi;
+        soNuocCu = latestInvoice.soNuocMoi;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Error fetching latest readings for room: $e");
+    }
   }
 
   void updateDienMoi(String value) {
@@ -289,8 +311,6 @@ class InvoiceController extends ChangeNotifier {
     required double soNuocMoi,
     required double phuPhi,
     String? moTaPhuPhi,
-    double? tienDichVu,
-    String? moTaDichVu,
   }) async {
     _setLoading(true);
     _setError(null);
@@ -301,8 +321,6 @@ class InvoiceController extends ChangeNotifier {
         soNuocMoi: soNuocMoi,
         phuPhi: phuPhi,
         moTaPhuPhi: moTaPhuPhi,
-        tienDichVu: tienDichVu,
-        moTaDichVu: moTaDichVu,
       );
       
       // Cập nhật hóa đơn trong list local
@@ -313,8 +331,7 @@ class InvoiceController extends ChangeNotifier {
         double soNuocTieuThu = soNuocMoi - current.soNuocCu;
         double tienDien = soDienTieuThu * current.donGiaDien;
         double tienNuoc = soNuocTieuThu * current.donGiaNuoc;
-        double finalTienDichVu = tienDichVu ?? current.tienDichVu;
-        double totalNew = current.tienPhong + tienDien + tienNuoc + finalTienDichVu + phuPhi;
+        double totalNew = current.tienPhong + tienDien + tienNuoc + current.tienDichVu + phuPhi;
 
         _invoices[index] = InvoiceModel(
           maHoaDon: current.maHoaDon,
@@ -332,8 +349,8 @@ class InvoiceController extends ChangeNotifier {
           donGiaDien: current.donGiaDien,
           donGiaNuoc: current.donGiaNuoc,
           tienPhong: current.tienPhong,
-          tienDichVu: finalTienDichVu,
-          moTaDichVu: moTaDichVu ?? current.moTaDichVu,
+          tienDichVu: current.tienDichVu,
+          moTaDichVu: current.moTaDichVu,
           phuPhi: phuPhi,
           moTaPhuPhi: moTaPhuPhi,
           tongTien: totalNew,

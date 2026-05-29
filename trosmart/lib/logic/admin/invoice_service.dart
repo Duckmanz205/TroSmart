@@ -138,8 +138,6 @@ class InvoiceService {
     required double soNuocMoi,
     required double phuPhi,
     String? moTaPhuPhi,
-    double? tienDichVu,
-    String? moTaDichVu,
   }) async {
     try {
       final response = await _dio.put(
@@ -149,12 +147,10 @@ class InvoiceService {
           'soNuocMoi': soNuocMoi,
           'phuPhi': phuPhi,
           'moTaPhuPhi': moTaPhuPhi,
-          'tienDichVu': tienDichVu ?? 0.0,
-          'moTaDichVu': moTaDichVu ?? '',
         },
       );
 
-      if (response.statusCode != 200 && response.statusCode != 204) {
+      if (response.statusCode != 200) {
         throw Exception('Không cập nhật được hóa đơn.');
       }
     } on DioException catch (e) {
