@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../../shared/app_colors.dart';
+import '../../logic/admin/utility_controller.dart';
 
 class PageTitleSection extends StatelessWidget {
   final int month;
@@ -221,48 +223,84 @@ class UtilityFilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Tìm phòng, khách thuê...',
-            prefixIcon: const Icon(LucideIcons.search, color: Colors.grey, size: 20),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.utilityBorder),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.utilityBorder),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.utilityBorder),
-          ),
-          child: const Row(
-            children: [
-              Icon(LucideIcons.mapPin, color: Colors.grey, size: 20),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Tất cả cơ sở',
-                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent),
+    return Consumer<UtilityController>(
+      builder: (context, controller, _) {
+        return Column(
+          children: [
+            TextField(
+              onChanged: controller.setSearchQuery,
+              decoration: InputDecoration(
+                hintText: 'Tìm phòng, khách thuê...',
+                prefixIcon: const Icon(LucideIcons.search, color: Colors.grey, size: 20),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.utilityBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.utilityBorder),
                 ),
               ),
-              Icon(LucideIcons.chevronDown, color: Colors.grey, size: 20),
-            ],
-          ),
-        ),
-      ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.utilityBorder),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int?>(
+                  value: controller.selectedCoSoId,
+                  isExpanded: true,
+                  hint: const Row(
+                    children: [
+                      Icon(LucideIcons.mapPin, color: Colors.grey, size: 20),
+                      SizedBox(width: 12),
+                      Text('Tất cả cơ sở', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent)),
+                    ],
+                  ),
+                  icon: const Icon(LucideIcons.chevronDown, color: Colors.grey, size: 20),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Row(
+                        children: [
+                          Icon(LucideIcons.mapPin, color: Colors.grey, size: 20),
+                          SizedBox(width: 12),
+                          Text('Tất cả cơ sở', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent)),
+                        ],
+                      ),
+                    ),
+                    ...controller.facilities.map((facility) {
+                      return DropdownMenuItem<int?>(
+                        value: facility['maCoSo'] as int?,
+                        child: Row(
+                          children: [
+                            const Icon(LucideIcons.mapPin, color: AppColors.adminDarkPurple, size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              facility['tenCoSo'] as String,
+                              style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                  onChanged: (value) {
+                    controller.changeCoSo(value);
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -294,6 +332,7 @@ enum RoomStatus { inputting, calculated, saved, vacant }
 class RoomUtilityCard extends StatelessWidget {
   final String roomName;
   final String tenant;
+  final String? facilityName;
   final RoomStatus status;
   final String? totalAmount;
   final String? dienCu;
@@ -308,6 +347,7 @@ class RoomUtilityCard extends StatelessWidget {
     super.key,
     required this.roomName,
     required this.tenant,
+    this.facilityName,
     required this.status,
     this.totalAmount,
     this.dienCu,
@@ -388,6 +428,19 @@ class RoomUtilityCard extends StatelessWidget {
                       tenant,
                       style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
                     ),
+                    if (facilityName != null && facilityName!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(LucideIcons.mapPin, color: Colors.white60, size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            facilityName!,
+                            style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
