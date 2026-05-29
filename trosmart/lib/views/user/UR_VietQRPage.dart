@@ -406,7 +406,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               child: ElevatedButton(
                 onPressed: () async {
                   final controller = context.read<UserPaymentController>();
-                  final ok = await controller.markAsPaid(inv.maHoaDon);
+                  final ok = await controller.submitPaymentProof(inv.maHoaDon);
                   if (mounted) {
                     if (ok) {
                       _showSuccessDialog();

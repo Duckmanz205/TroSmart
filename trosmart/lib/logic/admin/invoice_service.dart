@@ -132,6 +132,34 @@ class InvoiceService {
     }
   }
 
+  Future<void> updateInvoice({
+    required int maHoaDon,
+    required double soDienMoi,
+    required double soNuocMoi,
+    required double phuPhi,
+    String? moTaPhuPhi,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/Invoice/$maHoaDon',
+        data: {
+          'soDienMoi': soDienMoi,
+          'soNuocMoi': soNuocMoi,
+          'phuPhi': phuPhi,
+          'moTaPhuPhi': moTaPhuPhi,
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Không cập nhật được hóa đơn.');
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Lỗi hệ thống: $e');
+    }
+  }
+
   Future<void> deleteInvoice(int id) async {
     try {
       final response = await _dio.delete('/Invoice/$id');

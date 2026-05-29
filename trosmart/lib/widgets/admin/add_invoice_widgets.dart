@@ -286,6 +286,7 @@ class ReadingInput extends StatelessWidget {
   final String value;
   final bool isReadOnly;
   final ValueChanged<String>? onChanged;
+  final TextEditingController? controller;
 
   const ReadingInput({
     super.key,
@@ -293,6 +294,7 @@ class ReadingInput extends StatelessWidget {
     required this.value,
     this.isReadOnly = false,
     this.onChanged,
+    this.controller,
   });
 
   @override
@@ -321,13 +323,14 @@ class ReadingInput extends StatelessWidget {
           isReadOnly
             ? Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey,
                 ),
               )
             : TextField(
+                controller: controller,
                 keyboardType: TextInputType.number,
                 onChanged: onChanged,
                 decoration: const InputDecoration(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../views/user/UR_VietQRPage.dart';
 import '../../shared/app_theme.dart';
+import '../../logic/user/user_payment_controller.dart';
 
 class BillBanner extends StatelessWidget {
   final InvoiceModel invoice;
@@ -84,7 +86,10 @@ class BillBanner extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => UrVietQRPage(invoice: invoice),
+                              builder: (routeContext) => ChangeNotifierProvider.value(
+                                value: context.read<UserPaymentController>(),
+                                child: UrVietQRPage(invoice: invoice),
+                              ),
                             ),
                           );
                         },

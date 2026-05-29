@@ -122,6 +122,30 @@ public class InvoiceController : ControllerBase
         }
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateInvoice(int id, [FromBody] InvoiceUpdateDto updateDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var success = await _invoiceService.UpdateInvoiceAsync(id, updateDto);
+            if (!success)
+            {
+                return NotFound(new { message = "Không tìm thấy hóa đơn cần cập nhật." });
+            }
+
+            return Ok(new { message = "Cập nhật hóa đơn thành công!" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi cập nhật hóa đơn.", error = ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteInvoice(int id)
     {

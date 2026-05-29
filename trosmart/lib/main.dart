@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:trosmart/views/auth/login_screen.dart';
 import 'package:trosmart/views/admin/navigation_screen_admin.dart';
@@ -22,3 +23,4 @@ class TroSmartApp extends StatelessWidget {
     );
   }
 }
+
