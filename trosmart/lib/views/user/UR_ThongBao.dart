@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
-import '../../widgets/common/notification_card.dart';
+import '../../widgets/user/notification_widgets.dart';
 
 /// User Notification (Thông báo) screen.
 class UrThongBao extends StatelessWidget {

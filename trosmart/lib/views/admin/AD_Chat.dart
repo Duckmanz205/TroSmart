@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
 import '../../widgets/common/app_search_field.dart';
-import '../../widgets/common/chat_list_item.dart';
+import '../../widgets/chat_widgets.dart';
 import 'AD_ChiTietChat.dart';
 
 class AdChat extends StatelessWidget {

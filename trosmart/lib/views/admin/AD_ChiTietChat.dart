@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
 import '../../widgets/common/app_header.dart';
-import '../../widgets/common/chat_bubble.dart';
-import '../../widgets/common/chat_input_bar.dart';
+import '../../widgets/chat_widgets.dart';
 
 /// Admin Chat Detail screen – conversation with a specific tenant.
 class AdChiTietChat extends StatelessWidget {
