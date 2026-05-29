@@ -4,9 +4,6 @@ import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_model.dart';
 import 'AD_ThemPhong.dart';
 import 'AD_ChiTietPhong.dart';
-import '../../widgets/admin/admin_drawer.dart';
-import '../../widgets/common/admin/custom_app_bar.dart';
-import '../../widgets/common/admin/custom_bottom_navigation.dart';
 
 class PhongManagementView extends StatefulWidget {
   final int maCoSo;
@@ -19,12 +16,15 @@ class PhongManagementView extends StatefulWidget {
   });
 
   @override
-  State<PhongManagementView> createState() => _PhongManagementViewState();
+  State<PhongManagementView> createState() =>
+      _PhongManagementViewState();
 }
 
-class _PhongManagementViewState extends State<PhongManagementView> {
+class _PhongManagementViewState
+    extends State<PhongManagementView> {
   final PhongService _service = PhongService();
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController =
+      TextEditingController();
 
   late Future<List<PhongModel>> _futurePhongs;
 
@@ -45,7 +45,8 @@ class _PhongManagementViewState extends State<PhongManagementView> {
 
   Future<void> _reload() async {
     setState(() {
-      _futurePhongs = _service.getByCoSo(widget.maCoSo);
+      _futurePhongs =
+          _service.getByCoSo(widget.maCoSo);
     });
   }
 
@@ -60,19 +61,29 @@ class _PhongManagementViewState extends State<PhongManagementView> {
       final matchKeyword = keyword.isEmpty ||
           item.soPhong.toLowerCase().contains(keyword) ||
           item.trangThai.toLowerCase().contains(keyword) ||
-          (item.moTa?.toLowerCase().contains(keyword) ?? false) ||
-          (item.tang?.toString().contains(keyword) ?? false) ||
+          (item.moTa?.toLowerCase().contains(keyword) ??
+              false) ||
+          (item.tang
+                  ?.toString()
+                  .contains(keyword) ??
+              false) ||
           matchTienIch;
 
       final matchStatus =
-          _statusFilter == 'Tất cả' || item.trangThai == _statusFilter;
+          _statusFilter == 'Tất cả' ||
+              item.trangThai == _statusFilter;
 
       return matchKeyword && matchStatus;
     }).toList();
   }
 
-  int _countStatus(List<PhongModel> list, String status) {
-    return list.where((x) => x.trangThai == status).length;
+  int _countStatus(
+      List<PhongModel> list,
+      String status,
+      ) {
+    return list
+        .where((x) => x.trangThai == status)
+        .length;
   }
 
   Future<void> _openAddPhong() async {
@@ -93,7 +104,9 @@ class _PhongManagementViewState extends State<PhongManagementView> {
     }
   }
 
-  Future<void> _openPhongDetail(PhongModel room) async {
+  Future<void> _openPhongDetail(
+      PhongModel room,
+      ) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -115,14 +128,24 @@ class _PhongManagementViewState extends State<PhongManagementView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8FB),
-      appBar: const CustomAppBar(),
-      drawer: const AdminDrawer(activeTitle: "Phòng"),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 2),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openAddPhong,
+        backgroundColor: const Color(0xFF7430A3),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text(
+          'Thêm phòng',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: FutureBuilder<List<PhongModel>>(
           future: _futurePhongs,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState ==
+                ConnectionState.waiting) {
               return const Center(
                 child: CircularProgressIndicator(
                   color: Color(0xFF8A36B0),
@@ -131,19 +154,29 @@ class _PhongManagementViewState extends State<PhongManagementView> {
             }
 
             if (snapshot.hasError) {
-              return _buildError(snapshot.error.toString());
+              return _buildError(
+                snapshot.error.toString(),
+              );
             }
 
             final data = snapshot.data ?? [];
-            final filteredData = _applyFilter(data);
+            final filteredData =
+            _applyFilter(data);
 
             return RefreshIndicator(
               onRefresh: _reload,
               child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(18, 14, 18, 30),
+                physics:
+                const AlwaysScrollableScrollPhysics(),
+                padding:
+                const EdgeInsets.fromLTRB(
+                    18,
+                    14,
+                    18,
+                    100),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
                   children: [
                     _buildBackRow(),
                     const SizedBox(height: 14),
@@ -157,11 +190,12 @@ class _PhongManagementViewState extends State<PhongManagementView> {
                     _buildFilterChips(),
                     const SizedBox(height: 12),
                     _buildSearchBox(),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 18),
+
                     if (filteredData.isEmpty)
                       _buildEmpty()
                     else
-                      _buildRoomGrid(filteredData),
+                      _buildRoomList(filteredData),
                   ],
                 ),
               ),
@@ -213,56 +247,20 @@ class _PhongManagementViewState extends State<PhongManagementView> {
       'Quản lý phòng',
       style: TextStyle(
         color: Color(0xFF151521),
-        fontSize: 25,
+        fontSize: 28,
         fontWeight: FontWeight.w900,
-        height: 1.05,
       ),
     );
   }
 
   Widget _buildSubHeader(int total) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            '${widget.tenCoSo} — $total phòng',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.black.withValues(alpha: 0.68),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          height: 38,
-          child: ElevatedButton.icon(
-            onPressed: _openAddPhong,
-            icon: const Icon(
-              Icons.add_rounded,
-              size: 15,
-            ),
-            label: const Text(
-              'Thêm phòng',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF7430A3),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(19),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return Text(
+      '${widget.tenCoSo} — $total phòng',
+      style: TextStyle(
+        color: Colors.black.withValues(alpha: 0.65),
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 
@@ -271,7 +269,8 @@ class _PhongManagementViewState extends State<PhongManagementView> {
       children: [
         Expanded(
           child: _statCard(
-            value: '${_countStatus(list, 'Đang thuê')}',
+            value:
+            '${_countStatus(list, 'Đang thuê')}',
             label: 'Đang thuê',
             color: const Color(0xFF19D8B3),
           ),
@@ -279,7 +278,8 @@ class _PhongManagementViewState extends State<PhongManagementView> {
         const SizedBox(width: 10),
         Expanded(
           child: _statCard(
-            value: '${_countStatus(list, 'Trống')}',
+            value:
+            '${_countStatus(list, 'Trống')}',
             label: 'Còn trống',
             color: const Color(0xFFF5A623),
           ),
@@ -287,7 +287,8 @@ class _PhongManagementViewState extends State<PhongManagementView> {
         const SizedBox(width: 10),
         Expanded(
           child: _statCard(
-            value: '${_countStatus(list, 'Bảo trì')}',
+            value:
+            '${_countStatus(list, 'Bảo trì')}',
             label: 'Bảo trì',
             color: const Color(0xFFFF4D4F),
           ),
@@ -302,22 +303,21 @@ class _PhongManagementViewState extends State<PhongManagementView> {
     required Color color,
   }) {
     return Container(
-      height: 68,
+      height: 78,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: const Color(0xFF17151F).withValues(alpha: 0.65),
-        ),
+        borderRadius:
+        BorderRadius.circular(18),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment:
+        MainAxisAlignment.center,
         children: [
           Text(
             value,
             style: TextStyle(
               color: color,
-              fontSize: 21,
+              fontSize: 24,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -325,8 +325,10 @@ class _PhongManagementViewState extends State<PhongManagementView> {
           Text(
             label,
             style: TextStyle(
-              color: Colors.black.withValues(alpha: 0.62),
-              fontSize: 10,
+              color:
+              Colors.black.withValues(
+                  alpha: 0.6),
+              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -336,16 +338,23 @@ class _PhongManagementViewState extends State<PhongManagementView> {
   }
 
   Widget _buildFilterChips() {
-    final filters = ['Tất cả', 'Đang thuê', 'Trống', 'Bảo trì'];
+    final filters = [
+      'Tất cả',
+      'Đang thuê',
+      'Trống',
+      'Bảo trì'
+    ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: filters.map((filter) {
-          final selected = _statusFilter == filter;
+          final selected =
+              _statusFilter == filter;
 
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding:
+            const EdgeInsets.only(right: 8),
             child: GestureDetector(
               onTap: () {
                 setState(() {
@@ -353,25 +362,30 @@ class _PhongManagementViewState extends State<PhongManagementView> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
+                padding:
+                const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 9,
                 ),
                 decoration: BoxDecoration(
-                  color: selected ? const Color(0xFF7430A3) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: selected
-                        ? const Color(0xFF7430A3)
-                        : Colors.black.withValues(alpha: 0.22),
-                  ),
+                  color: selected
+                      ? const Color(
+                      0xFF7430A3)
+                      : Colors.white,
+                  borderRadius:
+                  BorderRadius.circular(
+                      20),
                 ),
                 child: Text(
                   filter,
                   style: TextStyle(
-                    color: selected ? Colors.white : const Color(0xFF17151F),
+                    color: selected
+                        ? Colors.white
+                        : const Color(
+                        0xFF17151F),
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontWeight:
+                    FontWeight.w800,
                   ),
                 ),
               ),
@@ -384,7 +398,7 @@ class _PhongManagementViewState extends State<PhongManagementView> {
 
   Widget _buildSearchBox() {
     return SizedBox(
-      height: 44,
+      height: 48,
       child: TextField(
         controller: _searchController,
         onChanged: (value) {
@@ -392,60 +406,41 @@ class _PhongManagementViewState extends State<PhongManagementView> {
             _keyword = value;
           });
         },
-        style: const TextStyle(
-          fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-        ),
         decoration: InputDecoration(
-          hintText: 'Tìm phòng hoặc tiện ích...',
-          hintStyle: TextStyle(
-            color: Colors.black.withValues(alpha: 0.42),
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-          prefixIcon: Icon(
+          hintText:
+          'Tìm phòng hoặc tiện ích...',
+          prefixIcon: const Icon(
             Icons.search_rounded,
-            color: Colors.black.withValues(alpha: 0.55),
-            size: 20,
           ),
           filled: true,
           fillColor: Colors.white,
-          contentPadding: EdgeInsets.zero,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: Colors.black.withValues(alpha: 0.42),
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: Color(0xFF7430A3),
-              width: 1.2,
-            ),
+          border: OutlineInputBorder(
+            borderRadius:
+            BorderRadius.circular(14),
+            borderSide: BorderSide.none,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildRoomGrid(List<PhongModel> rooms) {
-    return GridView.builder(
+  Widget _buildRoomList(
+      List<PhongModel> rooms,
+      ) {
+    return ListView.separated(
       itemCount: rooms.length,
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.64,
-      ),
+      physics:
+      const NeverScrollableScrollPhysics(),
+      separatorBuilder: (_, __) =>
+      const SizedBox(height: 14),
       itemBuilder: (context, index) {
         final room = rooms[index];
 
         return _RoomCard(
           room: room,
-          onTap: () => _openPhongDetail(room),
+          onTap: () =>
+              _openPhongDetail(room),
         );
       },
     );
@@ -457,7 +452,8 @@ class _PhongManagementViewState extends State<PhongManagementView> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+        BorderRadius.circular(16),
       ),
       child: const Column(
         children: [
@@ -480,45 +476,7 @@ class _PhongManagementViewState extends State<PhongManagementView> {
 
   Widget _buildError(String error) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.wifi_off_rounded,
-              color: Color(0xFF7430A3),
-              size: 44,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Không thể tải danh sách phòng',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.black.withValues(alpha: 0.48),
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _reload,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7430A3),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Thử lại'),
-            ),
-          ],
-        ),
-      ),
+      child: Text(error),
     );
   }
 }
@@ -539,256 +497,266 @@ class _RoomCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.72),
-          ),
+          borderRadius:
+          BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color:
+              Colors.black.withValues(
+                  alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
           children: [
-            _buildImageBox(statusStyle),
-            const SizedBox(height: 10),
-            _buildTop(statusStyle),
-            const SizedBox(height: 10),
-            Text(
-              _displayRoomName(room.soPhong),
-              style: const TextStyle(
-                color: Color(0xFF151521),
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
+            ClipRRect(
+              borderRadius:
+              BorderRadius.circular(18),
+              child: SizedBox(
+                height: 190,
+                width: double.infinity,
+                child: _buildImageBox(
+                    statusStyle),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              room.tang != null ? 'Tầng ${room.tang}' : 'Chưa có tầng',
-              style: TextStyle(
-                color: Colors.black.withValues(alpha: 0.55),
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-              ),
+
+            const SizedBox(height: 14),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _displayRoomName(
+                        room.soPhong),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight:
+                      FontWeight.w900,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding:
+                  const EdgeInsets
+                      .symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                    statusStyle.bgColor,
+                    borderRadius:
+                    BorderRadius
+                        .circular(
+                        14),
+                  ),
+                  child: Text(
+                    room.trangThai,
+                    style: TextStyle(
+                      color: statusStyle
+                          .mainColor,
+                      fontWeight:
+                      FontWeight.w900,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              _buildMetaText(room),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.black.withValues(alpha: 0.52),
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+
             const SizedBox(height: 8),
-            _buildTienIchWrap(),
-            const Spacer(),
+
+            Text(
+              room.tang != null
+                  ? 'Tầng ${room.tang}'
+                  : 'Chưa có tầng',
+              style: TextStyle(
+                color:
+                Colors.black.withValues(
+                    alpha: 0.55),
+                fontSize: 13,
+                fontWeight:
+                FontWeight.w600,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            SingleChildScrollView(
+              scrollDirection:
+              Axis.horizontal,
+              child: Row(
+                children:
+                room.tienIches.map((item) {
+                  return Container(
+                    margin:
+                    const EdgeInsets.only(
+                        right: 8),
+                    padding:
+                    const EdgeInsets
+                        .symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(
+                          0xFFF2E9FA),
+                      borderRadius:
+                      BorderRadius
+                          .circular(
+                          14),
+                    ),
+                    child: Text(
+                      item,
+                      style:
+                      const TextStyle(
+                        color: Color(
+                            0xFF7B2CBF),
+                        fontSize: 11,
+                        fontWeight:
+                        FontWeight
+                            .w800,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
             Text(
               _formatCurrency(room.giaThue),
               style: TextStyle(
                 color: statusStyle.mainColor,
-                fontSize: 15,
+                fontSize: 24,
                 fontWeight: FontWeight.w900,
               ),
             ),
+
             const SizedBox(height: 2),
+
             Text(
               'VNĐ / tháng',
               style: TextStyle(
-                color: Colors.black.withValues(alpha: 0.48),
-                fontSize: 9.5,
-                fontWeight: FontWeight.w600,
+                color:
+                Colors.black.withValues(
+                    alpha: 0.48),
+                fontSize: 11,
+                fontWeight:
+                FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              (room.moTa != null && room.moTa!.trim().isNotEmpty)
-                  ? room.moTa!
-                  : 'Chưa có mô tả',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.black.withValues(alpha: 0.48),
-                fontSize: 9.5,
-                fontWeight: FontWeight.w600,
+
+            if (room.moTa != null &&
+                room.moTa!
+                    .trim()
+                    .isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                room.moTa!,
+                style: TextStyle(
+                  color: Colors.black
+                      .withValues(
+                      alpha: 0.55),
+                  fontSize: 12,
+                  height: 1.4,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImageBox(_RoomStatusStyle style) {
-    final imagePath = room.hinhAnhPhong?.trim();
+  Widget _buildImageBox(
+      _RoomStatusStyle style) {
+    final imagePath =
+    room.hinhAnhPhong?.trim();
+
+    if (imagePath != null &&
+        imagePath.isNotEmpty) {
+      if (imagePath.startsWith('assets/')) {
+        return Image.asset(
+          imagePath,
+          fit: BoxFit.cover,
+        );
+      }
+
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        errorBuilder:
+            (_, __, ___) => Container(
+          color: style.bgColor,
+          child: Icon(
+            Icons.image_not_supported,
+            color: style.mainColor,
+            size: 34,
+          ),
+        ),
+      );
+    }
 
     return Container(
-      height: 86,
-      width: double.infinity,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: style.bgColor,
-        borderRadius: BorderRadius.circular(12),
+      color: style.bgColor,
+      child: Icon(
+        room.baoTri
+            ? Icons.build_rounded
+            : Icons.home_outlined,
+        color: style.mainColor,
+        size: 42,
       ),
-      child: (imagePath != null && imagePath.isNotEmpty)
-          ? _buildImage(imagePath)
-          : Icon(
-              room.baoTri ? Icons.build_rounded : Icons.home_outlined,
-              color: style.mainColor,
-              size: 28,
-            ),
-    );
-  }
-
-  Widget _buildImage(String path) {
-    if (path.startsWith('assets/')) {
-      return Image.asset(
-        path,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Center(
-          child: Icon(
-            Icons.image_not_supported_outlined,
-            color: Color(0xFF7430A3),
-          ),
-        ),
-      );
-    }
-
-    return Image.network(
-      path,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const Center(
-        child: Icon(
-          Icons.image_not_supported_outlined,
-          color: Color(0xFF7430A3),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTop(_RoomStatusStyle style) {
-    return Row(
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: style.bgColor,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            room.baoTri ? Icons.build_rounded : Icons.meeting_room_outlined,
-            color: style.mainColor,
-            size: 18,
-          ),
-        ),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-          decoration: BoxDecoration(
-            color: style.bgColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            room.trangThai,
-            style: TextStyle(
-              color: style.mainColor,
-              fontSize: 8.5,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTienIchWrap() {
-    if (room.tienIches.isEmpty) {
-      return Text(
-        'Chưa có tiện ích',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: Colors.black.withValues(alpha: 0.42),
-          fontSize: 9.5,
-          fontWeight: FontWeight.w600,
-        ),
-      );
-    }
-
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: room.tienIches.take(3).map((item) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF2E9FA),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFF8A36B0).withValues(alpha: 0.18),
-            ),
-          ),
-          child: Text(
-            item,
-            style: const TextStyle(
-              color: Color(0xFF7B2CBF),
-              fontSize: 9.5,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 
   String _displayRoomName(String soPhong) {
     final value = soPhong.trim();
 
-    if (value.toLowerCase().startsWith('p.')) {
+    if (value
+        .toLowerCase()
+        .startsWith('p.')) {
       return value;
     }
 
     return 'P.$value';
   }
 
-  String _buildMetaText(PhongModel room) {
-    final parts = <String>[];
-
-    if (room.dienTich != null) {
-      parts.add('${room.dienTich!.toStringAsFixed(0)} m²');
-    }
-
-    if (room.soNguoiToiDa != null) {
-      parts.add('Tối đa ${room.soNguoiToiDa} người');
-    }
-
-    if (parts.isEmpty) {
-      return 'Chưa có thông tin thêm';
-    }
-
-    return parts.join(' • ');
-  }
-
   String _formatCurrency(num value) {
     final text = value.toStringAsFixed(0);
     final buffer = StringBuffer();
+
     int count = 0;
 
-    for (int i = text.length - 1; i >= 0; i--) {
+    for (int i = text.length - 1;
+    i >= 0;
+    i--) {
       buffer.write(text[i]);
       count++;
+
       if (count % 3 == 0 && i != 0) {
         buffer.write('.');
       }
     }
 
-    return buffer.toString().split('').reversed.join();
+    return buffer
+        .toString()
+        .split('')
+        .reversed
+        .join();
   }
 
-  _RoomStatusStyle _statusStyle(PhongModel room) {
+  _RoomStatusStyle _statusStyle(
+      PhongModel room,
+      ) {
     if (room.trangThai == 'Đang thuê') {
       return const _RoomStatusStyle(
         mainColor: Color(0xFF19D8B3),

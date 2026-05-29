@@ -24,6 +24,7 @@ class RoomDetailView extends StatelessWidget {
     for (int i = 0; i < raw.length; i++) {
       final reverseIndex = raw.length - i;
       buffer.write(raw[i]);
+
       if (reverseIndex > 1 && reverseIndex % 3 == 1) {
         buffer.write('.');
       }
@@ -57,9 +58,18 @@ class RoomDetailView extends StatelessWidget {
   }
 
   String get _availabilityText {
-    if (room.isTrong) return 'Phòng đang trống và có thể đặt lịch xem.';
-    if (room.isDangThue) return 'Phòng hiện đang có khách thuê.';
-    if (room.isBaoTri) return 'Phòng đang bảo trì, chưa thể đặt lịch.';
+    if (room.isTrong) {
+      return 'Phòng đang trống và có thể đặt lịch xem.';
+    }
+
+    if (room.isDangThue) {
+      return 'Phòng hiện đang có khách thuê.';
+    }
+
+    if (room.isBaoTri) {
+      return 'Phòng đang bảo trì, chưa thể đặt lịch.';
+    }
+
     return 'Trạng thái phòng chưa xác định.';
   }
 
@@ -96,7 +106,7 @@ class RoomDetailView extends StatelessWidget {
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Không mở được bản đồ'),
+          content: Text('Không mở được Google Maps'),
         ),
       );
     }
@@ -109,7 +119,7 @@ class RoomDetailView extends StatelessWidget {
       bottomNavigationBar: _bottomBookingBar(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 108),
+          padding: const EdgeInsets.only(bottom: 110),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -121,28 +131,38 @@ class RoomDetailView extends StatelessWidget {
                   children: [
                     _imageHero(),
                     const SizedBox(height: 16),
+
                     _mainInfoCard(context),
                     const SizedBox(height: 16),
+
                     _overviewGrid(),
                     const SizedBox(height: 18),
+
                     _sectionTitle('Cơ sở'),
                     const SizedBox(height: 12),
                     _facilityCard(context),
+
                     const SizedBox(height: 18),
+
                     if (room.tienIches.isNotEmpty) ...[
                       _sectionTitle('Tiện ích phòng'),
                       const SizedBox(height: 12),
                       _amenitiesCard(),
                       const SizedBox(height: 18),
                     ],
+
                     _sectionTitle('Vị trí cơ sở'),
                     const SizedBox(height: 12),
                     _mapCard(context),
+
                     const SizedBox(height: 18),
+
                     _sectionTitle('Thông tin chi tiết'),
                     const SizedBox(height: 12),
                     _detailInfoCard(),
+
                     const SizedBox(height: 18),
+
                     _sectionTitle('Tình trạng hiện tại'),
                     const SizedBox(height: 12),
                     _availabilityCard(),
@@ -162,7 +182,10 @@ class RoomDetailView extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          bottom: BorderSide(color: borderColor, width: 1),
+          bottom: BorderSide(
+            color: borderColor,
+            width: 1,
+          ),
         ),
       ),
       child: Row(
@@ -194,7 +217,10 @@ class RoomDetailView extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               gradient: const LinearGradient(
-                colors: [primaryDark, primary],
+                colors: [
+                  primaryDark,
+                  primary,
+                ],
               ),
             ),
             child: const Icon(
@@ -213,10 +239,9 @@ class RoomDetailView extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
-      child: Container(
-        height: 230,
+      child: SizedBox(
+        height: 240,
         width: double.infinity,
-        color: const Color(0xFFE9FBF4),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -224,21 +249,21 @@ class RoomDetailView extends StatelessWidget {
               Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _imagePlaceholder(),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
+                errorBuilder: (_, __, ___) => _imagePlaceholder(),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
 
                   return const Center(
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
                       color: primary,
+                      strokeWidth: 2,
                     ),
                   );
                 },
               )
             else
               _imagePlaceholder(),
+
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -246,16 +271,18 @@ class RoomDetailView extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.black.withValues(alpha: 0.05),
-                    Colors.black.withValues(alpha: 0.55),
+                    Colors.black.withValues(alpha: 0.65),
                   ],
                 ),
               ),
             ),
+
             Positioned(
               top: 14,
               left: 14,
               child: _statusBadge(),
             ),
+
             Positioned(
               left: 16,
               right: 16,
@@ -269,14 +296,11 @@ class RoomDetailView extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 30,
                       fontWeight: FontWeight.w900,
-                      height: 1.05,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     room.tenCoSo,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -301,7 +325,6 @@ class RoomDetailView extends StatelessWidget {
                             color: Colors.white70,
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            height: 1.3,
                           ),
                         ),
                       ),
@@ -329,8 +352,8 @@ class RoomDetailView extends StatelessWidget {
       child: const Center(
         child: Icon(
           Icons.apartment_rounded,
+          size: 72,
           color: primary,
-          size: 70,
         ),
       ),
     );
@@ -338,7 +361,10 @@ class RoomDetailView extends StatelessWidget {
 
   Widget _statusBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 13,
+        vertical: 7,
+      ),
       decoration: BoxDecoration(
         color: _statusColor,
         borderRadius: BorderRadius.circular(18),
@@ -369,6 +395,7 @@ class RoomDetailView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -396,7 +423,9 @@ class RoomDetailView extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 8),
+
           Text(
             _availabilityText,
             style: TextStyle(
@@ -405,41 +434,57 @@ class RoomDetailView extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
+
           const SizedBox(height: 14),
+
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _showContactMessage(context),
-                  icon: const Icon(Icons.phone_outlined, size: 18),
+                  icon: const Icon(
+                    Icons.phone_outlined,
+                    size: 18,
+                  ),
                   label: const Text('Liên hệ'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: primary,
-                    side: const BorderSide(color: primary, width: 1.5),
+                    side: const BorderSide(
+                      color: primary,
+                      width: 1.5,
+                    ),
                     minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: _canBook ? () => _showBookingMessage(context) : null,
-                  icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                  onPressed:
+                      _canBook ? () => _showBookingMessage(context) : null,
+                  icon: const Icon(
+                    Icons.calendar_month_outlined,
+                    size: 18,
+                  ),
                   label: const Text('Đặt lịch xem'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
-                    disabledBackgroundColor: const Color(0xFFD7D7DD),
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFFD7D7DD),
                     minimumSize: const Size.fromHeight(48),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
@@ -499,13 +544,14 @@ class RoomDetailView extends StatelessWidget {
                   ? Image.network(
                       imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
+                      errorBuilder: (_, __, ___) =>
                           _facilityPlaceholder(),
                     )
                   : _facilityPlaceholder(),
             ),
           ),
           const SizedBox(width: 14),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,17 +564,21 @@ class RoomDetailView extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
+
                 const SizedBox(height: 6),
+
                 Text(
                   room.diaChi,
                   style: const TextStyle(
                     color: Color(0xFF475569),
                     fontSize: 12.5,
-                    height: 1.45,
                     fontWeight: FontWeight.w600,
+                    height: 1.45,
                   ),
                 ),
+
                 const SizedBox(height: 10),
+
                 GestureDetector(
                   onTap: () => _openMap(context),
                   child: Row(
@@ -576,7 +626,10 @@ class RoomDetailView extends StatelessWidget {
         runSpacing: 8,
         children: room.tienIches.map((item) {
           return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 11,
+              vertical: 8,
+            ),
             decoration: BoxDecoration(
               color: const Color(0xFFF2E9FA),
               borderRadius: BorderRadius.circular(14),
@@ -609,34 +662,34 @@ class RoomDetailView extends StatelessWidget {
     );
   }
 
+  // ================= MAP CARD FIX =================
+
   Widget _mapCard(BuildContext context) {
     return GestureDetector(
       onTap: () => _openMap(context),
       child: Container(
-        height: 190,
+        height: 220,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.06),
-          ),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.025),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(22),
           child: Stack(
             children: [
               Positioned.fill(
                 child: Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                       colors: [
                         Color(0xFFE9FBF4),
                         Color(0xFFF7F0FF),
@@ -645,65 +698,127 @@ class RoomDetailView extends StatelessWidget {
                   ),
                 ),
               ),
+
               Positioned.fill(
                 child: CustomPaint(
                   painter: _MapPatternPainter(),
                 ),
               ),
-              Center(
+
+              Positioned.fill(
                 child: Container(
-                  width: 58,
-                  height: 58,
                   decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primary.withValues(alpha: 0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: Colors.white,
-                    size: 32,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.08),
+                      ],
+                    ),
                   ),
                 ),
               ),
+
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: primary,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withValues(alpha: 0.35),
+                            blurRadius: 18,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: Colors.white,
+                        size: 34,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Nhấn để mở Google Maps',
+                      style: TextStyle(
+                        color: textDark,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               Positioned(
                 left: 14,
                 right: 14,
                 bottom: 14,
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.94),
-                    borderRadius: BorderRadius.circular(14),
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.05),
+                    ),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.apartment_rounded,
-                        color: primary,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          room.diaChi,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: textDark,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w800,
-                            height: 1.3,
-                          ),
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2E9FA),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.apartment_rounded,
+                          color: primary,
+                          size: 20,
                         ),
                       ),
+
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              room.tenCoSo,
+                              style: const TextStyle(
+                                color: textDark,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              room.diaChi,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                       const SizedBox(width: 8),
+
                       const Icon(
                         Icons.open_in_new_rounded,
                         color: primary,
@@ -720,6 +835,8 @@ class RoomDetailView extends StatelessWidget {
     );
   }
 
+  // =================================================
+
   Widget _detailInfoCard() {
     return _whiteBox(
       child: Column(
@@ -734,15 +851,23 @@ class RoomDetailView extends StatelessWidget {
           _divider(),
           _detailRow('Địa chỉ', room.diaChi),
           _divider(),
-          _detailRow('Trạng thái', room.displayStatus, valueColor: _statusColor),
+          _detailRow(
+            'Trạng thái',
+            room.displayStatus,
+            valueColor: _statusColor,
+          ),
           _divider(),
           _detailRow('Giá thuê', _fullPrice),
           _divider(),
           _detailRow('Diện tích', room.dienTichText),
           _divider(),
-          _detailRow('Số người tối đa', '${room.soNguoiToiDa} người'),
+          _detailRow(
+            'Số người tối đa',
+            '${room.soNguoiToiDa} người',
+          ),
           _divider(),
           _detailRow('Tầng', '${room.tang}'),
+
           if (room.hasLocation) ...[
             _divider(),
             _detailRow('Vĩ độ', room.latitude.toString()),
@@ -777,6 +902,7 @@ class RoomDetailView extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -795,8 +921,8 @@ class RoomDetailView extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF475569),
                     fontSize: 13,
-                    height: 1.45,
                     fontWeight: FontWeight.w600,
+                    height: 1.45,
                   ),
                 ),
               ],
@@ -831,7 +957,11 @@ class RoomDetailView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: primary, size: 20),
+          Icon(
+            icon,
+            color: primary,
+            size: 20,
+          ),
           const Spacer(),
           Text(
             label,
@@ -867,7 +997,11 @@ class RoomDetailView extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, String value, {Color? valueColor}) {
+  Widget _detailRow(
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -882,6 +1016,7 @@ class RoomDetailView extends StatelessWidget {
             ),
           ),
         ),
+
         Expanded(
           child: Text(
             value,
@@ -936,7 +1071,10 @@ class RoomDetailView extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.97),
         border: const Border(
-          top: BorderSide(color: borderColor, width: 1),
+          top: BorderSide(
+            color: borderColor,
+            width: 1,
+          ),
         ),
         boxShadow: [
           BoxShadow(
@@ -965,6 +1103,7 @@ class RoomDetailView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 3),
+
                   RichText(
                     text: TextSpan(
                       children: [
@@ -990,26 +1129,33 @@ class RoomDetailView extends StatelessWidget {
                 ],
               ),
             ),
+
             SizedBox(
               height: 48,
               child: ElevatedButton.icon(
-                onPressed: _canBook ? () => _showBookingMessage(context) : null,
-                icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                onPressed:
+                    _canBook ? () => _showBookingMessage(context) : null,
+                icon: const Icon(
+                  Icons.calendar_month_outlined,
+                  size: 18,
+                ),
+                label: Text(
+                  _canBook
+                      ? 'Đặt lịch xem'
+                      : 'Không khả dụng',
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primary,
-                  disabledBackgroundColor: const Color(0xFFD7D7DD),
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFD7D7DD),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                label: Text(
-                  _canBook ? 'Đặt lịch xem' : 'Không khả dụng',
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -1025,24 +1171,27 @@ class _MapPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final roadPaint = Paint()
-      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.7)
-      ..strokeWidth = 8
+      ..color = Colors.white.withValues(alpha: 0.7)
+      ..strokeWidth = 9
       ..strokeCap = StrokeCap.round;
 
     final smallRoadPaint = Paint()
-      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.55)
+      ..color = Colors.white.withValues(alpha: 0.45)
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
 
+    final dotPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.22);
+
     canvas.drawLine(
-      Offset(-20, size.height * 0.25),
-      Offset(size.width * 0.75, size.height * 0.05),
+      Offset(-20, size.height * 0.22),
+      Offset(size.width * 0.82, size.height * 0.05),
       roadPaint,
     );
 
     canvas.drawLine(
-      Offset(size.width * 0.1, size.height + 20),
-      Offset(size.width * 0.95, -10),
+      Offset(size.width * 0.08, size.height + 10),
+      Offset(size.width * 0.92, -10),
       roadPaint,
     );
 
@@ -1057,8 +1206,20 @@ class _MapPatternPainter extends CustomPainter {
       Offset(size.width * 0.55, size.height + 10),
       smallRoadPaint,
     );
+
+    for (double x = 20; x < size.width; x += 50) {
+      for (double y = 20; y < size.height; y += 50) {
+        canvas.drawCircle(
+          Offset(x, y),
+          2,
+          dotPaint,
+        );
+      }
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
 }
