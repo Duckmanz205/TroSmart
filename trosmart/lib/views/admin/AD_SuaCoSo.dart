@@ -983,55 +983,70 @@ class _EditCoSoViewState extends State<EditCoSoView> {
     );
   }
 
-  Widget _buildMapEditor() {
-    final currentPoint = LatLng(
-      _latitude ?? 10.7769,
-      _longitude ?? 106.7009,
-    );
+Widget _buildMapEditor() {
+  final currentPoint = LatLng(
+    _latitude ?? 10.7769,
+    _longitude ?? 106.7009,
+  );
 
-    return Container(
-      height: 240,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF8A36B0).withValues(alpha: 0.14),
-        ),
+  return Container(
+    height: 240,
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: const Color(0xFF8A36B0).withOpacity(0.14),
       ),
-      child: FlutterMap(
-        options: MapOptions(
-          initialCenter: currentPoint,
-          initialZoom: 15.5,
-          onTap: (tapPosition, point) {
-            setState(() {
-              _latitude = point.latitude;
-              _longitude = point.longitude;
-            });
-          },
+    ),
+    child: FlutterMap(
+      options: MapOptions(
+        initialCenter: currentPoint,
+        initialZoom: 15.5,
+
+        onTap: (tapPosition, point) {
+          setState(() {
+            _latitude = point.latitude;
+            _longitude = point.longitude;
+          });
+        },
+      ),
+
+      children: [
+        TileLayer(
+          // ===== FIX ACCESS BLOCKED =====
+          urlTemplate:
+              'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+
+          subdomains: const ['a', 'b', 'c'],
+
+          userAgentPackageName: 'com.example.trosmart',
+
+          maxZoom: 19,
+
+          tileDisplay: const TileDisplay.fadeIn(),
         ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          ),
-          if (_latitude != null && _longitude != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: LatLng(_latitude!, _longitude!),
-                  width: 42,
-                  height: 42,
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: Color(0xFF7B2CBF),
-                    size: 38,
-                  ),
+
+        if (_latitude != null && _longitude != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(_latitude!, _longitude!),
+
+                width: 42,
+                height: 42,
+
+                child: const Icon(
+                  Icons.location_on_rounded,
+                  color: Color(0xFF7B2CBF),
+                  size: 38,
                 ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
+              ),
+            ],
+          ),
+      ],
+    ),
+  );
+}
 
   Widget _buildCoordinateInfo() {
     return Container(

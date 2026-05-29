@@ -24,6 +24,7 @@ import '../../widgets/common/admin/admin_drawer.dart';
 
 // Import logic
 import '../../logic/admin/invoice_controller.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdminNavigationScreen extends StatefulWidget {
   const AdminNavigationScreen({super.key});
@@ -59,8 +60,8 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
     super.initState();
     _pages = [
       const AdminHomeScreen(), // 0: Dashboard
-      const Text('Cơ sở'), // 1: Cơ sở
-      const Text('Phòng'), // 2: Phòng
+      const _CoSoManagementWrapper(), // 1: Cơ sở (Dynamic wrapper)
+      const PhongManagementView(maCoSo: 1, tenCoSo: 'Cơ sở 1'), // 2: Phòng
       ChangeNotifierProvider(
         create: (context) => InvoiceController(),
         child: const InvoiceScreen(),
@@ -121,5 +122,47 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
         onTap: _onBottomNavTapped,
       ),
     );
+  }
+}
+
+class _CoSoManagementWrapper extends StatefulWidget {
+  const _CoSoManagementWrapper();
+
+  @override
+  State<_CoSoManagementWrapper> createState() => _CoSoManagementWrapperState();
+}
+
+class _CoSoManagementWrapperState extends State<_CoSoManagementWrapper> {
+  int? _maQuanLy;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMaQuanLy();
+  }
+
+  Future<void> _loadMaQuanLy() async {
+    final mq = await AuthService().getMaQuanLy();
+    if (mounted) {
+      setState(() {
+        _maQuanLy = mq;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF7430A3),
+          ),
+        ),
+      );
+    }
+    return CoSoManagementView(maQuanLy: _maQuanLy ?? 1);
   }
 }
