@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'invoice_screen.dart';
-import 'statistics_screen.dart';
-
-import 'utility_management_view.dart';
+import 'package:trosmart/views/admin/AD_HoaDon.dart';
+import 'package:trosmart/views/admin/AD_QLDienNuoc.dart';
+import 'package:trosmart/views/admin/AD_QLThongKe.dart';
 import 'admin_sidebar.dart';
 import 'admin_profile_screen.dart';
 import '../../widgets/common/admin/custom_app_bar.dart';
@@ -19,10 +18,10 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Widget> _screens = [
-    const StatisticsScreen(),          // 0 - Trang chủ
-    const InvoiceScreen(),             // 1 - Hóa đơn
-    const UtilityManagementView(),   // 2 - Phòng / Điện nước
-    const AdminProfileScreen(),        // 3 - Tài khoản
+    const StatisticsScreen(), // 0 - Trang chủ
+    const InvoiceScreen(), // 1 - Hóa đơn
+    const UtilityManagementView(), // 2 - Phòng / Điện nước
+    const AdminProfileScreen(), // 3 - Tài khoản
   ];
 
   @override
@@ -34,10 +33,7 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
         child: CustomAppBar(),
       ),
       drawer: const AdminSidebar(),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
