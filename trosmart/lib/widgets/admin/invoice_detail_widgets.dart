@@ -4,6 +4,8 @@ import 'package:trosmart/views/admin/AD_HoaDon.dart';
 import '../../views/admin/AD_ThemHoaDon.dart';
 import 'package:trosmart/views/admin/AD_SuaHoaDon.dart';
 import '../../shared/app_colors.dart';
+import 'package:provider/provider.dart';
+import '../../logic/admin/invoice_controller.dart';
 
 import '../../models/admin/invoice_model.dart';
 
@@ -305,9 +307,9 @@ class InvoiceDetailRow extends StatelessWidget {
   }
 }
 
-// --- Component: Thẻ chuyển khoản ---
 class BankTransferCard extends StatelessWidget {
-  const BankTransferCard({super.key});
+  final InvoiceModel invoice;
+  const BankTransferCard({super.key, required this.invoice});
 
   @override
   Widget build(BuildContext context) {
@@ -326,13 +328,34 @@ class BankTransferCard extends StatelessWidget {
             child: const Icon(Icons.qr_code_2, size: 50, color: AppColors.darkAccent),
           ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Quét QR chuyển khoản', style: GoogleFonts.inter(color: AppColors.adminDarkPurple, fontWeight: FontWeight.bold, fontSize: 13)),
-              Text('Ngân hàng: VietinBank', style: GoogleFonts.inter(color: AppColors.textLight, fontSize: 11)),
-              Text('STK: 102xxxxxxxxx', style: GoogleFonts.inter(color: AppColors.textLight, fontSize: 11)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quét QR chuyển khoản',
+                  style: GoogleFonts.inter(
+                    color: AppColors.adminDarkPurple,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  invoice.tenVietTat != null && invoice.tenVietTat!.isNotEmpty
+                      ? 'Ngân hàng: ${invoice.tenVietTat}'
+                      : 'Ngân hàng: Chưa thiết lập',
+                  style: GoogleFonts.inter(color: AppColors.textLight, fontSize: 11),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  invoice.soTaiKhoan != null && invoice.soTaiKhoan!.isNotEmpty
+                      ? 'STK: ${invoice.soTaiKhoan}'
+                      : 'STK: Chưa thiết lập',
+                  style: GoogleFonts.inter(color: AppColors.textLight, fontSize: 11),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -366,16 +389,32 @@ class ActionButtons extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => EditInvoiceScreen(invoice: invoice)));
-            },
+            onPressed: invoice.trangThai == 'Đã thanh toán'
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (routeContext) => ChangeNotifierProvider.value(
+                          value: context.read<InvoiceController>(),
+                          child: EditInvoiceScreen(invoice: invoice),
+                        ),
+                      ),
+                    );
+                  },
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.adminDarkPurple, width: 2),
-              foregroundColor: AppColors.adminDarkPurple,
+              side: BorderSide(
+                color: invoice.trangThai == 'Đã thanh toán' ? Colors.grey : AppColors.adminDarkPurple,
+                width: 2,
+              ),
+              foregroundColor: invoice.trangThai == 'Đã thanh toán' ? Colors.grey : AppColors.adminDarkPurple,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Sửa dữ liệu', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              invoice.trangThai == 'Đã thanh toán' ? 'Đã khóa sửa' : 'Sửa dữ liệu',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],

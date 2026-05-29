@@ -56,3 +56,13 @@ public class InvoiceUpdateStatusDto
 {
     public string TrangThai { get; set; } = string.Empty;
 }
+
+public class InvoiceUpdateDto
+{
+    public double SoDienMoi { get; set; }
+    public double SoNuocMoi { get; set; }
+    public decimal PhuPhi { get; set; }
+    public string? MoTaPhuPhi { get; set; }
+    public decimal TienDichVu { get; set; }
+    public string? MoTaDichVu { get; set; }
+}

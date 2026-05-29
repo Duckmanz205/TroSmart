@@ -162,7 +162,60 @@ class InvoiceController extends ChangeNotifier {
     _setLoading(true);
     _setError(null);
     try {
-      _invoices = await _invoiceService.getInvoices(month, year);
+      final list = await _invoiceService.getInvoices(month, year);
+      
+      // Tự động kiểm tra hóa đơn quá hạn
+      final now = DateTime.now();
+      final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      final todayDate = DateTime.parse(todayStr);
+
+      for (var i = 0; i < list.length; i++) {
+        final inv = list[i];
+        if (inv.trangThai == 'Chưa thanh toán' && inv.hanThanhToan != null) {
+          try {
+            final dueDate = DateTime.parse(inv.hanThanhToan!.substring(0, 10));
+            if (dueDate.isBefore(todayDate)) {
+              // Cập nhật trạng thái "Quá hạn" lên database
+              await _invoiceService.updateInvoiceStatus(inv.maHoaDon, 'Quá hạn');
+              // Cập nhật representation cục bộ
+              list[i] = InvoiceModel(
+                maHoaDon: inv.maHoaDon,
+                maPhong: inv.maPhong,
+                maKhach: inv.maKhach,
+                tenPhong: inv.tenPhong,
+                tenCoSo: inv.tenCoSo,
+                tenKhachThue: inv.tenKhachThue,
+                thang: inv.thang,
+                nam: inv.nam,
+                soDienCu: inv.soDienCu,
+                soDienMoi: inv.soDienMoi,
+                soNuocCu: inv.soNuocCu,
+                soNuocMoi: inv.soNuocMoi,
+                donGiaDien: inv.donGiaDien,
+                donGiaNuoc: inv.donGiaNuoc,
+                tienPhong: inv.tienPhong,
+                tienDichVu: inv.tienDichVu,
+                moTaDichVu: inv.moTaDichVu,
+                phuPhi: inv.phuPhi,
+                moTaPhuPhi: inv.moTaPhuPhi,
+                tongTien: inv.tongTien,
+                trangThai: 'Quá hạn',
+                ngayLap: inv.ngayLap,
+                hanThanhToan: inv.hanThanhToan,
+                ngayThanhToan: inv.ngayThanhToan,
+                soTaiKhoan: inv.soTaiKhoan,
+                tenTaiKhoan: inv.tenTaiKhoan,
+                maBin: inv.maBin,
+                tenVietTat: inv.tenVietTat,
+              );
+            }
+          } catch (_) {
+            // Bỏ qua lỗi định dạng ngày
+          }
+        }
+      }
+      _invoices = list;
+      notifyListeners();
     } catch (e) {
       _setError(e.toString());
     } finally {
@@ -218,6 +271,77 @@ class InvoiceController extends ChangeNotifier {
       // Thêm luôn vào danh sách nếu đang xem cùng tháng/năm
       if (thang == _selectedMonth && nam == _selectedYear) {
         _invoices.add(newInvoice);
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Cập nhật hóa đơn
+  Future<bool> updateInvoice({
+    required int maHoaDon,
+    required double soDienMoi,
+    required double soNuocMoi,
+    required double phuPhi,
+    String? moTaPhuPhi,
+    double? tienDichVu,
+    String? moTaDichVu,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+    try {
+      await _invoiceService.updateInvoice(
+        maHoaDon: maHoaDon,
+        soDienMoi: soDienMoi,
+        soNuocMoi: soNuocMoi,
+        phuPhi: phuPhi,
+        moTaPhuPhi: moTaPhuPhi,
+        tienDichVu: tienDichVu,
+        moTaDichVu: moTaDichVu,
+      );
+      
+      // Cập nhật hóa đơn trong list local
+      final index = _invoices.indexWhere((inv) => inv.maHoaDon == maHoaDon);
+      if (index != -1) {
+        final current = _invoices[index];
+        double soDienTieuThu = soDienMoi - current.soDienCu;
+        double soNuocTieuThu = soNuocMoi - current.soNuocCu;
+        double tienDien = soDienTieuThu * current.donGiaDien;
+        double tienNuoc = soNuocTieuThu * current.donGiaNuoc;
+        double finalTienDichVu = tienDichVu ?? current.tienDichVu;
+        double totalNew = current.tienPhong + tienDien + tienNuoc + finalTienDichVu + phuPhi;
+
+        _invoices[index] = InvoiceModel(
+          maHoaDon: current.maHoaDon,
+          maPhong: current.maPhong,
+          maKhach: current.maKhach,
+          tenPhong: current.tenPhong,
+          tenCoSo: current.tenCoSo,
+          tenKhachThue: current.tenKhachThue,
+          thang: current.thang,
+          nam: current.nam,
+          soDienCu: current.soDienCu,
+          soDienMoi: soDienMoi,
+          soNuocCu: current.soNuocCu,
+          soNuocMoi: soNuocMoi,
+          donGiaDien: current.donGiaDien,
+          donGiaNuoc: current.donGiaNuoc,
+          tienPhong: current.tienPhong,
+          tienDichVu: finalTienDichVu,
+          moTaDichVu: moTaDichVu ?? current.moTaDichVu,
+          phuPhi: phuPhi,
+          moTaPhuPhi: moTaPhuPhi,
+          tongTien: totalNew,
+          trangThai: current.trangThai,
+          ngayLap: current.ngayLap,
+          hanThanhToan: current.hanThanhToan,
+          ngayThanhToan: current.ngayThanhToan,
+        );
       }
       notifyListeners();
       return true;

@@ -106,4 +106,17 @@ class UserPaymentController extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> submitPaymentProof(int invoiceId) async {
+    try {
+      await _service.updateInvoiceStatus(invoiceId, 'Chờ duyệt');
+      // Tải lại danh sách
+      await loadUserInvoices();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

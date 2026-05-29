@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:trosmart/views/admin/AD_ThemHoaDon.dart';
 import '../../logic/admin/invoice_controller.dart';
 import '../../models/admin/invoice_model.dart';
+import '../../views/admin/AD_DuyetThanhToan.dart';
 import '../../views/admin/AD_ChiTietHoaDon.dart';
 
 class SectionTitleAction extends StatelessWidget {
@@ -12,43 +13,84 @@ class SectionTitleAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Thu & Thuê',
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF111827),
+                ),
+              ),
+              const SizedBox(height: 2),
+              const Text(
+                'Quản lý hóa đơn',
+                style: TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Thu & Thuê',
-              style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF111827),
+            ElevatedButton.icon(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (routeCtx) => ChangeNotifierProvider.value(
+                      value: context.read<InvoiceController>(),
+                      child: const ApprovePaymentScreen(),
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.fact_check_rounded, color: Colors.white, size: 14),
+              label: const Text('Duyệt', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6E589E),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 2,
               ),
             ),
-            const Text(
-              'Quản lý hóa đơn & thanh toán',
-              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+            const SizedBox(width: 6),
+            ElevatedButton.icon(
+              onPressed: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddInvoiceScreen()));
+                if (context.mounted) {
+                  final controller = context.read<InvoiceController>();
+                  controller.fetchInvoices(controller.selectedMonth, controller.selectedYear);
+                }
+              },
+              icon: const Icon(Icons.add, color: Colors.white, size: 14),
+              label: const Text('Tạo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2DDCB1),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+                shadowColor: const Color(0xFF2DDCB1).withOpacity(0.3),
+              ),
             ),
           ],
-        ),
-        ElevatedButton.icon(
-          onPressed: () async {
-            await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddInvoiceScreen()));
-            if (context.mounted) {
-              final controller = context.read<InvoiceController>();
-              controller.fetchInvoices(controller.selectedMonth, controller.selectedYear);
-            }
-          },
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text('Tạo', style: TextStyle(fontWeight: FontWeight.bold)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2DDCB1),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 8,
-            shadowColor: const Color(0xFF2DDCB1).withOpacity(0.4),
-          ),
         ),
       ],
     );
@@ -271,7 +313,15 @@ class InvoiceCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => InvoiceDetailsScreen(invoice: invoice)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (routeContext) => ChangeNotifierProvider.value(
+              value: context.read<InvoiceController>(),
+              child: InvoiceDetailsScreen(invoice: invoice),
+            ),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),

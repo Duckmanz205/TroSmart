@@ -294,6 +294,30 @@ public class InvoiceService : IInvoiceService
         return true;
     }
 
+    public async Task<bool> UpdateInvoiceAsync(int id, InvoiceUpdateDto updateDto)
+    {
+        var invoice = await _context.HoaDons.FindAsync(id);
+        if (invoice == null) return false;
+
+        invoice.ChiSoDienMoi = (int)updateDto.SoDienMoi;
+        invoice.ChiSoNuocMoi = (int)updateDto.SoNuocMoi;
+        invoice.PhuPhi = updateDto.PhuPhi;
+        invoice.MoTaPhuPhi = updateDto.MoTaPhuPhi;
+        invoice.TienDichVu = updateDto.TienDichVu;
+        invoice.MoTaDichVu = updateDto.MoTaDichVu;
+
+        // Recalculate total amount
+        int soDienTieuThu = invoice.ChiSoDienMoi - invoice.ChiSoDienCu;
+        int soNuocTieuThu = invoice.ChiSoNuocMoi - invoice.ChiSoNuocCu;
+        decimal tienDien = (decimal)soDienTieuThu * invoice.DonGiaDien;
+        decimal tienNuoc = (decimal)soNuocTieuThu * invoice.DonGiaNuoc;
+        
+        invoice.TongTien = invoice.TienPhong + tienDien + tienNuoc + (invoice.TienDichVu ?? 0) + (invoice.PhuPhi ?? 0);
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> DeleteInvoiceAsync(int id)
     {
         var invoice = await _context.HoaDons.FindAsync(id);

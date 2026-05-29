@@ -19,14 +19,17 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
   bool _isPaidMocked = false;
   bool _isUploading = false;
   String? _uploadedImagePath;
+  int _shareCount = 2;
 
   String get _bankId => widget.invoice.maBin ?? '970415';
   String get _accountNo => widget.invoice.soTaiKhoan ?? '102876543210';
   String get _accountName => widget.invoice.tenTaiKhoan ?? 'TROSMART ACADEMY';
-  
+
   String get _vietQRUrl {
     final amount = widget.invoice.tongTien.toInt();
-    final addInfo = Uri.encodeComponent('TROSMART T${widget.invoice.thang} P${widget.invoice.tenPhong}');
+    final addInfo = Uri.encodeComponent(
+      'TROSMART T${widget.invoice.thang} P${widget.invoice.tenPhong}',
+    );
     final accountNameEncoded = Uri.encodeComponent(_accountName);
     return 'https://img.vietqr.io/image/$_bankId-$_accountNo-compact2.png?amount=$amount&addInfo=$addInfo&accountName=$accountNameEncoded';
   }
@@ -77,7 +80,10 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: AppTheme.textPrimary),
+          icon: const Icon(
+            LucideIcons.chevronLeft,
+            color: AppTheme.textPrimary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -100,11 +106,17 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               decoration: BoxDecoration(
                 color: AppTheme.primaryPurple.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primaryPurple.withOpacity(0.2)),
+                border: Border.all(
+                  color: AppTheme.primaryPurple.withOpacity(0.2),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(LucideIcons.info, color: AppTheme.deepPurple, size: 20),
+                  const Icon(
+                    LucideIcons.info,
+                    color: AppTheme.deepPurple,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -132,7 +144,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                     color: Color(0x08000000),
                     blurRadius: 24,
                     offset: Offset(0, 12),
-                  )
+                  ),
                 ],
               ),
               child: Column(
@@ -146,11 +158,17 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                         height: 28,
                         errorBuilder: (_, __, ___) => Text(
                           'VietQR',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: Colors.blue[900]),
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.blue[900],
+                          ),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
@@ -201,7 +219,8 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                             child: Center(
                               child: CircularProgressIndicator(
                                 value: progress.expectedTotalBytes != null
-                                    ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                                    ? progress.cumulativeBytesLoaded /
+                                          progress.expectedTotalBytes!
                                     : null,
                               ),
                             ),
@@ -218,11 +237,18 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                             child: const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(LucideIcons.wifiOff, color: Colors.grey, size: 40),
+                                Icon(
+                                  LucideIcons.wifiOff,
+                                  color: Colors.grey,
+                                  size: 40,
+                                ),
                                 SizedBox(height: 12),
                                 Text(
                                   'Không thể tải mã QR',
-                                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -246,10 +272,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                   const SizedBox(height: 4),
                   Text(
                     'Tự động điền số tiền & nội dung chuyển khoản',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
+                    style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
                   ),
                 ],
               ),
@@ -282,10 +305,15 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                 children: [
                   _buildTransferDetailRow(
                     'Ngân hàng',
-                    widget.invoice.tenVietTat != null && widget.invoice.tenVietTat!.isNotEmpty
+                    widget.invoice.tenVietTat != null &&
+                            widget.invoice.tenVietTat!.isNotEmpty
                         ? widget.invoice.tenVietTat!
                         : 'VietinBank (ICB)',
-                    trailing: const Icon(LucideIcons.externalLink, size: 16, color: Colors.grey),
+                    trailing: const Icon(
+                      LucideIcons.externalLink,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                   ),
                   const Divider(height: 24, thickness: 0.5),
                   _buildTransferDetailRow(
@@ -294,21 +322,283 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                     onCopy: () => _copyToClipboard(_accountNo, 'Số tài khoản'),
                   ),
                   const Divider(height: 24, thickness: 0.5),
-                  _buildTransferDetailRow(
-                    'Chủ tài khoản',
-                    _accountName,
-                  ),
+                  _buildTransferDetailRow('Chủ tài khoản', _accountName),
                   const Divider(height: 24, thickness: 0.5),
                   _buildTransferDetailRow(
                     'Số tiền',
                     totalStr,
-                    onCopy: () => _copyToClipboard(inv.tongTien.toInt().toString(), 'Số tiền'),
+                    onCopy: () => _copyToClipboard(
+                      inv.tongTien.toInt().toString(),
+                      'Số tiền',
+                    ),
                   ),
                   const Divider(height: 24, thickness: 0.5),
                   _buildTransferDetailRow(
                     'Nội dung',
                     description,
-                    onCopy: () => _copyToClipboard(description, 'Nội dung chuyển khoản'),
+                    onCopy: () =>
+                        _copyToClipboard(description, 'Nội dung chuyển khoản'),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+            // Panel Chia sẻ hóa đơn
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x04000000),
+                    blurRadius: 16,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.users,
+                        color: AppTheme.primaryPurple,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'CHIA SẺ HÓA ĐƠN (2-4 NGƯỜI)',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.textPrimary,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Phòng này có nhiều người ở ghép? Hãy chọn số người để tự động chia đều tiền phòng và dịch vụ:',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppTheme.textBody,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [2, 3, 4].map((count) {
+                      final isSelected = _shareCount == count;
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _shareCount = count;
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isSelected
+                                  ? AppTheme.primaryPurple
+                                  : const Color(0xFFF3F2F8),
+                              foregroundColor: isSelected
+                                  ? Colors.white
+                                  : Colors.black87,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Text(
+                              '$count Người',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBF9FE),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Tổng cộng hóa đơn:',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            Text(
+                              totalStr,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10.0),
+                          child: Divider(height: 1, thickness: 0.5),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Mỗi thành viên trả:',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryPurple,
+                              ),
+                            ),
+                            Text(
+                              formatCurrency(
+                                widget.invoice.tongTien / _shareCount,
+                              ),
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.primaryPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Hiển thị dialog QR chia đôi / chia ba / chia bốn riêng biệt
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            final splitAmount =
+                                (widget.invoice.tongTien / _shareCount).toInt();
+                            final splitInfo = Uri.encodeComponent(
+                              'TROSMART T${widget.invoice.thang} P${widget.invoice.tenPhong} CHIA $_shareCount',
+                            );
+                            final splitQRUrl =
+                                'https://img.vietqr.io/image/$_bankId-$_accountNo-compact2.png?amount=$splitAmount&addInfo=$splitInfo&accountName=${Uri.encodeComponent(_accountName)}';
+                            return Dialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Mã QR cho mỗi người',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Số tiền: ${formatCurrency(widget.invoice.tongTien / _shareCount)}',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        color: AppTheme.primaryPurple,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Container(
+                                      height: 200,
+                                      width: 200,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Colors.grey.withOpacity(0.2),
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.network(
+                                          splitQRUrl,
+                                          fit: BoxFit.contain,
+                                          loadingBuilder:
+                                              (
+                                                context,
+                                                child,
+                                                loadingProgress,
+                                              ) {
+                                                if (loadingProgress == null)
+                                                  return child;
+                                                return const Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                );
+                                              },
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      'Quét mã này sẽ tự động điền số tiền chia đều và nội dung đã chia.',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Đóng'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      icon: const Icon(LucideIcons.qrCode, size: 16),
+                      label: Text(
+                        'Xem mã QR chia đều',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryPurple,
+                        side: const BorderSide(color: AppTheme.primaryPurple),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -335,7 +625,10 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               onTap: _isUploading ? null : _mockImageUpload,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                  horizontal: 16,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -349,51 +642,59 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                 child: _isUploading
                     ? const Center(child: CircularProgressIndicator())
                     : _uploadedImagePath != null
-                        ? Column(
-                            children: [
-                              const Icon(LucideIcons.checkCircle, color: AppTheme.accentTeal, size: 36),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Đã đính kèm ảnh xác minh giao dịch!',
-                                style: GoogleFonts.inter(
-                                  color: AppTheme.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Chạm để thay đổi hình ảnh',
-                                style: GoogleFonts.inter(
-                                  color: Colors.grey,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              Icon(LucideIcons.image, color: Colors.grey[400], size: 36),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Tải lên ảnh chụp màn hình chuyển khoản',
-                                style: GoogleFonts.inter(
-                                  color: AppTheme.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Giúp chủ nhà kiểm tra và xác nhận hóa đơn nhanh hơn.',
-                                style: GoogleFonts.inter(
-                                  color: Colors.grey,
-                                  fontSize: 11,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                    ? Column(
+                        children: [
+                          const Icon(
+                            LucideIcons.checkCircle,
+                            color: AppTheme.accentTeal,
+                            size: 36,
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Đã đính kèm ảnh xác minh giao dịch!',
+                            style: GoogleFonts.inter(
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Chạm để thay đổi hình ảnh',
+                            style: GoogleFonts.inter(
+                              color: Colors.grey,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Icon(
+                            LucideIcons.image,
+                            color: Colors.grey[400],
+                            size: 36,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tải lên ảnh chụp màn hình chuyển khoản',
+                            style: GoogleFonts.inter(
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Giúp chủ nhà kiểm tra và xác nhận hóa đơn nhanh hơn.',
+                            style: GoogleFonts.inter(
+                              color: Colors.grey,
+                              fontSize: 11,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
               ),
             ),
 
@@ -406,7 +707,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               child: ElevatedButton(
                 onPressed: () async {
                   final controller = context.read<UserPaymentController>();
-                  final ok = await controller.markAsPaid(inv.maHoaDon);
+                  final ok = await controller.submitPaymentProof(inv.maHoaDon);
                   if (mounted) {
                     if (ok) {
                       _showSuccessDialog();
@@ -444,7 +745,12 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
     );
   }
 
-  Widget _buildTransferDetailRow(String label, String value, {VoidCallback? onCopy, Widget? trailing}) {
+  Widget _buildTransferDetailRow(
+    String label,
+    String value, {
+    VoidCallback? onCopy,
+    Widget? trailing,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -453,10 +759,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
           children: [
             Text(
               label,
-              style: GoogleFonts.inter(
-                color: Colors.grey,
-                fontSize: 11,
-              ),
+              style: GoogleFonts.inter(color: Colors.grey, fontSize: 11),
             ),
             const SizedBox(height: 4),
             Text(
@@ -480,7 +783,11 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(LucideIcons.copy, size: 12, color: AppTheme.deepPurple),
+                  const Icon(
+                    LucideIcons.copy,
+                    size: 12,
+                    color: AppTheme.deepPurple,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Sao chép',
@@ -506,7 +813,9 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
