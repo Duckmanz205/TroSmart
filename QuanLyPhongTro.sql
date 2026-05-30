@@ -696,6 +696,3 @@ GO
 SELECT MaTaiKhoan, TenDangNhap, VaiTro, TrangThai 
 FROM [dbo].[TaiKhoan]
 GO
-
-
-

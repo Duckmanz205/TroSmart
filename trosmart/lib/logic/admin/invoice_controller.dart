@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../models/admin/invoice_model.dart';
 import 'invoice_service.dart';
+import 'utility_service.dart';
 
 class InvoiceController extends ChangeNotifier {
   final InvoiceService _invoiceService = InvoiceService();
@@ -119,11 +120,40 @@ class InvoiceController extends ChangeNotifier {
     incidentalItems = [IncidentalFeeItem()];
     notifyListeners();
 
+    // 1. Thử lấy chỉ số điện nước đã nhập của tháng hiện tại từ UtilityService
+    try {
+      final now = DateTime.now();
+      final readings = await UtilityService().getReadings(now.month, now.year);
+      final roomReading = readings.firstWhere(
+        (r) => r['maPhong'] == roomId,
+        orElse: () => <String, dynamic>{},
+      );
+      if (roomReading.isNotEmpty) {
+        if (roomReading['chiSoDienCu'] != null) {
+          soDienCu = (roomReading['chiSoDienCu'] as num).toDouble();
+        }
+        if (roomReading['chiSoNuocCu'] != null) {
+          soNuocCu = (roomReading['chiSoNuocCu'] as num).toDouble();
+        }
+        if (roomReading['chiSoDienMoi'] != null) {
+          soDienMoi = (roomReading['chiSoDienMoi'] as num).toDouble();
+        }
+        if (roomReading['chiSoNuocMoi'] != null) {
+          soNuocMoi = (roomReading['chiSoNuocMoi'] as num).toDouble();
+        }
+        notifyListeners();
+        return; // Đã tìm thấy chỉ số tiêu thụ tháng này, bỏ qua fallback hóa đơn cũ
+      }
+    } catch (e) {
+      debugPrint("Error fetching current month utility readings: $e");
+    }
+
+    // 2. Fallback: Lấy chỉ số mới nhất từ hóa đơn trước đó nếu tháng này chưa có ghi nhận điện nước
     try {
       final allInvoices = await _invoiceService.getInvoices(0, 0);
       final roomInvoices = allInvoices.where((inv) => inv.maPhong == roomId).toList();
       if (roomInvoices.isNotEmpty) {
-        // Sort by year, then month descending to find the latest invoice
+        // Sắp xếp giảm dần theo năm và tháng để lấy hóa đơn gần nhất
         roomInvoices.sort((a, b) {
           if (a.nam != b.nam) {
             return b.nam.compareTo(a.nam);

@@ -140,11 +140,12 @@ class UtilityManagementView extends StatelessWidget {
                         roomName: 'Phòng ${room['soPhong']}',
                         tenant:
                             '${room['tenKhachThue']?.isNotEmpty == true ? room['tenKhachThue'] : 'Chưa rõ'} - Tầng ${room['tang'] ?? '?'}',
+                        facilityName: room['tenCoSo'],
                         status: status,
                         totalAmount: totalAmount,
-                        dienCu: (dienCu as int).toString(),
+                        dienCu: dienCu.toString(),
                         dienMoi: dienMoi?.toString(),
-                        nuocCu: (nuocCu as int).toString(),
+                        nuocCu: nuocCu.toString(),
                         nuocMoi: nuocMoi?.toString(),
                         onDienMoiChanged: (val) =>
                             controller.updateDienMoi(maPhong, val),
