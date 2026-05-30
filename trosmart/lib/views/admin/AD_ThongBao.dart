@@ -3,14 +3,115 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../shared/app_colors.dart';
 import '../../widgets/common/admin/custom_app_bar.dart';
 
-class AD_ThongBao extends StatelessWidget {
+import '../../models/thong_bao.dart';
+import '../../services/thong_bao_service.dart';
+
+class AD_ThongBao extends StatefulWidget {
   const AD_ThongBao({super.key});
+
+  @override
+  State<AD_ThongBao> createState() => _AD_ThongBaoState();
+}
+
+class _AD_ThongBaoState extends State<AD_ThongBao> {
+  late Future<List<ThongBao>> _futureThongBao;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThongBaos();
+  }
+
+  void _loadThongBaos() {
+    setState(() {
+      _futureThongBao = ThongBaoService().getAllThongBao();
+    });
+  }
+
+  void _showCreateDialog() {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    final maKhachController = TextEditingController(text: '1'); // Default to 1 for testing
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Tạo thông báo mới', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Tiêu đề', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: contentController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Nội dung', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: maKhachController,
+                  decoration: const InputDecoration(labelText: 'Mã khách (ID)', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6D28D9)),
+              onPressed: () async {
+                if (titleController.text.isEmpty || contentController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng nhập đủ thông tin!')),
+                  );
+                  return;
+                }
+
+                final newTb = ThongBao(
+                  maThongBao: 0,
+                  maKhach: int.tryParse(maKhachController.text) ?? 1,
+                  tieuDe: titleController.text,
+                  noiDung: contentController.text,
+                  loaiThongBao: 'Hệ thống',
+                  daDoc: false,
+                );
+
+                try {
+                  final success = await ThongBaoService().sendThongBao(newTb);
+                  if (success) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã gửi thông báo thành công!')),
+                    );
+                    _loadThongBaos();
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi: $e')),
+                  );
+                }
+              },
+              child: const Text('Gửi', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundGray,
-      appBar: const CustomAppBar(),
       body: SafeArea(
         child: Column(
           children: [
@@ -43,9 +144,7 @@ class AD_ThongBao extends StatelessWidget {
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      // TODO: Add new notification logic
-                    },
+                    onPressed: _showCreateDialog,
                     icon: const Icon(Icons.add, size: 20, color: Colors.white,),
                     label: Text(
                       'Tạo mới', 
@@ -103,36 +202,36 @@ class AD_ThongBao extends StatelessWidget {
             const SizedBox(height: 24),
             
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  _buildNotificationCard(
-                    title: 'Nhắc nhở thanh toán tiền phòng tháng 10',
-                    content: 'Đã gửi đến 15 phòng chưa thanh toán. Vui lòng thanh toán trước ngày 15/10/2025.',
-                    time: '10:30 AM, 10/10/2025',
-                    type: 'Nhắc nhở',
-                    typeColor: Colors.orange,
-                    status: 'Đã gửi',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildNotificationCard(
-                    title: 'Lịch bảo trì thang máy cơ sở 1',
-                    content: 'Thang máy sẽ ngừng hoạt động từ 14:00 đến 16:00 ngày 12/10 để bảo trì định kỳ.',
-                    time: '09:00 AM, 09/10/2025',
-                    type: 'Hệ thống',
-                    typeColor: Colors.blue,
-                    status: 'Đã lên lịch',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildNotificationCard(
-                    title: 'Quy định mới về phân loại rác',
-                    content: 'Yêu cầu toàn bộ khách thuê thực hiện phân loại rác hữu cơ và vô cơ từ 01/11/2025.',
-                    time: '15:45 PM, 05/10/2025',
-                    type: 'Quy định',
-                    typeColor: Colors.purple,
-                    status: 'Đã gửi',
-                  ),
-                ],
+              child: FutureBuilder<List<ThongBao>>(
+                future: _futureThongBao,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Lỗi: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('Không có thông báo nào.'));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      final tb = snapshot.data![index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: _buildNotificationCard(
+                          title: tb.tieuDe,
+                          content: tb.noiDung ?? '',
+                          time: tb.ngayGui != null ? '${tb.ngayGui!.hour}:${tb.ngayGui!.minute}, ${tb.ngayGui!.day}/${tb.ngayGui!.month}/${tb.ngayGui!.year}' : '',
+                          type: 'Thông báo',
+                          typeColor: Colors.blue,
+                          status: tb.daDoc ? 'Đã xem' : 'Chưa xem',
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],

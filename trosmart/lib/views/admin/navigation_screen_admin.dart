@@ -14,8 +14,10 @@ import 'AD_QLPhong.dart';
 import 'AD_QLCoSo.dart';
 import 'AD_QLDienNuoc.dart';
 import 'AD_SuCo.dart';
+import 'AD_ThongBao.dart';
 import 'AD_QLThongKe.dart';
 import 'AD_Chat.dart';
+import 'admin_profile_screen.dart';
 
 // Import widgets
 import '../../widgets/common/admin/custom_app_bar.dart';
@@ -46,11 +48,12 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
     AdminPages.hopDong, // 4
     AdminPages.dienNuoc, // 5
     AdminPages.suCo, // 6
-    AdminPages.lichCongViec, // 7
-    AdminPages.baoCao, // 8
-    AdminPages.chat, // 9
-    AdminPages.caiDat, // 10
-    AdminPages.taiKhoan, // 11
+    AdminPages.thongBao, // 7
+    AdminPages.lichCongViec, // 8
+    AdminPages.baoCao, // 9
+    AdminPages.chat, // 10
+    AdminPages.caiDat, // 11
+    AdminPages.taiKhoan, // 12
   ];
 
   late final List<Widget> _pages;
@@ -69,13 +72,12 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
       const AdQLHopDong(), // 4: Hợp đồng (chờ hoàn thiện)
       const UtilityManagementView(), // 5: Điện nước
       const AD_SuCo(), // 6: Sự cố
-      const AdLichCongViec(), // 7: Lịch & Công việc
-      const StatisticsScreen(), // 8: Báo cáo (Thống kê)
-      const AdChat(), // 9: Chat
-      const AdminSettingsScreen(), // 10: Cài đặt (chờ hoàn thiện)
-      const Center(
-        child: Text('Quản lý Tài khoản'),
-      ), // 11: Tài khoản (chờ hoàn thiện)
+      const AD_ThongBao(), // 7: Thông báo
+      const AdLichCongViec(), // 8: Lịch & Công việc
+      const StatisticsScreen(), // 9: Báo cáo (Thống kê)
+      const AdChat(), // 10: Chat
+      const AdminSettingsScreen(), // 11: Cài đặt (chờ hoàn thiện)
+      const AdminProfileScreen(), // 12: Tài khoản
     ];
   }
 

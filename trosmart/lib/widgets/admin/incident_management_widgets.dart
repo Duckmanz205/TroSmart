@@ -204,7 +204,14 @@ class IncidentCard extends StatelessWidget {
     this.isUrgent = false,
     this.rating,
     required this.bgColor,
+    this.onAccept,
+    this.onReject,
+    this.onComplete,
   });
+
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
+  final VoidCallback? onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +276,12 @@ class IncidentCard extends StatelessWidget {
           const SizedBox(height: 12),
           IncidentInfoGrid(room: room, requester: requester, date: date, imagesCount: imagesCount, rating: rating),
           const SizedBox(height: 16),
-          IncidentActionButtons(status: status),
+          IncidentActionButtons(
+            status: status,
+            onAccept: onAccept,
+            onReject: onReject,
+            onComplete: onComplete,
+          ),
         ],
       ),
     );
@@ -376,8 +388,17 @@ class IncidentInfoItem extends StatelessWidget {
 
 class IncidentActionButtons extends StatelessWidget {
   final String status;
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
+  final VoidCallback? onComplete;
 
-  const IncidentActionButtons({super.key, required this.status});
+  const IncidentActionButtons({
+    super.key, 
+    required this.status,
+    this.onAccept,
+    this.onReject,
+    this.onComplete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -390,6 +411,7 @@ class IncidentActionButtons extends StatelessWidget {
               icon: Icons.check,
               color: AppColors.adminDarkPurple,
               textColor: Colors.white,
+              onTap: onAccept,
             ),
           ),
           const SizedBox(width: 8),
@@ -400,18 +422,20 @@ class IncidentActionButtons extends StatelessWidget {
               color: Colors.white.withOpacity(0.1),
               textColor: AppColors.statusUrgent,
               hasBorder: true,
+              onTap: onReject,
             ),
           ),
         ],
       );
     }
     if (status == 'ĐANG XỬ LÝ') {
-      return const IncidentButton(
+      return IncidentButton(
         label: 'Đánh dấu hoàn thành',
         icon: Icons.check_circle_outline,
         color: AppColors.adminDarkPurple,
         textColor: AppColors.accentTeal,
         isFullWidth: true,
+        onTap: onComplete,
       );
     }
     return const SizedBox.shrink();
@@ -425,6 +449,7 @@ class IncidentButton extends StatelessWidget {
   final Color textColor;
   final bool isFullWidth;
   final bool hasBorder;
+  final VoidCallback? onTap;
 
   const IncidentButton({
     super.key,
@@ -434,12 +459,15 @@ class IncidentButton extends StatelessWidget {
     required this.textColor,
     this.isFullWidth = false,
     this.hasBorder = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: isFullWidth ? double.infinity : null,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: isFullWidth ? double.infinity : null,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: color,
@@ -454,6 +482,7 @@ class IncidentButton extends StatelessWidget {
           Text(label, style: GoogleFonts.inter(color: textColor, fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
+    ),
     );
   }
 }

@@ -91,9 +91,6 @@ class _CoSoManagementViewState extends State<CoSoManagementView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F5FA),
-      appBar: const CustomAppBar(),
-      drawer: const AdminDrawer(activeTitle: "Cơ sở"),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 2),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _reload,

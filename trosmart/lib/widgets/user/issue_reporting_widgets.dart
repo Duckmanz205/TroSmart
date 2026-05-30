@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../shared/app_colors.dart';
+import '../../models/su_co.dart';
+import '../../services/su_co_service.dart';
 
 /// --- TIÊU ĐỀ TRANG VÀ NÚT TẠO YÊU CẦU ---
 class ActionHeader extends StatelessWidget {
@@ -61,9 +63,64 @@ class ActionHeader extends StatelessWidget {
   }
 }
 
-/// --- FORM TẠO YÊU CẦU MỚI ---
-class NewRequestForm extends StatelessWidget {
-  const NewRequestForm({super.key});
+class NewRequestForm extends StatefulWidget {
+  final VoidCallback? onSubmitSuccess;
+  const NewRequestForm({super.key, this.onSubmitSuccess});
+
+  @override
+  State<NewRequestForm> createState() => _NewRequestFormState();
+}
+
+class _NewRequestFormState extends State<NewRequestForm> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
+  bool _isSubmitting = false;
+
+  Future<void> _submitRequest() async {
+    if (_titleController.text.isEmpty || _descController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ tiêu đề và mô tả sự cố')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final suCo = SuCo(
+        maSuCo: 0, // Backend tự tạo
+        maPhong: 1, // Giả lập phòng 1
+        maKhach: 1, // Giả lập khách 1
+        tieuDe: _titleController.text,
+        moTa: _descController.text,
+      );
+
+      final success = await SuCoService().sendSuCo(suCo);
+      if (success) {
+        _titleController.clear();
+        _descController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gửi báo cáo thành công!')),
+        );
+        if (widget.onSubmitSuccess != null) {
+          widget.onSubmitSuccess!();
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,10 +160,10 @@ class NewRequestForm extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _buildLabel('MÔ TẢ SỰ CỐ'),
-          _buildInput('VD: đèn trong nhà tắm bị hỏng'),
+          _buildInput('VD: đèn trong nhà tắm bị hỏng', _titleController),
           const SizedBox(height: 20),
           _buildLabel('CHI TIẾT'),
-          _buildInput('Mô tả chi tiết hơn...', maxLines: 4),
+          _buildInput('Mô tả chi tiết hơn...', _descController, maxLines: 4),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -125,19 +182,24 @@ class NewRequestForm extends StatelessWidget {
               Row(
                 children: [
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      _titleController.clear();
+                      _descController.clear();
+                    },
                     child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _isSubmitting ? null : _submitRequest,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.userPurple,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    child: const Text('Gửi'),
+                    child: _isSubmitting 
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text('Gửi'),
                   ),
                 ],
               )
@@ -159,8 +221,9 @@ class NewRequestForm extends StatelessWidget {
     );
   }
 
-  Widget _buildInput(String hint, {int maxLines = 1}) {
+  Widget _buildInput(String hint, TextEditingController controller, {int maxLines = 1}) {
     return TextField(
+      controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hint,
@@ -202,32 +265,59 @@ class HistoryDivider extends StatelessWidget {
   }
 }
 
-/// --- DANH SÁCH LỊCH SỬ ---
-class IssueHistoryList extends StatelessWidget {
+class IssueHistoryList extends StatefulWidget {
   const IssueHistoryList({super.key});
 
   @override
+  State<IssueHistoryList> createState() => _IssueHistoryListState();
+}
+
+class _IssueHistoryListState extends State<IssueHistoryList> {
+  late Future<List<SuCo>> _futureSuCo;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureSuCo = SuCoService().getSuCoForUser(1); // Giả lập lấy mã khách = 1
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          HistoryCard(
-            title: 'Đèn nhà tắm hỏng',
-            date: '01/03/2026',
-            status: 'Đang xử lý',
-            statusColor: Colors.blue,
-            child: ProcessingStatusDetails(),
-          ),
-          SizedBox(height: 16),
-          HistoryCard(
-            title: 'Ống nước bị rò rỉ',
-            date: '25/02/2026',
-            status: 'Hoàn thành',
-            statusColor: AppColors.tealDark,
-            child: CompletedStatusDetails(),
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: FutureBuilder<List<SuCo>>(
+        future: _futureSuCo,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Lỗi tải dữ liệu: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Bạn chưa báo cáo sự cố nào.'));
+          }
+
+          return Column(
+            children: snapshot.data!.map((suCo) {
+              final isCompleted = (suCo.trangThai ?? '').toLowerCase() == 'đã hoàn thành';
+              final color = isCompleted ? AppColors.tealDark : Colors.blue;
+              final dateStr = suCo.ngayBao != null ? '${suCo.ngayBao!.day}/${suCo.ngayBao!.month}/${suCo.ngayBao!.year}' : '';
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: HistoryCard(
+                  title: suCo.tieuDe,
+                  date: dateStr,
+                  status: suCo.trangThai ?? 'Chờ xử lý',
+                  statusColor: color,
+                  child: isCompleted ? const CompletedStatusDetails() : const ProcessingStatusDetails(),
+                ),
+              );
+            }).toList(),
+          );
+        },
       ),
     );
   }

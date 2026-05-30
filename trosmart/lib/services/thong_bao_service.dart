@@ -45,9 +45,13 @@ class ThongBaoService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(thongBao.toJson()),
       );
-      return response.statusCode == 201 || response.statusCode == 200;
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Server từ chối với lỗi: ${response.statusCode} - ${response.body}');
+      }
     } catch (e) {
-      throw Exception('Lỗi kết nối server: $e');
+      throw Exception('Lỗi gửi thông báo: $e');
     }
   }
 }
