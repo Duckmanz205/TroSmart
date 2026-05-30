@@ -21,11 +21,20 @@ namespace PhongTroAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<NguoiQuanLy>> GetNguoiQuanLy(int id)
         {
-            var nguoiQuanLy = await _context.NguoiQuanLies.FindAsync(id);
+            var nguoiQuanLy = await _context.NguoiQuanLies
+                .Include(n => n.MaNganHangNavigation)
+                .FirstOrDefaultAsync(n => n.MaQuanLy == id);
 
             if (nguoiQuanLy == null)
             {
                 return NotFound();
+            }
+
+            if (nguoiQuanLy.MaNganHangNavigation != null)
+            {
+                nguoiQuanLy.TenNganHang = nguoiQuanLy.MaNganHangNavigation.TenNganHang;
+                // Ngăn chặn lỗi vòng lặp JSON (A possible object cycle was detected)
+                nguoiQuanLy.MaNganHangNavigation = null;
             }
 
             return nguoiQuanLy;
@@ -46,13 +55,28 @@ namespace PhongTroAPI.Controllers
                 return NotFound();
             }
 
+            // Xử lý riêng cho Ngân Hàng (lưu Tên thay vì ID)
+            if (!string.IsNullOrEmpty(nguoiQuanLy.TenNganHang))
+            {
+                var bank = await _context.NganHangs
+                    .FirstOrDefaultAsync(b => b.TenNganHang == nguoiQuanLy.TenNganHang);
+                
+                if (bank == null)
+                {
+                    // Nếu chưa có ngân hàng này trong DB, tự động tạo mới
+                    bank = new NganHang { TenNganHang = nguoiQuanLy.TenNganHang, MaBin = "0000" };
+                    _context.NganHangs.Add(bank);
+                    await _context.SaveChangesAsync();
+                }
+                existingManager.MaNganHang = bank.MaNganHang;
+            }
+
             // Update fields
             existingManager.HoTen = nguoiQuanLy.HoTen;
             existingManager.Sdt = nguoiQuanLy.Sdt;
             existingManager.Email = nguoiQuanLy.Email;
             existingManager.SoTaiKhoan = nguoiQuanLy.SoTaiKhoan;
             existingManager.TenTaiKhoan = nguoiQuanLy.TenTaiKhoan;
-            existingManager.MaNganHang = nguoiQuanLy.MaNganHang;
 
             try
             {

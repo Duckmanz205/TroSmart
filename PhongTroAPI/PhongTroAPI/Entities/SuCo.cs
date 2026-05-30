@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PhongTroAPI.Entities;
@@ -23,7 +23,7 @@ public partial class SuCo
 
     public DateTime? NgayXuLy { get; set; }
 
-    public virtual KhachThue MaKhachNavigation { get; set; } = null!;
+    public virtual KhachThue? MaKhachNavigation { get; set; }
 
-    public virtual Phong MaPhongNavigation { get; set; } = null!;
+    public virtual Phong? MaPhongNavigation { get; set; }
 }

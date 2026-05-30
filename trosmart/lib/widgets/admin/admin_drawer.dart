@@ -11,6 +11,7 @@ import '../../views/admin/AD_QLHopDong.dart';
 import '../../views/admin/AD_SuCo.dart';
 import '../../views/admin/AD_LichCongViec.dart';
 import '../../views/admin/AD_Chat.dart';
+import '../../views/admin/AD_ThongBao.dart';
 import '../../views/admin/settings_screen.dart';
 
 import '../../views/auth/login_screen.dart';
@@ -206,6 +207,20 @@ class AdminDrawer extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const AD_SuCo(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.notifications_active,
+                    title: "Thông báo",
+                    isActive: activeTitle == "Thông báo",
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AD_ThongBao(),
                         ),
                       );
                     },
