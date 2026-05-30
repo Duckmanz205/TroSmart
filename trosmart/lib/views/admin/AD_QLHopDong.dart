@@ -11,8 +11,6 @@ class AdQLHopDong extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(context),
-      drawer: const AdminDrawer(activeTitle: "Hợp đồng"),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -76,7 +74,6 @@ class AdQLHopDong extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 

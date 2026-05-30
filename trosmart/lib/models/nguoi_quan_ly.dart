@@ -25,7 +25,7 @@ class NguoiQuanLy {
       email: json['email'],
       tenNganHang: json['tenNganHang'],
       soTaiKhoan: json['soTaiKhoan'],
-      chuTaiKhoan: json['chuTaiKhoan'],
+      chuTaiKhoan: json['tenTaiKhoan'], // Changed from chuTaiKhoan
     );
   }
 
@@ -37,7 +37,7 @@ class NguoiQuanLy {
       'email': email,
       'tenNganHang': tenNganHang,
       'soTaiKhoan': soTaiKhoan,
-      'chuTaiKhoan': chuTaiKhoan,
+      'tenTaiKhoan': chuTaiKhoan, // Changed from chuTaiKhoan
     };
   }
 }
