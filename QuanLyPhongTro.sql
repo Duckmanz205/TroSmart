@@ -671,15 +671,3 @@ GO
 SELECT MaTaiKhoan, TenDangNhap, VaiTro, TrangThai 
 FROM [dbo].[TaiKhoan]
 GO
-
-
-USE master;
-GO
-
--- Xóa database cũ nếu đang tồn tại (kể cả khi đang có người kết nối)
-IF EXISTS (SELECT name FROM sys.databases WHERE name = N'QuanLyPhongTro')
-BEGIN
-    ALTER DATABASE [QuanLyPhongTro] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE [QuanLyPhongTro];
-END
-GO

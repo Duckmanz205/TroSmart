@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../logic/admin/invoice_controller.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../shared/app_colors.dart';
@@ -117,6 +118,7 @@ class _ApprovePaymentScreenState extends State<ApprovePaymentScreen> {
   }
 
   Widget _buildPendingCard(InvoiceModel inv, InvoiceController controller) {
+    final proofUrl = Supabase.instance.client.storage.from('payment_proofs').getPublicUrl('proof_${inv.maHoaDon}.png');
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -248,49 +250,60 @@ class _ApprovePaymentScreenState extends State<ApprovePaymentScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                // Beautiful Real Receipt Container from Supabase Storage
                 
-                // Beautiful Mock Receipt Container
                 GestureDetector(
                   onTap: () => _showReceiptPreviewDialog(context, inv),
                   child: Container(
                     width: double.infinity,
-                    height: 140,
+                    height: 160,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFD1D5DB), style: BorderStyle.solid),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
                     ),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.image_search_rounded,
-                                size: 36,
-                                color: Color(0xFF6E589E),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Click để phóng to ảnh minh chứng',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF6E589E),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        proofUrl,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(child: CircularProgressIndicator(color: Color(0xFF6E589E)));
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback container when no actual image upload is found
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.no_photography_outlined,
+                                  size: 36,
+                                  color: Colors.orangeAccent,
                                 ),
-                              ),
-                              Text(
-                                'payment_proof_${inv.maHoaDon}.png',
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  color: const Color(0xFF9CA3AF),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Chưa có ảnh minh chứng thanh toán',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orangeAccent,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Click để xem thông tin chi tiết',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: const Color(0xFF9CA3AF),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -396,6 +409,8 @@ class _ApprovePaymentScreenState extends State<ApprovePaymentScreen> {
   }
 
   void _showReceiptPreviewDialog(BuildContext context, InvoiceModel inv) {
+    final proofUrl = Supabase.instance.client.storage.from('payment_proofs').getPublicUrl('proof_${inv.maHoaDon}.png');
+
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -406,68 +421,96 @@ class _ApprovePaymentScreenState extends State<ApprovePaymentScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(28),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                title: Text(
-                  'Chi tiết chứng từ',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 16),
-                ),
-                centerTitle: true,
-                automaticallyImplyLeading: false,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.black54),
-                    onPressed: () => Navigator.pop(ctx),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  title: Text(
+                    'Chi tiết chứng từ thanh toán',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 16),
                   ),
-                ],
-              ),
-              Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                ),
-                child: Column(
-                  children: [
-                    const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 48),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Giao dịch thành công',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF111827)),
+                  centerTitle: true,
+                  automaticallyImplyLeading: false,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black54),
+                      onPressed: () => Navigator.pop(ctx),
                     ),
-                    Text(
-                      formatCurrency(inv.tongTien),
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFF111827)),
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(color: Color(0xFFE5E7EB)),
-                    const SizedBox(height: 12),
-                    _buildPopupRow('Nội dung:', 'TS HD ${inv.maHoaDon}'),
-                    const SizedBox(height: 8),
-                    _buildPopupRow('Phòng:', inv.tenPhong.isNotEmpty ? 'Phòng ${inv.tenPhong}' : 'Phòng ${inv.maPhong}'),
-                    const SizedBox(height: 8),
-                    _buildPopupRow('Khách thuê:', inv.tenKhachThue.isNotEmpty ? inv.tenKhachThue : 'N/A'),
-                    const SizedBox(height: 8),
-                    _buildPopupRow('Thời gian:', DateTime.now().toIso8601String().substring(0, 16).replaceAll('T', ' ')),
-                    const SizedBox(height: 8),
-                    _buildPopupRow('Mã giao dịch:', 'FT260529${inv.maHoaDon}839'),
                   ],
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: Text(
-                  'Hình ảnh mô phỏng chứng từ giao dịch ngân hàng',
-                  style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
+                
+                // Hiển thị ảnh chụp hóa đơn giao dịch thực tế từ Supabase Storage
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  height: 320,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.network(
+                      proofUrl,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return const Center(child: CircularProgressIndicator(color: Color(0xFF6E589E)));
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.broken_image_outlined, size: 48, color: Colors.grey),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Không tìm thấy ảnh chụp hóa đơn tải lên',
+                                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 36),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Thông tin hóa đơn đối soát',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF111827)),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPopupRow('Nội dung:', 'TROSMART T${inv.thang} P${inv.tenPhong}'),
+                      const SizedBox(height: 8),
+                      _buildPopupRow('Tổng tiền hóa đơn:', formatCurrency(inv.tongTien)),
+                      const SizedBox(height: 8),
+                      _buildPopupRow('Phòng:', inv.tenPhong.isNotEmpty ? 'Phòng ${inv.tenPhong}' : 'Phòng ${inv.maPhong}'),
+                      const SizedBox(height: 8),
+                      _buildPopupRow('Khách thuê:', inv.tenKhachThue.isNotEmpty ? inv.tenKhachThue : 'Ẩn danh'),
+                      const SizedBox(height: 8),
+                      _buildPopupRow('Hạn thanh toán:', inv.hanThanhToanDisplay),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

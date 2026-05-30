@@ -125,3 +125,4 @@ bin/
 **/[Bb]in/
 obj/
 **/[Oo]bj/
+.env

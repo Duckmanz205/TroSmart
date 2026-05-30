@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PhongTroAPI.Entities;
 
@@ -23,9 +22,6 @@ public partial class NguoiQuanLy
     public string? TenTaiKhoan { get; set; }
 
     public int? MaNganHang { get; set; }
-
-    [NotMapped]
-    public string? TenNganHang { get; set; }
 
     public virtual ICollection<CoSo> CoSos { get; set; } = new List<CoSo>();
 
