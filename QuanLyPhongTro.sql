@@ -1,3 +1,14 @@
+USE master;
+GO
+
+-- Xóa database cũ nếu đang tồn tại (kể cả khi đang có người kết nối)
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'QuanLyPhongTro')
+BEGIN
+    ALTER DATABASE [QuanLyPhongTro] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [QuanLyPhongTro];
+END
+GO
+
 CREATE DATABASE [QuanLyPhongTro]
 GO
 USE [QuanLyPhongTro]
@@ -206,6 +217,20 @@ CREATE TABLE [dbo].[ThongBao](
     [DaDoc] [bit] DEFAULT ((0)),
     [NgayGui] [datetime] NULL,
 PRIMARY KEY CLUSTERED ([MaThongBao] ASC)
+) ON [PRIMARY]
+GO
+
+-- BẢNG MỚI: Tin Nhắn
+CREATE TABLE [dbo].[TinNhan](
+    [MaTinNhan] [int] IDENTITY(1,1) NOT NULL,
+    [MaNguoiGui] [int] NULL,
+    [VaiTroNguoiGui] [nvarchar](50) NOT NULL,
+    [MaNguoiNhan] [int] NULL,
+    [VaiTroNguoiNhan] [nvarchar](50) NOT NULL,
+    [NoiDung] [nvarchar](max) NOT NULL,
+    [NgayGui] [datetime] DEFAULT (getdate()),
+    [DaDoc] [bit] DEFAULT ((0)),
+PRIMARY KEY CLUSTERED ([MaTinNhan] ASC)
 ) ON [PRIMARY]
 GO
 
@@ -673,13 +698,4 @@ FROM [dbo].[TaiKhoan]
 GO
 
 
-USE master;
-GO
 
--- Xóa database cũ nếu đang tồn tại (kể cả khi đang có người kết nối)
-IF EXISTS (SELECT name FROM sys.databases WHERE name = N'QuanLyPhongTro')
-BEGIN
-    ALTER DATABASE [QuanLyPhongTro] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE [QuanLyPhongTro];
-END
-GO
