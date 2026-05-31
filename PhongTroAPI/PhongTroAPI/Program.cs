@@ -69,7 +69,7 @@ if (app.Environment.IsDevelopment())
 // Middleware
 app.UseCors("AllowFlutterWeb");
 app.UseStaticFiles();
-
+app.UseCors("AllowAll");
 app.UseAuthentication(); // ✅ PHẢI trước UseAuthorization
 app.UseAuthorization();
 

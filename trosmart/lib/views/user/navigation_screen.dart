@@ -15,7 +15,10 @@ import 'app_sidebar.dart';
 import 'UR_ThanhToan.dart';
 
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  
+  final int maPhong;
+
+  const MainNavigationScreen({super.key, this.maPhong = 2});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -28,13 +31,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // 2. Danh sách các trang hiển thị trong IndexedStack
   // Thứ tự này sẽ tương ứng với số index của IndexedStack
   final List<String> _pageOrder = [
-    AppPages.home,              // 0: Trang chủ
-    AppPages.payment,           // 1: Thanh toán
-    AppPages.chat,              // 2: Chat
-    AppPages.contract,          // 3: Hợp đồng
-    AppPages.searchroom,        // 4: Tra cứu phòng
-    AppPages.reportIssue,       // 5: Báo cáo sự cố
-    AppPages.notifications,     // 6: UrThongBao 
+    AppPages.home,           // 0: Trang chủ
+    AppPages.payment,         // 1: Thanh toán
+    AppPages.chat,            // 2: Chat
+    AppPages.contract,        // 3: Hợp đồng
+    AppPages.searchroom,      // 4: Tra cứu phòng
+    AppPages.reportIssue,     // 5: Báo cáo sự cố
+    AppPages.notifications,   // 6: UrThongBao 
     AppPages.accommodationShare,// 7: Ở ghép
     AppPages.stats,             // 8: HistoryStatsScreen
     AppPages.profileDetail,     // 9: Cá nhân
@@ -70,16 +73,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(
         index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
         children: [
-          const UserHomeScreen(),                       // 0
-          const PaymentDetailsScreen(),                 // 1
-          const UrChat(),                               // 2
-          const UrHopDong(),                            // 3
-          const RoomSearchView(),                       // 4
-          const IssueReportingScreen(),                 // 5
-          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 6
-          const UrOGhep(),                              // 7
-          const HistoryStatsScreen(),                   // 8
-          const UserProfileScreen(),                    // 9
+          const UserHomeScreen(),                                                       // 0
+          const PaymentDetailsScreen(),                                                 // 1
+          const UrChat(),                                                               // 2
+          const UrHopDong(),                                                            // 3
+          const RoomSearchView(),                                                       // 4
+          const IssueReportingScreen(),                                                 // 5
+          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)),          // 6
+          
+          // 🌟 SỬA CHỖ 2: Gọi đúng widget.maPhong để truyền sang trang Ở ghép động và xóa chữ "const" ở đầu dòng đi
+          UrOGhep(maPhong: widget.maPhong),                                              // 7
+          
+          const HistoryStatsScreen(),                                                   // 8
+          const UserProfileScreen(),                                                    // 9
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
