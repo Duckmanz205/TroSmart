@@ -134,18 +134,22 @@ class UtilityManagementView extends StatelessWidget {
                           : RoomStatus.calculated;
                     }
 
+                    final bool isInvoiceCreated = room['daLapHoaDon'] == true;
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: RoomUtilityCard(
                         roomName: 'Phòng ${room['soPhong']}',
                         tenant:
                             '${room['tenKhachThue']?.isNotEmpty == true ? room['tenKhachThue'] : 'Chưa rõ'} - Tầng ${room['tang'] ?? '?'}',
+                        facilityName: room['tenCoSo'],
                         status: status,
                         totalAmount: totalAmount,
-                        dienCu: (dienCu as int).toString(),
+                        dienCu: dienCu.toString(),
                         dienMoi: dienMoi?.toString(),
-                        nuocCu: (nuocCu as int).toString(),
+                        nuocCu: nuocCu.toString(),
                         nuocMoi: nuocMoi?.toString(),
+                        isInvoiceCreated: isInvoiceCreated,
                         onDienMoiChanged: (val) =>
                             controller.updateDienMoi(maPhong, val),
                         onNuocMoiChanged: (val) =>

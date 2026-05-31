@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
-import '../../widgets/common/app_header.dart';
 import '../../widgets/common/app_search_field.dart';
 import '../../widgets/chat_widgets.dart';
 import '../../logic/admin/chat_controller.dart';

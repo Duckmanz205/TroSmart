@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../shared/app_theme.dart';
 import '../../logic/user/user_payment_controller.dart';
@@ -47,21 +50,56 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
     );
   }
 
-  void _mockImageUpload() async {
+  Future<void> _actualImageUpload() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (pickedFile == null) return;
+
     setState(() => _isUploading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _isUploading = false;
-      _uploadedImagePath = 'assets/images/payment_proof_mock.png';
-    });
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã tải lên ảnh xác nhận chuyển khoản!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
+
+    try {
+      final file = File(pickedFile.path);
+      final fileName = 'proof_${widget.invoice.maHoaDon}.png';
+      
+      final supabase = Supabase.instance.client;
+      await supabase.storage.from('payment_proofs').upload(
+        fileName,
+        file,
+        fileOptions: const FileOptions(upsert: true),
       );
+
+      final publicUrl = supabase.storage.from('payment_proofs').getPublicUrl(fileName);
+
+      setState(() {
+        _uploadedImagePath = publicUrl;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã tải lên minh chứng thanh toán thành công lên Supabase Storage!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Supabase Upload Error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi tải ảnh lên Supabase: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isUploading = false);
     }
   }
 
@@ -332,10 +370,10 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
             const SizedBox(height: 12),
 
             GestureDetector(
-              onTap: _isUploading ? null : _mockImageUpload,
+              onTap: _isUploading ? null : _actualImageUpload,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -347,16 +385,36 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                   ),
                 ),
                 child: _isUploading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
                     : _uploadedImagePath != null
                         ? Column(
                             children: [
-                              const Icon(LucideIcons.checkCircle, color: AppTheme.accentTeal, size: 36),
-                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  _uploadedImagePath!,
+                                  height: 160,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, progress) {
+                                    if (progress == null) return child;
+                                    return Container(
+                                      height: 160,
+                                      color: Colors.grey[100],
+                                      child: const Center(child: CircularProgressIndicator()),
+                                    );
+                                  },
+                                  errorBuilder: (_, __, ___) => const Icon(LucideIcons.checkCircle, color: AppTheme.accentTeal, size: 36),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
                               Text(
-                                'Đã đính kèm ảnh xác minh giao dịch!',
+                                'Đã đính kèm ảnh minh chứng chuyển khoản!',
                                 style: GoogleFonts.inter(
-                                  color: AppTheme.textPrimary,
+                                  color: AppTheme.accentTeal,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
                                 ),
@@ -373,6 +431,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                           )
                         : Column(
                             children: [
+                              const SizedBox(height: 8),
                               Icon(LucideIcons.image, color: Colors.grey[400], size: 36),
                               const SizedBox(height: 8),
                               Text(
@@ -392,6 +451,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
+                              const SizedBox(height: 8),
                             ],
                           ),
               ),

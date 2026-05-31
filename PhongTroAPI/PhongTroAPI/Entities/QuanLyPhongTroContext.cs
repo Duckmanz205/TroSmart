@@ -49,8 +49,6 @@ public partial class QuanLyPhongTroContext : DbContext
 
     public virtual DbSet<ThongBao> ThongBaos { get; set; }
 
-    public virtual DbSet<TinNhan> TinNhans { get; set; }
-
     public virtual DbSet<TienIch> TienIches { get; set; }
 
     public virtual DbSet<ViewCoSoTongQuan> ViewCoSoTongQuans { get; set; }
@@ -58,6 +56,8 @@ public partial class QuanLyPhongTroContext : DbContext
     public virtual DbSet<ViewHoaDonUi> ViewHoaDonUis { get; set; }
 
     public virtual DbSet<ViewPhongUi> ViewPhongUis { get; set; }
+
+    public virtual DbSet<TinNhan> TinNhans { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -67,7 +67,7 @@ public partial class QuanLyPhongTroContext : DbContext
     {
         modelBuilder.Entity<ChiSoDienNuoc>(entity =>
         {
-            entity.HasKey(e => e.MaChiSo).HasName("PK__ChiSoDie__EBA18E1586331E36");
+            entity.HasKey(e => e.MaChiSo).HasName("PK__ChiSoDie__EBA18E155AC0E9F5");
 
             entity.ToTable("ChiSoDienNuoc");
 
@@ -85,7 +85,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<CoSo>(entity =>
         {
-            entity.HasKey(e => e.MaCoSo).HasName("PK__CoSo__152D06340FE8C3D4");
+            entity.HasKey(e => e.MaCoSo).HasName("PK__CoSo__152D06349D598C9E");
 
             entity.ToTable("CoSo");
 
@@ -117,14 +117,14 @@ public partial class QuanLyPhongTroContext : DbContext
                         .HasConstraintName("FK__CoSo_Tien__MaCoS__6FE99F9F"),
                     j =>
                     {
-                        j.HasKey("MaCoSo", "MaTienIch").HasName("PK__CoSo_Tie__A1447BBAA62FEEAE");
+                        j.HasKey("MaCoSo", "MaTienIch").HasName("PK__CoSo_Tie__A1447BBA783F239A");
                         j.ToTable("CoSo_TienIch");
                     });
         });
 
         modelBuilder.Entity<HinhAnhCoSo>(entity =>
         {
-            entity.HasKey(e => e.MaAnh).HasName("PK__HinhAnhC__356240DFCF914F84");
+            entity.HasKey(e => e.MaAnh).HasName("PK__HinhAnhC__356240DFBEA465BC");
 
             entity.ToTable("HinhAnhCoSo");
 
@@ -136,7 +136,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<HinhAnhPhong>(entity =>
         {
-            entity.HasKey(e => e.MaAnh).HasName("PK__HinhAnhP__356240DFEF105821");
+            entity.HasKey(e => e.MaAnh).HasName("PK__HinhAnhP__356240DF4D5761A3");
 
             entity.ToTable("HinhAnhPhong");
 
@@ -148,7 +148,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<HoaDon>(entity =>
         {
-            entity.HasKey(e => e.MaHoaDon).HasName("PK__HoaDon__835ED13B27D470BA");
+            entity.HasKey(e => e.MaHoaDon).HasName("PK__HoaDon__835ED13B87418400");
 
             entity.ToTable("HoaDon");
 
@@ -181,7 +181,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<HopDongThue>(entity =>
         {
-            entity.HasKey(e => e.MaHopDong).HasName("PK__HopDongT__36DD434273F396A2");
+            entity.HasKey(e => e.MaHopDong).HasName("PK__HopDongT__36DD43420B034A1C");
 
             entity.ToTable("HopDongThue");
 
@@ -208,7 +208,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<KhachThue>(entity =>
         {
-            entity.HasKey(e => e.MaKhach).HasName("PK__KhachThu__D0CB8DDDC38820C0");
+            entity.HasKey(e => e.MaKhach).HasName("PK__KhachThu__D0CB8DDD594E3235");
 
             entity.ToTable("KhachThue");
 
@@ -239,7 +239,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<LichHenXemPhong>(entity =>
         {
-            entity.HasKey(e => e.MaLichHen).HasName("PK__LichHenX__150F264F3B8AAE11");
+            entity.HasKey(e => e.MaLichHen).HasName("PK__LichHenX__150F264F4F85C123");
 
             entity.ToTable("LichHenXemPhong");
 
@@ -269,7 +269,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<LichSuGiaHan>(entity =>
         {
-            entity.HasKey(e => e.MaGiaHan).HasName("PK__LichSuGi__C3260BA4809AB7BC");
+            entity.HasKey(e => e.MaGiaHan).HasName("PK__LichSuGi__C3260BA4A191E160");
 
             entity.ToTable("LichSuGiaHan");
 
@@ -287,7 +287,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<LichSuThanhToan>(entity =>
         {
-            entity.HasKey(e => e.MaThanhToan).HasName("PK__LichSuTh__D4B258440F87256E");
+            entity.HasKey(e => e.MaThanhToan).HasName("PK__LichSuTh__D4B258448CF04CCF");
 
             entity.ToTable("LichSuThanhToan");
 
@@ -309,7 +309,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<NganHang>(entity =>
         {
-            entity.HasKey(e => e.MaNganHang).HasName("PK__NganHang__852407E8A5A99F7E");
+            entity.HasKey(e => e.MaNganHang).HasName("PK__NganHang__852407E880686797");
 
             entity.ToTable("NganHang");
 
@@ -320,11 +320,11 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<NguoiQuanLy>(entity =>
         {
-            entity.HasKey(e => e.MaQuanLy).HasName("PK__NguoiQua__2AB9EAF89A196DC1");
+            entity.HasKey(e => e.MaQuanLy).HasName("PK__NguoiQua__2AB9EAF8BB2D0838");
 
             entity.ToTable("NguoiQuanLy");
 
-            entity.HasIndex(e => e.Sdt, "UQ__NguoiQua__CA1930A556DE869E").IsUnique();
+            entity.HasIndex(e => e.Sdt, "UQ__NguoiQua__CA1930A597FEAA61").IsUnique();
 
             entity.Property(e => e.Email)
                 .HasMaxLength(100)
@@ -350,7 +350,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<Oghep>(entity =>
         {
-            entity.HasKey(e => e.MaBaiDang).HasName("PK__OGhep__BF5D50C59AFF96B2");
+            entity.HasKey(e => e.MaBaiDang).HasName("PK__OGhep__BF5D50C5F7172938");
 
             entity.ToTable("OGhep");
 
@@ -373,7 +373,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<Phong>(entity =>
         {
-            entity.HasKey(e => e.MaPhong).HasName("PK__Phong__20BD5E5BB81F432C");
+            entity.HasKey(e => e.MaPhong).HasName("PK__Phong__20BD5E5BBF85D4CB");
 
             entity.ToTable("Phong");
 
@@ -404,14 +404,14 @@ public partial class QuanLyPhongTroContext : DbContext
                         .HasConstraintName("FK__Phong_Tie__MaPho__74AE54BC"),
                     j =>
                     {
-                        j.HasKey("MaPhong", "MaTienIch").HasName("PK__Phong_Ti__94D423D557F2BD29");
+                        j.HasKey("MaPhong", "MaTienIch").HasName("PK__Phong_Ti__94D423D56F96869F");
                         j.ToTable("Phong_TienIch");
                     });
         });
 
         modelBuilder.Entity<SuCo>(entity =>
         {
-            entity.HasKey(e => e.MaSuCo).HasName("PK__SuCo__A69DF79FAAC412EB");
+            entity.HasKey(e => e.MaSuCo).HasName("PK__SuCo__A69DF79F9A44C819");
 
             entity.ToTable("SuCo");
 
@@ -437,11 +437,11 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<TaiKhoan>(entity =>
         {
-            entity.HasKey(e => e.MaTaiKhoan).HasName("PK__TaiKhoan__AD7C6529355735A9");
+            entity.HasKey(e => e.MaTaiKhoan).HasName("PK__TaiKhoan__AD7C6529FDED3866");
 
             entity.ToTable("TaiKhoan");
 
-            entity.HasIndex(e => e.TenDangNhap, "UQ__TaiKhoan__55F68FC0AA39A37E").IsUnique();
+            entity.HasIndex(e => e.TenDangNhap, "UQ__TaiKhoan__55F68FC06A439344").IsUnique();
 
             entity.Property(e => e.MatKhau)
                 .HasMaxLength(255)
@@ -468,7 +468,7 @@ public partial class QuanLyPhongTroContext : DbContext
 
         modelBuilder.Entity<ThongBao>(entity =>
         {
-            entity.HasKey(e => e.MaThongBao).HasName("PK__ThongBao__04DEB54E91F66AD7");
+            entity.HasKey(e => e.MaThongBao).HasName("PK__ThongBao__04DEB54EFBBB7F2B");
 
             entity.ToTable("ThongBao");
 
@@ -484,18 +484,9 @@ public partial class QuanLyPhongTroContext : DbContext
                 .HasConstraintName("FK__ThongBao__MaKhac__07C12930");
         });
 
-        modelBuilder.Entity<TinNhan>(entity =>
-        {
-            entity.HasKey(e => e.MaTinNhan);
-            entity.ToTable("TinNhan");
-            entity.Property(e => e.VaiTroNguoiGui).HasMaxLength(50);
-            entity.Property(e => e.VaiTroNguoiNhan).HasMaxLength(50);
-            entity.Property(e => e.NgayGui).HasColumnType("datetime");
-        });
-
         modelBuilder.Entity<TienIch>(entity =>
         {
-            entity.HasKey(e => e.MaTienIch).HasName("PK__TienIch__4697D8EA4B3B5616");
+            entity.HasKey(e => e.MaTienIch).HasName("PK__TienIch__4697D8EA4507B55D");
 
             entity.ToTable("TienIch");
 
@@ -542,6 +533,18 @@ public partial class QuanLyPhongTroContext : DbContext
             entity.Property(e => e.TenCoSo).HasMaxLength(150);
             entity.Property(e => e.TrangThai).HasMaxLength(50);
             entity.Property(e => e.TrangThaiHienThi).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<TinNhan>(entity =>
+        {
+            entity.HasKey(e => e.MaTinNhan).HasName("PK_TinNhan");
+            entity.ToTable("TinNhan");
+            entity.Property(e => e.NoiDung).HasMaxLength(1000);
+            entity.Property(e => e.VaiTroNguoiGui).HasMaxLength(50);
+            entity.Property(e => e.VaiTroNguoiNhan).HasMaxLength(50);
+            entity.Property(e => e.NgayGui)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
         });
 
         OnModelCreatingPartial(modelBuilder);

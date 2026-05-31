@@ -235,6 +235,36 @@ public class InvoiceService : IInvoiceService
         _context.HoaDons.Add(hoaDon);
         await _context.SaveChangesAsync();
 
+        // Đồng bộ hóa/Cập nhật hoặc Tạo mới bản ghi ChiSoDienNuoc để đánh dấu DaLapHoaDon = true
+        var chiSo = await _context.ChiSoDienNuocs
+            .FirstOrDefaultAsync(c => c.MaPhong == createDto.MaPhong && c.Thang == createDto.Thang && c.Nam == createDto.Nam);
+        if (chiSo != null)
+        {
+            chiSo.DaLapHoaDon = true;
+            chiSo.ChiSoDienCu = (int)createDto.SoDienCu;
+            chiSo.ChiSoDienMoi = (int)createDto.SoDienMoi;
+            chiSo.ChiSoNuocCu = (int)createDto.SoNuocCu;
+            chiSo.ChiSoNuocMoi = (int)createDto.SoNuocMoi;
+            chiSo.NgayCapNhat = DateTime.Now;
+        }
+        else
+        {
+            var newChiSo = new ChiSoDienNuoc
+            {
+                MaPhong = createDto.MaPhong,
+                Thang = createDto.Thang,
+                Nam = createDto.Nam,
+                ChiSoDienCu = (int)createDto.SoDienCu,
+                ChiSoDienMoi = (int)createDto.SoDienMoi,
+                ChiSoNuocCu = (int)createDto.SoNuocCu,
+                ChiSoNuocMoi = (int)createDto.SoNuocMoi,
+                DaLapHoaDon = true,
+                NgayCapNhat = DateTime.Now
+            };
+            _context.ChiSoDienNuocs.Add(newChiSo);
+        }
+        await _context.SaveChangesAsync();
+
         // Lấy tên khách thuê
         string tenKhach = string.Empty;
         if (maKhach.HasValue)

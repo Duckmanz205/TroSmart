@@ -65,10 +65,23 @@ public class UtilityReadingController : ControllerBase
             .ToListAsync();
         var prevReadingMap = prevReadings.ToDictionary(r => r.MaPhong);
 
+        // Lấy hóa đơn mới nhất của từng phòng để làm chỉ số cũ mặc định tối cao
+        var latestInvoices = await _context.HoaDons.ToListAsync();
+        var latestInvoiceMap = latestInvoices
+            .GroupBy(h => h.MaPhong)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(h => h.Nam).ThenByDescending(h => h.Thang).First()
+            );
+
         var result = rooms.Select(r =>
         {
             var hasReading = readingMap.TryGetValue(r.MaPhong, out var reading);
             var hasPrev = prevReadingMap.TryGetValue(r.MaPhong, out var prevReading);
+            var hasLatestInvoice = latestInvoiceMap.TryGetValue(r.MaPhong, out var latestInvoice);
+
+            int defaultDienCu = hasLatestInvoice ? Convert.ToInt32(latestInvoice.ChiSoDienMoi) : (hasPrev && prevReading!.ChiSoDienMoi.HasValue ? prevReading.ChiSoDienMoi.Value : 0);
+            int defaultNuocCu = hasLatestInvoice ? Convert.ToInt32(latestInvoice.ChiSoNuocMoi) : (hasPrev && prevReading!.ChiSoNuocMoi.HasValue ? prevReading.ChiSoNuocMoi.Value : 0);
 
             return new
             {
@@ -80,10 +93,10 @@ public class UtilityReadingController : ControllerBase
                 r.MaCoSo,
                 r.TenKhachThue,
                 MaChiSo = hasReading ? reading!.MaChiSo : (int?)null,
-                // Chỉ số cũ: lấy từ record hiện tại, nếu không có lấy từ chỉ số mới tháng trước
-                ChiSoDienCu = hasReading ? reading!.ChiSoDienCu : (hasPrev && prevReading!.ChiSoDienMoi.HasValue ? prevReading.ChiSoDienMoi.Value : 0),
+                // Chỉ số cũ: lấy từ record hiện tại, nếu không có lấy từ hóa đơn mới nhất hoặc chỉ số mới tháng trước
+                ChiSoDienCu = hasReading ? reading!.ChiSoDienCu : defaultDienCu,
                 ChiSoDienMoi = hasReading ? reading!.ChiSoDienMoi : (int?)null,
-                ChiSoNuocCu = hasReading ? reading!.ChiSoNuocCu : (hasPrev && prevReading!.ChiSoNuocMoi.HasValue ? prevReading.ChiSoNuocMoi.Value : 0),
+                ChiSoNuocCu = hasReading ? reading!.ChiSoNuocCu : defaultNuocCu,
                 ChiSoNuocMoi = hasReading ? reading!.ChiSoNuocMoi : (int?)null,
                 DaLapHoaDon = hasReading && reading!.DaLapHoaDon,
             };
