@@ -5,6 +5,21 @@ import 'invoice_service.dart';
 class InvoiceController extends ChangeNotifier {
   final InvoiceService _invoiceService = InvoiceService();
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
+  }
+
   List<InvoiceModel> _invoices = [];
   List<InvoiceModel> get invoices => _invoices;
 

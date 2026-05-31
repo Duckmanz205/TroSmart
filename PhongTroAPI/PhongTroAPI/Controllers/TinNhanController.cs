@@ -51,21 +51,30 @@ namespace PhongTroAPI.Controllers
         [HttpGet("Admin/{maAdmin}/Recent")]
         public async Task<ActionResult<IEnumerable<object>>> GetRecentChatsForAdmin(int maAdmin)
         {
+            var activeTenants = await _context.HopDongThues
+                .Include(h => h.MaKhachNavigation)
+                .Include(h => h.MaPhongNavigation)
+                .Where(h => h.TrangThai == "Đang hiệu lực")
+                .ToListAsync();
+
             var messages = await _context.TinNhans
                 .Where(t => (t.MaNguoiGui == maAdmin && t.VaiTroNguoiGui == "Admin") ||
                             (t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin"))
                 .ToListAsync();
 
-            var userIds = messages
+            var userIdsWithMessages = messages
                 .Select(t => t.VaiTroNguoiGui == "User" ? t.MaNguoiGui : t.MaNguoiNhan)
                 .Where(id => id.HasValue)
                 .Select(id => id.Value)
                 .Distinct()
                 .ToList();
 
+            var activeTenantIds = activeTenants.Select(h => h.MaKhach).Distinct().ToList();
+            var allUserIds = activeTenantIds.Union(userIdsWithMessages).Distinct().ToList();
+
             var recentChats = new List<object>();
 
-            foreach (var userId in userIds)
+            foreach (var userId in allUserIds)
             {
                 var userMessages = messages
                     .Where(t => (t.MaNguoiGui == userId && t.VaiTroNguoiGui == "User") ||
@@ -74,30 +83,50 @@ namespace PhongTroAPI.Controllers
                     .ToList();
 
                 var lastMessage = userMessages.FirstOrDefault();
-                if (lastMessage != null)
+                
+                var hopDong = activeTenants.FirstOrDefault(h => h.MaKhach == userId);
+                string tenKhach = hopDong?.MaKhachNavigation?.HoTen;
+                string soPhong = hopDong?.MaPhongNavigation?.SoPhong;
+                int category = 1; // 1: Khách đang thuê
+
+                if (hopDong == null)
                 {
                     var khachThue = await _context.KhachThues.FindAsync(userId);
-                    var hopDong = await _context.HopDongThues
+                    tenKhach = khachThue?.HoTen;
+                    var anyContract = await _context.HopDongThues
                         .Include(h => h.MaPhongNavigation)
-                        .Where(h => h.MaKhach == userId && h.TrangThai == "Đang hiệu lực")
+                        .Where(h => h.MaKhach == userId)
+                        .OrderByDescending(h => h.NgayBatDau)
                         .FirstOrDefaultAsync();
-
-                    var unreadCount = userMessages.Count(t => t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin" && t.DaDoc == false);
-
-                    recentChats.Add(new
+                        
+                    if (anyContract != null)
                     {
-                        MaKhach = userId,
-                        TenKhach = khachThue?.HoTen ?? "Khách " + userId,
-                        SoPhong = hopDong?.MaPhongNavigation?.SoPhong ?? "N/A",
-                        LastMessage = lastMessage.NoiDung,
-                        NgayGui = lastMessage.NgayGui,
-                        IsUnread = unreadCount > 0,
-                        UnreadCount = unreadCount
-                    });
+                        category = 3; // 3: Khách hết hợp đồng
+                        soPhong = anyContract.MaPhongNavigation?.SoPhong ?? "N/A";
+                    }
+                    else
+                    {
+                        category = 2; // 2: Khách quan tâm
+                        soPhong = "N/A";
+                    }
                 }
+
+                var unreadCount = userMessages.Count(t => t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin" && t.DaDoc == false);
+
+                recentChats.Add(new
+                {
+                    MaKhach = userId,
+                    TenKhach = tenKhach ?? "Khách " + userId,
+                    SoPhong = soPhong,
+                    LastMessage = lastMessage?.NoiDung ?? "Chưa có tin nhắn nào",
+                    NgayGui = (DateTime?)lastMessage?.NgayGui,
+                    IsUnread = unreadCount > 0,
+                    UnreadCount = unreadCount,
+                    Category = category
+                });
             }
 
-            return Ok(recentChats.OrderByDescending(c => ((dynamic)c).NgayGui));
+            return Ok(recentChats.OrderByDescending(c => ((dynamic)c).NgayGui ?? DateTime.MinValue));
         }
     }
 }

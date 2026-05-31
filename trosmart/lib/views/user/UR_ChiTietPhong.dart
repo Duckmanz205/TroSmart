@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/admin/phong_view_model.dart';
+import 'UR_Chat.dart';
 
 class RoomDetailView extends StatelessWidget {
   final PhongViewModel room;
@@ -82,10 +83,11 @@ class RoomDetailView extends StatelessWidget {
   }
 
   void _showContactMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Liên hệ tư vấn phòng ${room.soPhong}'),
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => UrChat(
+        initialMessage: 'Tôi muốn liên hệ xem phòng ${room.soPhong} - ${room.tenCoSo}',
+      )),
     );
   }
 

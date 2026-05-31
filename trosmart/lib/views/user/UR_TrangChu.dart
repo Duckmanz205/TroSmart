@@ -1,33 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../logic/user/user_payment_controller.dart';
+import 'package:intl/intl.dart';
 
 class UserHomeScreen extends StatelessWidget {
   const UserHomeScreen({super.key});
 
+  String _formatCurrency(double amount) {
+    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    return formatter.format(amount);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildWelcomeSection(),
-            const SizedBox(height: 24),
-            _buildPaymentHeroCard(),
-            const SizedBox(height: 32),
-            _buildOverviewBento(),
-            const SizedBox(height: 32),
-            _buildNotificationsSection(),
-            const SizedBox(height: 40), // Spacing cho Bottom Nav
-          ],
+    return ChangeNotifierProvider(
+      create: (_) => UserPaymentController(),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Consumer<UserPaymentController>(
+          builder: (context, controller, child) {
+            if (controller.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWelcomeSection(controller),
+                  const SizedBox(height: 24),
+                  if (controller.activeInvoice != null) ...[
+                    _buildPaymentHeroCard(controller),
+                    const SizedBox(height: 32),
+                    _buildOverviewBento(controller),
+                    const SizedBox(height: 32),
+                  ],
+                  _buildNotificationsSection(),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
 
-  Widget _buildWelcomeSection() {
+  Widget _buildWelcomeSection(UserPaymentController controller) {
+    String firstName = "Khách";
+    if (controller.currentUserName.isNotEmpty) {
+      final parts = controller.currentUserName.split(' ');
+      firstName = parts.last;
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -39,7 +64,7 @@ class UserHomeScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 3),
-        const Text("Xin chào, Bình!", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF6750A4))),
+        Text("Xin chào, $firstName!", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF6750A4))),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -52,7 +77,8 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentHeroCard() {
+  Widget _buildPaymentHeroCard(UserPaymentController controller) {
+    final invoice = controller.activeInvoice!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -75,16 +101,16 @@ class UserHomeScreen extends StatelessWidget {
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Tổng tiền cần trả", style: TextStyle(fontSize: 16, color: Color(0xFF49454F))),
-                      SizedBox(height: 4),
-                      Text("3.500k", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Color(0xFF1C1B1F))),
+                    children: [
+                      const Text("Tổng tiền cần trả", style: TextStyle(fontSize: 16, color: Color(0xFF49454F))),
+                      const SizedBox(height: 4),
+                      Text(_formatCurrency(invoice.tongTien), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1C1B1F))),
                     ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(color: const Color(0x1A6750A4), borderRadius: BorderRadius.circular(12)),
-                    child: const Text("HẠN: 05/10", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF6750A4))),
+                    child: Text("HẠN: ${invoice.hanThanhToanDisplay}", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF6750A4))),
                   ),
                 ],
               ),
@@ -129,7 +155,8 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOverviewBento() {
+  Widget _buildOverviewBento(UserPaymentController controller) {
+    final invoice = controller.activeInvoice!;
     return Column(
       children: [
         Row(
@@ -148,10 +175,10 @@ class UserHomeScreen extends StatelessWidget {
           mainAxisSpacing: 16,
           childAspectRatio: 1.4,
           children: [
-            _buildBentoItem("Tiền thuê", "3.500k", Icons.home, const Color(0xFF6750A4)),
-            _buildBentoItem("Điện nước", "750k", Icons.water_drop, const Color(0xFF625B71)),
-            _buildBentoItem("Tiền cọc", "7.000k", Icons.monetization_on, const Color(0xFF616114)),
-            _buildBentoItem("Hợp đồng", "12 tháng", Icons.description, const Color(0xFF6B5E8C)),
+            _buildBentoItem("Tiền thuê", _formatCurrency(invoice.tienPhong), Icons.home, const Color(0xFF6750A4)),
+            _buildBentoItem("Điện nước", _formatCurrency(invoice.tienDien + invoice.tienNuoc), Icons.water_drop, const Color(0xFF625B71)),
+            _buildBentoItem("Dịch vụ", _formatCurrency(invoice.tienDichVu), Icons.cleaning_services, const Color(0xFF616114)),
+            _buildBentoItem("Tháng/Năm", "${invoice.thang}/${invoice.nam}", Icons.calendar_today, const Color(0xFF6B5E8C)),
           ],
         ),
       ],

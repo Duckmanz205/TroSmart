@@ -38,76 +38,109 @@ class _AdChatState extends State<AdChat> {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: _chatController,
-      child: Scaffold(
-        backgroundColor: AppTheme.bgWhite,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const AppGradientHeader(roleLabel: 'Chủ trọ'),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                child: Text('Tin nhắn', style: AppTheme.headingXl),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: AppSearchField(hintText: 'Tìm kiếm người thuê...'),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: Consumer<ChatController>(
-                  builder: (context, controller, child) {
-                    if (controller.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (controller.errorMessage != null) {
-                      return Center(
-                        child: Text(
-                          'Lỗi: ${controller.errorMessage}',
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      );
-                    }
-                    if (controller.recentChats.isEmpty) {
-                      return const Center(
-                        child: Text('Chưa có đoạn chat nào.'),
-                      );
-                    }
-                    return ListView.separated(
-                      padding: EdgeInsets.zero,
-                      itemCount: controller.recentChats.length,
-                      separatorBuilder: (context, index) => const Divider(height: 1, indent: 80),
-                      itemBuilder: (context, index) {
-                        final chat = controller.recentChats[index];
-                        final name = chat['tenKhach'] ?? 'Khách';
-                        final initials = name.toString().trim().isNotEmpty 
-                            ? name.toString().trim()[0].toUpperCase() 
-                            : '?';
-                        return ChatListItem(
-                          initials: initials,
-                          name: '$name (P.${chat['soPhong']})',
-                          lastMessage: chat['lastMessage'] ?? '',
-                          time: _formatTime(chat['ngayGui']),
-                          isUnread: chat['isUnread'] ?? false,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AdChiTietChat(
-                                  maKhach: chat['maKhach'],
-                                  tenKhach: name,
-                                  soPhong: chat['soPhong'].toString(),
-                                ),
-                              ),
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          backgroundColor: AppTheme.bgWhite,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                  child: Text('Tin nhắn', style: AppTheme.headingXl),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: AppSearchField(
+                    hintText: 'Tìm kiếm người...',
+                    onChanged: (value) => _chatController.filterChats(value),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TabBar(
+                  labelColor: AppTheme.primaryPurple,
+                  unselectedLabelColor: AppTheme.textMuted,
+                  indicatorColor: AppTheme.primaryPurple,
+                  labelStyle: AppTheme.bodyMd.copyWith(fontWeight: FontWeight.bold),
+                  tabs: const [
+                    Tab(text: 'Đang thuê'),
+                    Tab(text: 'Hết hợp đồng'),
+                    Tab(text: 'Quan tâm'),
+                  ],
+                ),
+                Expanded(
+                  child: Consumer<ChatController>(
+                    builder: (context, controller, child) {
+                      if (controller.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (controller.errorMessage != null) {
+                        return Center(
+                          child: Text(
+                            'Lỗi: ${controller.errorMessage}',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        );
+                      }
+
+                      Widget buildList(int category) {
+                        final list = controller.recentChats.where((c) => c['category'] == category).toList();
+                        if (list.isEmpty) {
+                          return Center(
+                            child: Text(
+                              category == 1 ? 'Không có khách đang thuê.' :
+                              category == 2 ? 'Không có khách quan tâm.' :
+                              'Không có khách hết hợp đồng.',
+                              style: AppTheme.bodyMd.copyWith(color: AppTheme.textMuted),
+                            ),
+                          );
+                        }
+                        return ListView.separated(
+                          padding: EdgeInsets.zero,
+                          itemCount: list.length,
+                          separatorBuilder: (context, index) => const Divider(height: 1, indent: 80),
+                          itemBuilder: (context, index) {
+                            final chat = list[index];
+                            final name = chat['tenKhach'] ?? 'Khách';
+                            final initials = name.toString().trim().isNotEmpty 
+                                ? name.toString().trim()[0].toUpperCase() 
+                                : '?';
+                            return ChatListItem(
+                              initials: initials,
+                              name: category == 2 ? name : '$name (P.${chat['soPhong']})',
+                              lastMessage: chat['lastMessage'] ?? '',
+                              time: _formatTime(chat['ngayGui']),
+                              isUnread: chat['isUnread'] ?? false,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AdChiTietChat(
+                                      maKhach: chat['maKhach'],
+                                      tenKhach: name,
+                                      soPhong: chat['soPhong'].toString(),
+                                    ),
+                                  ),
+                                );
+                              },
                             );
                           },
                         );
-                      },
-                    );
-                  },
+                      }
+
+                      return TabBarView(
+                        children: [
+                          buildList(1), // Khách đang thuê
+                          buildList(3), // Khách hết hợp đồng
+                          buildList(2), // Khách quan tâm
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
