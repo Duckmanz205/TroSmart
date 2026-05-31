@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Entities;
@@ -49,6 +49,8 @@ namespace PhongTroAPI.Controllers
                     moTa = cs.MoTa,
                     latitude = cs.Latitude,
                     longitude = cs.Longitude,
+                    donGiaDien = cs.DonGiaDien,
+                    donGiaNuoc = cs.DonGiaNuoc,
 
                     tenQuanLy = cs.MaQuanLyNavigation != null ? cs.MaQuanLyNavigation.HoTen : null,
                     soDienThoaiQuanLy = cs.MaQuanLyNavigation != null ? cs.MaQuanLyNavigation.Sdt : null,
@@ -514,6 +516,21 @@ namespace PhongTroAPI.Controllers
                 tienIch.MaTienIch,
                 tienIch.TenTienIch
             });
+        }
+
+        // PATCH: cập nhật giá điện nước của cơ sở
+        [HttpPatch("{id}/utility-prices")]
+        public async Task<IActionResult> UpdateUtilityPrices(int id, [FromBody] PhongTroAPI.DTOs.UpdateUtilityPricesDto dto)
+        {
+            var coso = await _context.CoSos.FindAsync(id);
+            if (coso == null)
+                return NotFound("Không tìm thấy cơ sở");
+
+            coso.DonGiaDien = dto.DonGiaDien;
+            coso.DonGiaNuoc = dto.DonGiaNuoc;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Cập nhật đơn giá thành công", donGiaDien = coso.DonGiaDien, donGiaNuoc = coso.DonGiaNuoc });
         }
     }
 }

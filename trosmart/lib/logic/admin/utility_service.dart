@@ -67,6 +67,20 @@ class UtilityService {
     }
   }
 
+  /// Cập nhật đơn giá điện nước cho cơ sở
+  Future<void> updateUtilityPrices(int maCoSo, double donGiaDien, double donGiaNuoc) async {
+    try {
+      await _dio.patch('/CoSo/$maCoSo/utility-prices', data: {
+        'donGiaDien': donGiaDien,
+        'donGiaNuoc': donGiaNuoc,
+      });
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Lỗi hệ thống: $e');
+    }
+  }
+
   Exception _handleDioError(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout || 
         e.type == DioExceptionType.receiveTimeout) {

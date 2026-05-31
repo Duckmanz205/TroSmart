@@ -26,10 +26,12 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
   String get _bankId => widget.invoice.maBin ?? '970415';
   String get _accountNo => widget.invoice.soTaiKhoan ?? '102876543210';
   String get _accountName => widget.invoice.tenTaiKhoan ?? 'TROSMART ACADEMY';
-  
+
   String get _vietQRUrl {
     final amount = widget.invoice.tongTien.toInt();
-    final addInfo = Uri.encodeComponent('TROSMART T${widget.invoice.thang} P${widget.invoice.tenPhong}');
+    final addInfo = Uri.encodeComponent(
+      'TROSMART T${widget.invoice.thang} P${widget.invoice.tenPhong}',
+    );
     final accountNameEncoded = Uri.encodeComponent(_accountName);
     return 'https://img.vietqr.io/image/$_bankId-$_accountNo-compact2.png?amount=$amount&addInfo=$addInfo&accountName=$accountNameEncoded';
   }
@@ -64,15 +66,15 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
     try {
       final file = File(pickedFile.path);
       final fileName = 'proof_${widget.invoice.maHoaDon}.png';
-      
-      final supabase = Supabase.instance.client;
-      await supabase.storage.from('payment_proofs').upload(
-        fileName,
-        file,
-        fileOptions: const FileOptions(upsert: true),
-      );
 
-      final publicUrl = supabase.storage.from('payment_proofs').getPublicUrl(fileName);
+      final supabase = Supabase.instance.client;
+      await supabase.storage
+          .from('payment_proofs')
+          .upload(fileName, file, fileOptions: const FileOptions(upsert: true));
+
+      final publicUrl = supabase.storage
+          .from('payment_proofs')
+          .getPublicUrl(fileName);
 
       setState(() {
         _uploadedImagePath = publicUrl;
@@ -81,7 +83,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã tải lên minh chứng thanh toán thành công lên Supabase Storage!'),
+            content: Text('Đã tải lên minh chứng thanh toán thành công!'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -115,7 +117,10 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: AppTheme.textPrimary),
+          icon: const Icon(
+            LucideIcons.chevronLeft,
+            color: AppTheme.textPrimary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -138,11 +143,17 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               decoration: BoxDecoration(
                 color: AppTheme.primaryPurple.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primaryPurple.withOpacity(0.2)),
+                border: Border.all(
+                  color: AppTheme.primaryPurple.withOpacity(0.2),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(LucideIcons.info, color: AppTheme.deepPurple, size: 20),
+                  const Icon(
+                    LucideIcons.info,
+                    color: AppTheme.deepPurple,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -170,7 +181,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                     color: Color(0x08000000),
                     blurRadius: 24,
                     offset: Offset(0, 12),
-                  )
+                  ),
                 ],
               ),
               child: Column(
@@ -184,11 +195,17 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                         height: 28,
                         errorBuilder: (_, __, ___) => Text(
                           'VietQR',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: Colors.blue[900]),
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.blue[900],
+                          ),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
@@ -239,7 +256,8 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                             child: Center(
                               child: CircularProgressIndicator(
                                 value: progress.expectedTotalBytes != null
-                                    ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                                    ? progress.cumulativeBytesLoaded /
+                                          progress.expectedTotalBytes!
                                     : null,
                               ),
                             ),
@@ -256,11 +274,18 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                             child: const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(LucideIcons.wifiOff, color: Colors.grey, size: 40),
+                                Icon(
+                                  LucideIcons.wifiOff,
+                                  color: Colors.grey,
+                                  size: 40,
+                                ),
                                 SizedBox(height: 12),
                                 Text(
                                   'Không thể tải mã QR',
-                                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -284,10 +309,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                   const SizedBox(height: 4),
                   Text(
                     'Tự động điền số tiền & nội dung chuyển khoản',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
+                    style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
                   ),
                 ],
               ),
@@ -320,10 +342,15 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                 children: [
                   _buildTransferDetailRow(
                     'Ngân hàng',
-                    widget.invoice.tenVietTat != null && widget.invoice.tenVietTat!.isNotEmpty
+                    widget.invoice.tenVietTat != null &&
+                            widget.invoice.tenVietTat!.isNotEmpty
                         ? widget.invoice.tenVietTat!
                         : 'VietinBank (ICB)',
-                    trailing: const Icon(LucideIcons.externalLink, size: 16, color: Colors.grey),
+                    trailing: const Icon(
+                      LucideIcons.externalLink,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                   ),
                   const Divider(height: 24, thickness: 0.5),
                   _buildTransferDetailRow(
@@ -332,21 +359,22 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                     onCopy: () => _copyToClipboard(_accountNo, 'Số tài khoản'),
                   ),
                   const Divider(height: 24, thickness: 0.5),
-                  _buildTransferDetailRow(
-                    'Chủ tài khoản',
-                    _accountName,
-                  ),
+                  _buildTransferDetailRow('Chủ tài khoản', _accountName),
                   const Divider(height: 24, thickness: 0.5),
                   _buildTransferDetailRow(
                     'Số tiền',
                     totalStr,
-                    onCopy: () => _copyToClipboard(inv.tongTien.toInt().toString(), 'Số tiền'),
+                    onCopy: () => _copyToClipboard(
+                      inv.tongTien.toInt().toString(),
+                      'Số tiền',
+                    ),
                   ),
                   const Divider(height: 24, thickness: 0.5),
                   _buildTransferDetailRow(
                     'Nội dung',
                     description,
-                    onCopy: () => _copyToClipboard(description, 'Nội dung chuyển khoản'),
+                    onCopy: () =>
+                        _copyToClipboard(description, 'Nội dung chuyển khoản'),
                   ),
                 ],
               ),
@@ -373,7 +401,10 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               onTap: _isUploading ? null : _actualImageUpload,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 16,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -390,70 +421,80 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                         child: Center(child: CircularProgressIndicator()),
                       )
                     : _uploadedImagePath != null
-                        ? Column(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  _uploadedImagePath!,
+                    ? Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              _uploadedImagePath!,
+                              height: 160,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
                                   height: 160,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, progress) {
-                                    if (progress == null) return child;
-                                    return Container(
-                                      height: 160,
-                                      color: Colors.grey[100],
-                                      child: const Center(child: CircularProgressIndicator()),
-                                    );
-                                  },
-                                  errorBuilder: (_, __, ___) => const Icon(LucideIcons.checkCircle, color: AppTheme.accentTeal, size: 36),
-                                ),
+                                  color: Colors.grey[100],
+                                  child: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (_, __, ___) => const Icon(
+                                LucideIcons.checkCircle,
+                                color: AppTheme.accentTeal,
+                                size: 36,
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Đã đính kèm ảnh minh chứng chuyển khoản!',
-                                style: GoogleFonts.inter(
-                                  color: AppTheme.accentTeal,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Chạm để thay đổi hình ảnh',
-                                style: GoogleFonts.inter(
-                                  color: Colors.grey,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              const SizedBox(height: 8),
-                              Icon(LucideIcons.image, color: Colors.grey[400], size: 36),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Tải lên ảnh chụp màn hình chuyển khoản',
-                                style: GoogleFonts.inter(
-                                  color: AppTheme.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Giúp chủ nhà kiểm tra và xác nhận hóa đơn nhanh hơn.',
-                                style: GoogleFonts.inter(
-                                  color: Colors.grey,
-                                  fontSize: 11,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                            ],
+                            ),
                           ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Đã đính kèm ảnh minh chứng chuyển khoản!',
+                            style: GoogleFonts.inter(
+                              color: AppTheme.accentTeal,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Chạm để thay đổi hình ảnh',
+                            style: GoogleFonts.inter(
+                              color: Colors.grey,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          Icon(
+                            LucideIcons.image,
+                            color: Colors.grey[400],
+                            size: 36,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tải lên ảnh chụp màn hình chuyển khoản',
+                            style: GoogleFonts.inter(
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Giúp chủ nhà kiểm tra và xác nhận hóa đơn nhanh hơn.',
+                            style: GoogleFonts.inter(
+                              color: Colors.grey,
+                              fontSize: 11,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
               ),
             ),
 
@@ -504,7 +545,12 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
     );
   }
 
-  Widget _buildTransferDetailRow(String label, String value, {VoidCallback? onCopy, Widget? trailing}) {
+  Widget _buildTransferDetailRow(
+    String label,
+    String value, {
+    VoidCallback? onCopy,
+    Widget? trailing,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -513,10 +559,7 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
           children: [
             Text(
               label,
-              style: GoogleFonts.inter(
-                color: Colors.grey,
-                fontSize: 11,
-              ),
+              style: GoogleFonts.inter(color: Colors.grey, fontSize: 11),
             ),
             const SizedBox(height: 4),
             Text(
@@ -540,7 +583,11 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(LucideIcons.copy, size: 12, color: AppTheme.deepPurple),
+                  const Icon(
+                    LucideIcons.copy,
+                    size: 12,
+                    color: AppTheme.deepPurple,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Sao chép',
@@ -566,7 +613,9 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(

@@ -6,6 +6,8 @@ import '../../logic/admin/invoice_controller.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../views/admin/AD_DuyetThanhToan.dart';
 import '../../views/admin/AD_ChiTietHoaDon.dart';
+import '../../services/thong_bao_service.dart';
+import '../../models/thong_bao.dart';
 
 class SectionTitleAction extends StatelessWidget {
   const SectionTitleAction({super.key});
@@ -175,11 +177,145 @@ class StatCard extends StatelessWidget {
   }
 }
 
-class SearchAndFilter extends StatelessWidget {
+class SearchAndFilter extends StatefulWidget {
   const SearchAndFilter({super.key});
 
   @override
+  State<SearchAndFilter> createState() => _SearchAndFilterState();
+}
+
+class _SearchAndFilterState extends State<SearchAndFilter> {
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialSearchText = context.read<InvoiceController>().searchText;
+    _searchController = TextEditingController(text: initialSearchText);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showFilterBottomSheet(BuildContext context, InvoiceController controller) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(28),
+              topRight: Radius.circular(28),
+            ),
+          ),
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom: 32,
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Bộ lọc hóa đơn',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111827),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildFilterOption(ctx, controller, 'Tất cả', 'Tất cả các hóa đơn', Icons.receipt_long_outlined),
+                _buildFilterOption(ctx, controller, 'Đã thanh toán', 'Đã thanh toán', Icons.check_circle_outline_rounded),
+                _buildFilterOption(ctx, controller, 'Chờ thu', 'Chờ thu', Icons.access_time_rounded),
+                _buildFilterOption(ctx, controller, 'Quá hạn', 'Quá hạn', Icons.warning_amber_rounded),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterOption(
+    BuildContext context, 
+    InvoiceController controller, 
+    String filterValue, 
+    String title, 
+    IconData icon
+  ) {
+    final isSelected = controller.selectedFilter == filterValue;
+    return GestureDetector(
+      onTap: () {
+        controller.updateSelectedFilter(filterValue);
+        Navigator.pop(context);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF6E589E).withOpacity(0.08) : const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6E589E) : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon, 
+              color: isSelected ? const Color(0xFF6E589E) : Colors.black54,
+              size: 20,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? const Color(0xFF6E589E) : const Color(0xFF111827),
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF6E589E),
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final controller = context.watch<InvoiceController>();
+
     return Row(
       children: [
         Expanded(
@@ -190,8 +326,10 @@ class SearchAndFilter extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.black12),
             ),
-            child: const TextField(
-              decoration: InputDecoration(
+            child: TextField(
+              controller: _searchController,
+              onChanged: controller.updateSearchText,
+              decoration: const InputDecoration(
                 icon: Icon(Icons.search, color: Colors.black26),
                 hintText: 'Tìm hóa đơn...',
                 hintStyle: TextStyle(color: Colors.black26),
@@ -201,14 +339,28 @@ class SearchAndFilter extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black12),
+        GestureDetector(
+          onTap: () => _showFilterBottomSheet(context, controller),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: controller.selectedFilter != 'Tất cả' 
+                  ? const Color(0xFF6E589E) 
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: controller.selectedFilter != 'Tất cả' 
+                    ? const Color(0xFF6E589E) 
+                    : Colors.black12,
+              ),
+            ),
+            child: Icon(
+              Icons.filter_list, 
+              color: controller.selectedFilter != 'Tất cả' 
+                  ? Colors.white 
+                  : Colors.black45,
+            ),
           ),
-          child: const Icon(Icons.filter_list, color: Colors.black45),
         ),
       ],
     );
@@ -263,8 +415,28 @@ class InvoiceList extends StatelessWidget {
       );
     }
 
+    final filteredList = controller.filteredInvoices;
+
+    if (filteredList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 24),
+            Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text(
+              "Không tìm thấy hóa đơn nào phù hợp với bộ lọc hoặc từ khóa tìm kiếm.",
+              style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
-      children: controller.invoices.map((inv) {
+      children: filteredList.map((inv) {
         // Xác định trạng thái hiển thị
         String status;
         if (inv.trangThai == 'Đã thanh toán') {
@@ -376,21 +548,77 @@ class InvoiceCard extends StatelessWidget {
           ),
           if (status != 'paid') ...[
             const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.outbound_rounded, color: Colors.white, size: 16),
-                  const SizedBox(width: 8),
-                  Text(status == 'overdue' ? 'Nhắc nhở khẩn' : 'Nhắc nhở', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                ],
+            InkWell(
+              onTap: invoice.maKhach == null || invoice.maKhach == 0
+                  ? () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Phòng chưa có khách thuê được gán hợp đồng hiệu lực!'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                  : () async {
+                      try {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đang gửi nhắc nhở đến người thuê...')),
+                        );
+                        
+                        final success = await ThongBaoService().sendThongBao(
+                          ThongBao(
+                            maThongBao: 0,
+                            maKhach: invoice.maKhach!,
+                            tieuDe: status == 'overdue' 
+                                ? 'Nhắc nhở đóng tiền phòng quá hạn 🚨' 
+                                : 'Nhắc nhở thanh toán hóa đơn tiền phòng 💸',
+                            noiDung: 'Hóa đơn tháng ${invoice.thang}/${invoice.nam} của phòng ${invoice.tenPhong} với số tiền $amount cần được thanh toán. Hạn chót: $deadline. Vui lòng kiểm tra và thanh toán sớm!',
+                            daDoc: false,
+                            ngayGui: DateTime.now(),
+                            loaiThongBao: 'Hệ thống',
+                          ),
+                        );
+                        
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã gửi nhắc nhở thành công!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Gửi nhắc nhở thất bại. Vui lòng thử lại!'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Lỗi: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.outbound_rounded, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    Text(status == 'overdue' ? 'Nhắc nhở khẩn' : 'Nhắc nhở', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  ],
+                ),
               ),
             ),
           ],
