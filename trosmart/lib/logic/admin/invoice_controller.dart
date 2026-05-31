@@ -135,14 +135,18 @@ class InvoiceController extends ChangeNotifier {
         if (roomReading['chiSoNuocCu'] != null) {
           soNuocCu = (roomReading['chiSoNuocCu'] as num).toDouble();
         }
-        if (roomReading['chiSoDienMoi'] != null) {
-          soDienMoi = (roomReading['chiSoDienMoi'] as num).toDouble();
+        
+        // Chỉ return early nếu thực sự đã có bản ghi chỉ số tháng này trên hệ thống
+        if (roomReading['maChiSo'] != null) {
+          if (roomReading['chiSoDienMoi'] != null) {
+            soDienMoi = (roomReading['chiSoDienMoi'] as num).toDouble();
+          }
+          if (roomReading['chiSoNuocMoi'] != null) {
+            soNuocMoi = (roomReading['chiSoNuocMoi'] as num).toDouble();
+          }
+          notifyListeners();
+          return; // Đã tìm thấy chỉ số tiêu thụ đầy đủ tháng này, bỏ qua fallback hóa đơn cũ
         }
-        if (roomReading['chiSoNuocMoi'] != null) {
-          soNuocMoi = (roomReading['chiSoNuocMoi'] as num).toDouble();
-        }
-        notifyListeners();
-        return; // Đã tìm thấy chỉ số tiêu thụ tháng này, bỏ qua fallback hóa đơn cũ
       }
     } catch (e) {
       debugPrint("Error fetching current month utility readings: $e");
