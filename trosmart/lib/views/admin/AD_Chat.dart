@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
-import '../../widgets/common/app_header.dart';
 import '../../widgets/common/app_search_field.dart';
 import '../../widgets/chat_widgets.dart';
 import '../../logic/admin/chat_controller.dart';
@@ -44,7 +43,6 @@ class _AdChatState extends State<AdChat> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const AppGradientHeader(roleLabel: 'Chủ trọ'),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Text('Tin nhắn', style: AppTheme.headingXl),
@@ -76,12 +74,13 @@ class _AdChatState extends State<AdChat> {
                     return ListView.separated(
                       padding: EdgeInsets.zero,
                       itemCount: controller.recentChats.length,
-                      separatorBuilder: (context, index) => const Divider(height: 1, indent: 80),
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1, indent: 80),
                       itemBuilder: (context, index) {
                         final chat = controller.recentChats[index];
                         final name = chat['tenKhach'] ?? 'Khách';
-                        final initials = name.toString().trim().isNotEmpty 
-                            ? name.toString().trim()[0].toUpperCase() 
+                        final initials = name.toString().trim().isNotEmpty
+                            ? name.toString().trim()[0].toUpperCase()
                             : '?';
                         return ChatListItem(
                           initials: initials,

@@ -81,7 +81,7 @@ namespace PhongTroAPI.Controllers
 
                 // Bước 5: Tạo JWT và trả AuthResponse
                 var token = GenerateJwtToken(maTaiKhoan, request.TenDangNhap.Trim(),
-                    "KhachThue", maKhach, request.HoTen.Trim());
+                    "KhachThue", maKhach, null, request.HoTen.Trim());
 
                 return Ok(new AuthResponse
                 {
@@ -161,7 +161,7 @@ namespace PhongTroAPI.Controllers
                 return StatusCode(403, new { message = "Tài khoản đã bị khóa" });
 
             // Bước 5 & 6: Tạo JWT và trả AuthResponse
-            var token = GenerateJwtToken(maTaiKhoan, tenDangNhap, vaiTro, maKhach, hoTen);
+            var token = GenerateJwtToken(maTaiKhoan, tenDangNhap, vaiTro, maKhach, maQuanLy, hoTen);
 
             return Ok(new AuthResponse
             {
@@ -179,7 +179,7 @@ namespace PhongTroAPI.Controllers
         // Hàm tạo JWT token
         // ─────────────────────────────────────────────
         private string GenerateJwtToken(int maTaiKhoan, string tenDangNhap,
-            string vaiTro, int? maKhach, string hoTen)
+            string vaiTro, int? maKhach, int? maQuanLy, string hoTen)
         {
             var secretKey = _config["JwtSettings:SecretKey"]!;
             var issuer = _config["JwtSettings:Issuer"]!;
@@ -200,6 +200,9 @@ namespace PhongTroAPI.Controllers
 
             if (maKhach.HasValue)
                 claims.Add(new Claim("MaKhach", maKhach.Value.ToString()));
+
+            if (maQuanLy.HasValue)
+                claims.Add(new Claim("MaQuanLy", maQuanLy.Value.ToString()));
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
