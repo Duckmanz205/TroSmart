@@ -316,7 +316,7 @@ class _HistoryStatsScreenState extends State<HistoryStatsScreen> {
                       showTitles: true,
                       getTitlesWidget: (val, meta) {
                         final idx = val.toInt();
-                        if (idx >= 0 && idx < lichSuCt.length) {
+                        if (val == idx.toDouble() && idx >= 0 && idx < lichSuCt.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
@@ -386,17 +386,18 @@ class _HistoryStatsScreenState extends State<HistoryStatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Lượng tiêu thụ Điện & Nước',
                 style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF1A1D1F)),
               ),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   _buildLegendItem('Điện (kWh)', AppColors.statusOrange),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   _buildLegendItem('Nước (m³)', AppColors.accentTeal),
                 ],
               )
@@ -414,7 +415,7 @@ class _HistoryStatsScreenState extends State<HistoryStatsScreen> {
                       showTitles: true,
                       getTitlesWidget: (val, meta) {
                         final idx = val.toInt();
-                        if (idx >= 0 && idx < lichSuTt.length) {
+                        if (val == idx.toDouble() && idx >= 0 && idx < lichSuTt.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
