@@ -177,11 +177,145 @@ class StatCard extends StatelessWidget {
   }
 }
 
-class SearchAndFilter extends StatelessWidget {
+class SearchAndFilter extends StatefulWidget {
   const SearchAndFilter({super.key});
 
   @override
+  State<SearchAndFilter> createState() => _SearchAndFilterState();
+}
+
+class _SearchAndFilterState extends State<SearchAndFilter> {
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialSearchText = context.read<InvoiceController>().searchText;
+    _searchController = TextEditingController(text: initialSearchText);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showFilterBottomSheet(BuildContext context, InvoiceController controller) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(28),
+              topRight: Radius.circular(28),
+            ),
+          ),
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom: 32,
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Bộ lọc hóa đơn',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111827),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildFilterOption(ctx, controller, 'Tất cả', 'Tất cả các hóa đơn', Icons.receipt_long_outlined),
+                _buildFilterOption(ctx, controller, 'Đã thanh toán', 'Đã thanh toán', Icons.check_circle_outline_rounded),
+                _buildFilterOption(ctx, controller, 'Chờ thu', 'Chờ thu', Icons.access_time_rounded),
+                _buildFilterOption(ctx, controller, 'Quá hạn', 'Quá hạn', Icons.warning_amber_rounded),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterOption(
+    BuildContext context, 
+    InvoiceController controller, 
+    String filterValue, 
+    String title, 
+    IconData icon
+  ) {
+    final isSelected = controller.selectedFilter == filterValue;
+    return GestureDetector(
+      onTap: () {
+        controller.updateSelectedFilter(filterValue);
+        Navigator.pop(context);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF6E589E).withOpacity(0.08) : const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6E589E) : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon, 
+              color: isSelected ? const Color(0xFF6E589E) : Colors.black54,
+              size: 20,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? const Color(0xFF6E589E) : const Color(0xFF111827),
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF6E589E),
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final controller = context.watch<InvoiceController>();
+
     return Row(
       children: [
         Expanded(
@@ -192,8 +326,10 @@ class SearchAndFilter extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.black12),
             ),
-            child: const TextField(
-              decoration: InputDecoration(
+            child: TextField(
+              controller: _searchController,
+              onChanged: controller.updateSearchText,
+              decoration: const InputDecoration(
                 icon: Icon(Icons.search, color: Colors.black26),
                 hintText: 'Tìm hóa đơn...',
                 hintStyle: TextStyle(color: Colors.black26),
@@ -203,14 +339,28 @@ class SearchAndFilter extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black12),
+        GestureDetector(
+          onTap: () => _showFilterBottomSheet(context, controller),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: controller.selectedFilter != 'Tất cả' 
+                  ? const Color(0xFF6E589E) 
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: controller.selectedFilter != 'Tất cả' 
+                    ? const Color(0xFF6E589E) 
+                    : Colors.black12,
+              ),
+            ),
+            child: Icon(
+              Icons.filter_list, 
+              color: controller.selectedFilter != 'Tất cả' 
+                  ? Colors.white 
+                  : Colors.black45,
+            ),
           ),
-          child: const Icon(Icons.filter_list, color: Colors.black45),
         ),
       ],
     );
@@ -265,8 +415,28 @@ class InvoiceList extends StatelessWidget {
       );
     }
 
+    final filteredList = controller.filteredInvoices;
+
+    if (filteredList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 24),
+            Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text(
+              "Không tìm thấy hóa đơn nào phù hợp với bộ lọc hoặc từ khóa tìm kiếm.",
+              style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
-      children: controller.invoices.map((inv) {
+      children: filteredList.map((inv) {
         // Xác định trạng thái hiển thị
         String status;
         if (inv.trangThai == 'Đã thanh toán') {

@@ -24,6 +24,50 @@ class InvoiceController extends ChangeNotifier {
   List<InvoiceModel> _invoices = [];
   List<InvoiceModel> get invoices => _invoices;
 
+  String _searchText = "";
+  String get searchText => _searchText;
+
+  String _selectedFilter = "Tất cả";
+  String get selectedFilter => _selectedFilter;
+
+  void updateSearchText(String value) {
+    _searchText = value;
+    notifyListeners();
+  }
+
+  void updateSelectedFilter(String value) {
+    _selectedFilter = value;
+    notifyListeners();
+  }
+
+  List<InvoiceModel> get filteredInvoices {
+    return _invoices.where((inv) {
+      // 1. Filter by status
+      if (_selectedFilter != "Tất cả") {
+        if (_selectedFilter == "Đã thanh toán" && inv.trangThai != "Đã thanh toán") {
+          return false;
+        }
+        if (_selectedFilter == "Chờ thu" && inv.trangThai != "Chưa thanh toán" && inv.trangThai != "Chờ thanh toán") {
+          return false;
+        }
+        if (_selectedFilter == "Quá hạn" && inv.trangThai != "Quá hạn") {
+          return false;
+        }
+      }
+
+      // 2. Filter by search text
+      if (_searchText.isNotEmpty) {
+        final query = _searchText.toLowerCase();
+        final matchRoom = inv.tenPhong.toLowerCase().contains(query) || inv.maPhong.toString().contains(query);
+        final matchTenant = inv.tenKhachThue.toLowerCase().contains(query);
+        final matchCoSo = inv.tenCoSo.toLowerCase().contains(query);
+        return matchRoom || matchTenant || matchCoSo;
+      }
+
+      return true;
+    }).toList();
+  }
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
