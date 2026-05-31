@@ -443,17 +443,7 @@ INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [Ti
 SET IDENTITY_INSERT [dbo].[HopDongThue] OFF
 GO
 
--- Hóa Đơn (Dữ liệu mới)
-SET IDENTITY_INSERT [dbo].[HoaDon] ON 
-INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
-VALUES (1, 2, 1, 10, 2024, CAST(2200000.00 AS Decimal(18,2)), 1250, 1342, CAST(3500.00 AS Decimal(18,2)), 430, 438, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi: 100.000đ', CAST(0.00 AS Decimal(18,2)), NULL, CAST(2782000.00 AS Decimal(18,2)), N'Đã thanh toán', GETDATE(), CAST(N'2024-10-05' AS Date), CAST(N'2024-10-04' AS Date))
-
-INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
-VALUES (2, 12, 2, 10, 2024, CAST(2000000.00 AS Decimal(18,2)), 2100, 2185, CAST(3500.00 AS Decimal(18,2)), 150, 156, CAST(20000.00 AS Decimal(18,2)), CAST(150000.00 AS Decimal(18,2)), N'Wifi: 100k, Rác: 50k', CAST(50000.00 AS Decimal(18,2)), N'Phạt vứt rác sai quy định', CAST(2617500.00 AS Decimal(18,2)), N'Chưa thanh toán', GETDATE(), CAST(N'2024-10-05' AS Date), NULL)
-
-INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
-VALUES (3, 24, 3, 9, 2024, CAST(2900000.00 AS Decimal(18,2)), 300, 450, CAST(3500.00 AS Decimal(18,2)), 80, 92, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi', CAST(0.00 AS Decimal(18,2)), NULL, CAST(3765000.00 AS Decimal(18,2)), N'Quá hạn', GETDATE(), CAST(N'2024-09-05' AS Date), NULL)
-SET IDENTITY_INSERT [dbo].[HoaDon] OFF
+-- Hóa Đơn (Dữ liệu mới) - Để trống ban đầu theo yêu cầu của người dùng
 GO
 
 -- Tài Khoản (Dữ liệu mới)
@@ -471,10 +461,7 @@ INSERT [dbo].[SuCo] ([MaSuCo], [MaPhong], [MaKhach], [TieuDe], [MoTa], [TrangTha
 SET IDENTITY_INSERT [dbo].[SuCo] OFF
 GO
 
--- Lịch Sử Thanh Toán (Dữ liệu mới)
-SET IDENTITY_INSERT [dbo].[LichSuThanhToan] ON
-INSERT [dbo].[LichSuThanhToan] ([MaThanhToan], [MaHoaDon], [SoTien], [PhuongThuc], [NguoiGhiNhan]) VALUES (1, 1, CAST(2782000.00 AS Decimal(18,2)), N'Chuyển khoản', 1)
-SET IDENTITY_INSERT [dbo].[LichSuThanhToan] OFF
+-- Lịch Sử Thanh Toán (Dữ liệu mới) - Để trống ban đầu theo yêu cầu của người dùng
 GO
 
 -- Thông Báo (Dữ liệu mới)

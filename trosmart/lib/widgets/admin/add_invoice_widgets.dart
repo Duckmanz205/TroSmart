@@ -73,18 +73,24 @@ class InvoiceFormCard extends StatefulWidget {
 class _InvoiceFormCardState extends State<InvoiceFormCard> {
   late TextEditingController _dienMoiController;
   late TextEditingController _nuocMoiController;
+  late FocusNode _dienMoiFocusNode;
+  late FocusNode _nuocMoiFocusNode;
 
   @override
   void initState() {
     super.initState();
     _dienMoiController = TextEditingController();
     _nuocMoiController = TextEditingController();
+    _dienMoiFocusNode = FocusNode();
+    _nuocMoiFocusNode = FocusNode();
   }
 
   @override
   void dispose() {
     _dienMoiController.dispose();
     _nuocMoiController.dispose();
+    _dienMoiFocusNode.dispose();
+    _nuocMoiFocusNode.dispose();
     super.dispose();
   }
 
@@ -98,12 +104,12 @@ class _InvoiceFormCardState extends State<InvoiceFormCard> {
 
     // Đồng bộ hóa văn bản khi dữ liệu thay đổi từ InvoiceController (Hỗ trợ autofill)
     final dienText = controller.soDienMoi > 0 ? controller.soDienMoi.toInt().toString() : '';
-    if (_dienMoiController.text != dienText && !FocusScope.of(context).hasFocus) {
+    if (_dienMoiController.text != dienText && !_dienMoiFocusNode.hasFocus) {
       _dienMoiController.text = dienText;
     }
 
     final nuocText = controller.soNuocMoi > 0 ? controller.soNuocMoi.toInt().toString() : '';
-    if (_nuocMoiController.text != nuocText && !FocusScope.of(context).hasFocus) {
+    if (_nuocMoiController.text != nuocText && !_nuocMoiFocusNode.hasFocus) {
       _nuocMoiController.text = nuocText;
     }
 
@@ -162,7 +168,7 @@ class _InvoiceFormCardState extends State<InvoiceFormCard> {
             children: [
               Expanded(child: ReadingInput(label: 'Cũ: ${controller.soDienCu.toInt()}', value: controller.soDienCu.toInt().toString(), isReadOnly: true)),
               const SizedBox(width: 12),
-              Expanded(child: ReadingInput(label: 'Mới *', value: '', controller: _dienMoiController, onChanged: controller.updateDienMoi)),
+              Expanded(child: ReadingInput(label: 'Mới *', value: '', controller: _dienMoiController, onChanged: controller.updateDienMoi, focusNode: _dienMoiFocusNode)),
             ],
           ),
           
@@ -173,7 +179,7 @@ class _InvoiceFormCardState extends State<InvoiceFormCard> {
             children: [
               Expanded(child: ReadingInput(label: 'Cũ: ${controller.soNuocCu.toInt()}', value: controller.soNuocCu.toInt().toString(), isReadOnly: true)),
               const SizedBox(width: 12),
-              Expanded(child: ReadingInput(label: 'Mới *', value: '', controller: _nuocMoiController, onChanged: controller.updateNuocMoi)),
+              Expanded(child: ReadingInput(label: 'Mới *', value: '', controller: _nuocMoiController, onChanged: controller.updateNuocMoi, focusNode: _nuocMoiFocusNode)),
             ],
           ),
           
@@ -320,6 +326,7 @@ class ReadingInput extends StatelessWidget {
   final bool isReadOnly;
   final ValueChanged<String>? onChanged;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
 
   const ReadingInput({
     super.key,
@@ -328,6 +335,7 @@ class ReadingInput extends StatelessWidget {
     this.isReadOnly = false,
     this.onChanged,
     this.controller,
+    this.focusNode,
   });
 
   @override
@@ -364,6 +372,7 @@ class ReadingInput extends StatelessWidget {
               )
             : TextField(
                 controller: controller,
+                focusNode: focusNode,
                 keyboardType: TextInputType.number,
                 onChanged: onChanged,
                 decoration: const InputDecoration(

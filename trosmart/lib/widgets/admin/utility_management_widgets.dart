@@ -342,6 +342,7 @@ class RoomUtilityCard extends StatelessWidget {
   final ValueChanged<String>? onDienMoiChanged;
   final ValueChanged<String>? onNuocMoiChanged;
   final VoidCallback? onSave;
+  final bool isInvoiceCreated;
 
   const RoomUtilityCard({
     super.key,
@@ -357,6 +358,7 @@ class RoomUtilityCard extends StatelessWidget {
     this.onDienMoiChanged,
     this.onNuocMoiChanged,
     this.onSave,
+    this.isInvoiceCreated = false,
   });
 
   @override
@@ -393,7 +395,24 @@ class RoomUtilityCard extends StatelessWidget {
                           roomName,
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
                         ),
-                        if (status == RoomStatus.saved) ...[
+                        if (isInvoiceCreated) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.greenAccent.withOpacity(0.3)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(LucideIcons.receipt, color: Colors.greenAccent, size: 10),
+                                SizedBox(width: 4),
+                                Text('Đã lập HĐ', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ] else if (status == RoomStatus.saved) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -432,7 +451,7 @@ class RoomUtilityCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(LucideIcons.mapPin, color: Colors.white60, size: 12),
+                           const Icon(LucideIcons.mapPin, color: Colors.white60, size: 12),
                           const SizedBox(width: 4),
                           Text(
                             facilityName!,
@@ -444,7 +463,7 @@ class RoomUtilityCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (status != RoomStatus.vacant)
+              if (status != RoomStatus.vacant && !isInvoiceCreated)
                 ElevatedButton.icon(
                   onPressed: onSave,
                   icon: Icon(status == RoomStatus.saved ? LucideIcons.edit2 : LucideIcons.save, size: 14),
@@ -505,7 +524,7 @@ class RoomUtilityCard extends StatelessWidget {
             Colors.yellow[400]!,
             dienCu ?? '0',
             dienMoi,
-            onChanged: onDienMoiChanged,
+            onChanged: isInvoiceCreated ? null : onDienMoiChanged,
             consumption: hasDien ? '${dMoi - dCu} kWh' : null,
             cost: hasDien ? '${((dMoi - dCu) * 3500).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
           ),
@@ -518,7 +537,7 @@ class RoomUtilityCard extends StatelessWidget {
             Colors.blue[300]!,
             nuocCu ?? '0',
             nuocMoi,
-            onChanged: onNuocMoiChanged,
+            onChanged: isInvoiceCreated ? null : onNuocMoiChanged,
             consumption: hasNuoc ? '${nMoi - nCu} m³' : null,
             cost: hasNuoc ? '${((nMoi - nCu) * 20000).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
           ),
@@ -563,6 +582,7 @@ class RoomUtilityCard extends StatelessWidget {
               border: newVal != null ? Border.all(color: AppColors.accentTeal.withOpacity(0.3)) : null,
             ),
             child: TextField(
+              enabled: onChanged != null,
               keyboardType: TextInputType.number,
               onChanged: onChanged,
               controller: newVal != null ? (TextEditingController(text: newVal)..selection = TextSelection.collapsed(offset: newVal.length)) : null,
