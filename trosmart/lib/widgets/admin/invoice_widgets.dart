@@ -6,6 +6,8 @@ import '../../logic/admin/invoice_controller.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../views/admin/AD_DuyetThanhToan.dart';
 import '../../views/admin/AD_ChiTietHoaDon.dart';
+import '../../services/thong_bao_service.dart';
+import '../../models/thong_bao.dart';
 
 class SectionTitleAction extends StatelessWidget {
   const SectionTitleAction({super.key});
@@ -376,21 +378,77 @@ class InvoiceCard extends StatelessWidget {
           ),
           if (status != 'paid') ...[
             const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.outbound_rounded, color: Colors.white, size: 16),
-                  const SizedBox(width: 8),
-                  Text(status == 'overdue' ? 'Nhắc nhở khẩn' : 'Nhắc nhở', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                ],
+            InkWell(
+              onTap: invoice.maKhach == null || invoice.maKhach == 0
+                  ? () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Phòng chưa có khách thuê được gán hợp đồng hiệu lực!'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                  : () async {
+                      try {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đang gửi nhắc nhở đến người thuê...')),
+                        );
+                        
+                        final success = await ThongBaoService().sendThongBao(
+                          ThongBao(
+                            maThongBao: 0,
+                            maKhach: invoice.maKhach!,
+                            tieuDe: status == 'overdue' 
+                                ? 'Nhắc nhở đóng tiền phòng quá hạn 🚨' 
+                                : 'Nhắc nhở thanh toán hóa đơn tiền phòng 💸',
+                            noiDung: 'Hóa đơn tháng ${invoice.thang}/${invoice.nam} của phòng ${invoice.tenPhong} với số tiền $amount cần được thanh toán. Hạn chót: $deadline. Vui lòng kiểm tra và thanh toán sớm!',
+                            daDoc: false,
+                            ngayGui: DateTime.now(),
+                            loaiThongBao: 'Hệ thống',
+                          ),
+                        );
+                        
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã gửi nhắc nhở thành công!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Gửi nhắc nhở thất bại. Vui lòng thử lại!'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Lỗi: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.outbound_rounded, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    Text(status == 'overdue' ? 'Nhắc nhở khẩn' : 'Nhắc nhở', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  ],
+                ),
               ),
             ),
           ],

@@ -160,7 +160,7 @@ class _InvoiceFormCardState extends State<InvoiceFormCard> {
               if (value != null) controller.selectRoom(value);
             },
           ),
-          
+          const SizedBox(height: 32),
           FormLabel(label: 'CHỈ SỐ ĐIỆN', subLabel: '(⚡ ${formatCurrency(controller.donGiaDien)}/kWh)'),
           const SizedBox(height: 8),
           Row(
