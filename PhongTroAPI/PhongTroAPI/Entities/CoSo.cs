@@ -27,6 +27,10 @@ public partial class CoSo
 
     public DateTime? NgayTao { get; set; }
 
+    public decimal DonGiaDien { get; set; }
+
+    public decimal DonGiaNuoc { get; set; }
+
     public virtual ICollection<HinhAnhCoSo> HinhAnhCoSos { get; set; } = new List<HinhAnhCoSo>();
 
     public virtual NguoiQuanLy? MaQuanLyNavigation { get; set; }

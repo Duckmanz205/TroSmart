@@ -35,7 +35,14 @@ public class InvoiceController : ControllerBase
                 return BadRequest(new { message = "Năm không hợp lệ." });
             }
 
-            var invoices = await _invoiceService.GetInvoicesAsync(month, year);
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
+            var invoices = await _invoiceService.GetInvoicesAsync(month, year, maQuanLy);
             return Ok(invoices);
         }
         catch (Exception ex)

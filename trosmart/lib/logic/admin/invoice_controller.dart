@@ -150,6 +150,12 @@ class InvoiceController extends ChangeNotifier {
         if (roomReading['chiSoNuocCu'] != null) {
           soNuocCu = (roomReading['chiSoNuocCu'] as num).toDouble();
         }
+        if (roomReading['donGiaDien'] != null) {
+          donGiaDien = (roomReading['donGiaDien'] as num).toDouble();
+        }
+        if (roomReading['donGiaNuoc'] != null) {
+          donGiaNuoc = (roomReading['donGiaNuoc'] as num).toDouble();
+        }
         
         // Chỉ return early nếu thực sự đã có bản ghi chỉ số tháng này trên hệ thống
         if (roomReading['maChiSo'] != null) {

@@ -59,6 +59,8 @@ CREATE TABLE [dbo].[CoSo](
 	[DanhGia] [float] NULL,
 	[TrangThai] [nvarchar](50) NULL,
 	[NgayTao] [datetime] NULL,
+	[DonGiaDien] [decimal](18, 2) NOT NULL DEFAULT 3500.00,
+	[DonGiaNuoc] [decimal](18, 2) NOT NULL DEFAULT 20000.00,
 PRIMARY KEY CLUSTERED ([MaCoSo] ASC)
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO

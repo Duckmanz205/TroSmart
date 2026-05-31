@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import '../../models/admin/invoice_model.dart';
+import '../auth/auth_service.dart';
 
 class InvoiceService {
   static const String baseUrl = 'http://10.0.2.2:5137/api';
+  final AuthService _authService = AuthService();
   
   final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
@@ -20,7 +22,14 @@ class InvoiceService {
         queryParams['year'] = year;
       }
 
-      final response = await _dio.get('/Invoice', queryParameters: queryParams);
+      final token = await _authService.getToken();
+      final response = await _dio.get(
+        '/Invoice',
+        queryParameters: queryParams,
+        options: Options(
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
+      );
 
       if (response.statusCode == 200) {
         final List data = response.data;

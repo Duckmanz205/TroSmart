@@ -122,10 +122,12 @@ class UtilityManagementView extends StatelessWidget {
 
                     String? totalAmount;
                     if (dienMoi != null && nuocMoi != null) {
+                      final donGiaDien = (room['donGiaDien'] ?? 3500.0).toDouble();
+                      final donGiaNuoc = (room['donGiaNuoc'] ?? 20000.0).toDouble();
                       final tienDien =
-                          (dienMoi - dienCu) * controller.donGiaDien;
+                          (dienMoi - dienCu) * donGiaDien;
                       final tienNuoc =
-                          (nuocMoi - nuocCu) * controller.donGiaNuoc;
+                          (nuocMoi - nuocCu) * donGiaNuoc;
                       final total = tienDien + tienNuoc;
                       totalAmount =
                           '${total.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
@@ -135,6 +137,8 @@ class UtilityManagementView extends StatelessWidget {
                     }
 
                     final bool isInvoiceCreated = room['daLapHoaDon'] == true;
+                    final donGiaDien = (room['donGiaDien'] ?? 3500.0).toDouble();
+                    final donGiaNuoc = (room['donGiaNuoc'] ?? 20000.0).toDouble();
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
@@ -150,6 +154,8 @@ class UtilityManagementView extends StatelessWidget {
                         nuocCu: nuocCu.toString(),
                         nuocMoi: nuocMoi?.toString(),
                         isInvoiceCreated: isInvoiceCreated,
+                        donGiaDien: donGiaDien,
+                        donGiaNuoc: donGiaNuoc,
                         onDienMoiChanged: (val) =>
                             controller.updateDienMoi(maPhong, val),
                         onNuocMoiChanged: (val) =>
