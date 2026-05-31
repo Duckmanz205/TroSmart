@@ -77,10 +77,6 @@ class _AdChiTietChatState extends State<AdChiTietChat> {
         body: SafeArea(
           child: Column(
             children: [
-              const AppGradientHeader(
-                roleLabel: 'Chủ trọ',
-                isDarkText: true,
-              ),
               AppDetailHeader(title: '${widget.tenKhach} (P.${widget.soPhong})'),
               Expanded(
                 child: Container(

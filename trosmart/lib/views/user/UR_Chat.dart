@@ -5,9 +5,12 @@ import '../../shared/app_theme.dart';
 import '../../widgets/chat_widgets.dart';
 import '../../logic/admin/chat_controller.dart';
 import '../../models/tin_nhan.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UrChat extends StatefulWidget {
-  const UrChat({super.key});
+  final String? initialMessage;
+  
+  const UrChat({super.key, this.initialMessage});
 
   @override
   State<UrChat> createState() => _UrChatState();
@@ -16,12 +19,23 @@ class UrChat extends StatefulWidget {
 class _UrChatState extends State<UrChat> {
   final ChatController _chatController = ChatController();
   final TextEditingController _msgController = TextEditingController();
-  final int _maKhach = 1; // Khách mặc định
+  int _maKhach = 0; 
   final int _maAdmin = 1; // Admin mặc định
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialMessage != null) {
+      _msgController.text = widget.initialMessage!;
+    }
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _maKhach = prefs.getInt('ma_khach') ?? 1;
+    });
     _chatController.fetchChatHistory(_maAdmin, _maKhach);
   }
 

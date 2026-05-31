@@ -5,6 +5,7 @@ import '../../models/tin_nhan.dart';
 class ChatController extends ChangeNotifier {
   final ChatService _chatService = ChatService();
 
+  List<Map<String, dynamic>> _allChats = [];
   List<Map<String, dynamic>> recentChats = [];
   List<TinNhan> currentChatHistory = [];
   bool isLoading = false;
@@ -16,13 +17,28 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      recentChats = await _chatService.getRecentChats(maAdmin);
+      _allChats = await _chatService.getRecentChats(maAdmin);
+      recentChats = List.from(_allChats);
     } catch (e) {
       errorMessage = e.toString();
     } finally {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void filterChats(String query) {
+    if (query.trim().isEmpty) {
+      recentChats = List.from(_allChats);
+    } else {
+      final lowerQuery = query.toLowerCase();
+      recentChats = _allChats.where((chat) {
+        final name = (chat['tenKhach'] ?? '').toString().toLowerCase();
+        final room = (chat['soPhong'] ?? '').toString().toLowerCase();
+        return name.contains(lowerQuery) || room.contains(lowerQuery);
+      }).toList();
+    }
+    notifyListeners();
   }
 
   Future<void> fetchChatHistory(int maAdmin, int maKhach) async {
