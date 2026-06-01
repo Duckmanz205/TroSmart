@@ -128,5 +128,23 @@ namespace PhongTroAPI.Services
                 TenCoSo = lichHen.MaPhongNavigation?.MaCoSoNavigation?.TenCoSo ?? "Chưa rõ cơ sở"
             };
         }
+        public List<LichHenViewDto> GetDanhSachLichHenByKhach(int maKhach)
+        {
+            return _context.LichHenXemPhongs
+                .Include(l => l.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
+                .Where(l => l.MaKhach == maKhach)
+                .OrderByDescending(l => l.ThoiGianHen)
+                .Select(l => new LichHenViewDto
+                {
+                    MaLichHen = l.MaLichHen,
+                    SoPhong = l.MaPhongNavigation.SoPhong,
+                    TenCoSo = l.MaPhongNavigation.MaCoSoNavigation.TenCoSo ?? "Chưa rõ cơ sở",
+                    ThoiGianHen = l.ThoiGianHen,
+                    GhiChu = l.GhiChu,
+                    TrangThai = l.TrangThai ?? "Chờ xác nhận"
+                })
+                .ToList();
+        }
     }
 }

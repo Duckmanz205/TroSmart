@@ -2,16 +2,7 @@ using System;
 
 namespace PhongTroAPI.DTOs
 {
-    /*
-    public class CreateLichHenDto
-    {
-        public int? MaKhach { get; set; }
-        public string HoTenKhach { get; set; } = null!;
-        public string SdtKhach { get; set; } = null!;
-        public int MaPhong { get; set; }
-        public DateTime ThoiGianHen { get; set; }
-        public string? GhiChu { get; set; }
-    }*/
+    
 
     public class LichHenRenderDto
     {

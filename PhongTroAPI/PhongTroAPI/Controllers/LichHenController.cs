@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Services;
-
+using System;
 
 namespace PhongTroAPI.Controllers
 {
@@ -16,20 +16,29 @@ namespace PhongTroAPI.Controllers
             _lichHenService = lichHenService;
         }
 
-        // 1. POST: /api/LichHen -> Dành cho màn hình đặt lịch xem phòng của khách
-        [HttpPost]
+        // 🌟 1. POST: /api/LichHen/dat-lich -> Khớp 100% với Service ngầm bên Flutter gọi sang
+        [HttpPost("dat-lich")]
         public IActionResult DatLich([FromBody] CreateLichHenDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var isSuccess = _lichHenService.CreateLichHen(dto);
             if (isSuccess) 
-                return Ok(new { message = "Đặt lịch xem phòng thành công!" });
+                return Ok(new { success = true, message = "Đặt lịch xem phòng thành công!" });
                 
-            return BadRequest(new { message = "Đã xảy ra lỗi khi lưu lịch hẹn." });
+            return BadRequest(new { success = false, message = "Đã xảy ra lỗi khi lưu lịch hẹn." });
         }
 
-        // 2. GET: /api/LichHen -> Dành cho màn hình danh sách Admin và lịch sử User
+        // 🌟 2. GET: /api/LichHen/lich-su/{maKhach} -> API mới tinh cho 2 trang UI của Thái load lịch sử
+        [HttpGet("lich-su/{maKhach}")]
+        public IActionResult GetLichSuXemPhong(int maKhach)
+        {
+            // Gọi hàm xử lý lọc danh sách theo mã khách từ Service của ông
+            var data = _lichHenService.GetDanhSachLichHenByKhach(maKhach);
+            return Ok(data);
+        }
+
+        // 3. GET: /api/LichHen -> Dành cho màn hình danh sách tổng cục bên Admin (Giữ nguyên)
         [HttpGet]
         public IActionResult GetDanhSach()
         {
@@ -37,7 +46,7 @@ namespace PhongTroAPI.Controllers
             return Ok(data);
         }
 
-        // 3. PUT: /api/LichHen/{id}/status -> Dành cho nút Duyệt / Hoàn thành nhanh bên Admin
+        // 4. PUT: /api/LichHen/{id}/status -> Dành cho nút Duyệt / Hoàn thành nhanh bên Admin (Giữ nguyên)
         [HttpPut("{id}/status")]
         public IActionResult CapNhatTrangThai(int id, [FromBody] UpdateStatusDto dto)
         {
@@ -53,7 +62,7 @@ namespace PhongTroAPI.Controllers
             return NotFound(new { message = "Không tìm thấy lịch hẹn yêu cầu." });
         }
 
-        // 4. PUT: /api/LichHen/{id} -> Tiếp nhận dữ liệu chỉnh sửa thô từ màn hình AD_EditLich
+        // 5. PUT: /api/LichHen/{id} -> Tiếp nhận dữ liệu chỉnh sửa thô từ màn hình AD_EditLich (Giữ nguyên)
         [HttpPut("{id}")]
         public IActionResult SuaThongTinLichHen(int id, [FromBody] CreateLichHenDto dto)
         {
@@ -66,7 +75,7 @@ namespace PhongTroAPI.Controllers
             return NotFound(new { message = "Không tìm thấy lịch hẹn hoặc dữ liệu không thay đổi." });
         }
 
-        // 5. DELETE: /api/LichHen/{id} -> Nút bấm xác nhận xoá hẳn bên màn hình AD_DeleteLich
+        // 6. DELETE: /api/LichHen/{id} -> Nút bấm xác nhận xoá hẳn bên màn hình AD_DeleteLich (Giữ nguyên)
         [HttpDelete("{id}")]
         public IActionResult XoaLichHen(int id)
         {
@@ -77,7 +86,8 @@ namespace PhongTroAPI.Controllers
             return NotFound(new { message = "Không tìm thấy lịch hẹn hoặc bản ghi đã bị xóa trước đó." });
         }
 
-       [HttpGet("{id}")]
+        // 7. GET: /api/LichHen/{id} -> Lấy chi tiết 1 lịch hẹn (Giữ nguyên)
+        [HttpGet("{id}")]
         public IActionResult GetChiTietLichHen(int id)
         {
             var data = _lichHenService.GetLichHenById(id);
