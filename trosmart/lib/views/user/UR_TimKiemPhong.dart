@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:trosmart/logic/auth/auth_service.dart';
 
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_view_model.dart';
 import 'UR_ChiTietPhong.dart';
+import 'UR_DatLichXemPhong.dart';
 
 class RoomSearchView extends StatefulWidget {
-  const RoomSearchView({super.key});
+
+  final int? maKhach; 
+
+  const RoomSearchView({super.key, this.maKhach}); 
 
   @override
   State<RoomSearchView> createState() => _RoomSearchViewState();
@@ -134,12 +139,21 @@ class _RoomSearchViewState extends State<RoomSearchView> {
   }
 
   void _bookRoom(PhongViewModel room) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đặt xem phòng ${room.soPhong}'),
+  // Bốc maKhach từ widget lên, nếu null thì hờ bằng 1 để không bị crash
+  int dynamicMaKhach = widget.maKhach ?? 1; 
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => UrDatLichXemPhong(
+        maPhong: room.maPhong,        
+        maKhach: dynamicMaKhach, 
+        soPhong: room.soPhong,        
+        tenCoSo: room.tenCoSo,        
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {

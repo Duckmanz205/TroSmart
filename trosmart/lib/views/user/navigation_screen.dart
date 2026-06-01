@@ -77,11 +77,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           const PaymentDetailsScreen(),                                                 // 1
           const UrChat(),                                                               // 2
           const UrHopDong(),                                                            // 3
-          const RoomSearchView(),                                                       // 4
+          RoomSearchView(maKhach: widget.maPhong),                                                      // 4
           const IssueReportingScreen(),                                                 // 5
           UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)),          // 6
           
-          // 🌟 SỬA CHỖ 2: Gọi đúng widget.maPhong để truyền sang trang Ở ghép động và xóa chữ "const" ở đầu dòng đi
+          // 
           UrOGhep(maPhong: widget.maPhong),                                              // 7
           
           const HistoryStatsScreen(),                                                   // 8

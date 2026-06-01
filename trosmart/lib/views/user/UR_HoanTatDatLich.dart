@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../shared/app_theme.dart';
+import '../../views/user/UR_LichSuXemPhong.dart';
 
 class UrHoanTatDatLich extends StatelessWidget {
-  const UrHoanTatDatLich({super.key});
+  // 🌟 ĐÃ MỞ CỔNG: Khai báo các biến để nhận dữ liệu từ trang Đặt lịch ném sang
+  final int maKhach;
+  final String soPhong;
+  final String tenCoSo;
+  final String thoiGianHenFormatted;
+
+  const UrHoanTatDatLich({
+    super.key,
+    required this.maKhach,
+    required this.soPhong,
+    required this.tenCoSo,
+    required this.thoiGianHenFormatted,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +64,7 @@ class UrHoanTatDatLich extends StatelessWidget {
             
             const SizedBox(height: 40),
 
-            // --- Card tóm tắt thông tin ---
+            // --- Card tóm tắt thông tin ĐỘNG ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Container(
@@ -63,11 +76,11 @@ class UrHoanTatDatLich extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildSummaryRow(Icons.business_rounded, 'Cơ sở:', 'Quận 7 - Luxury'),
+                    _buildSummaryRow(Icons.business_rounded, 'Cơ sở:', tenCoSo),
                     const Divider(height: 30),
-                    _buildSummaryRow(Icons.meeting_room_rounded, 'Phòng:', 'P.101'),
+                    _buildSummaryRow(Icons.meeting_room_rounded, 'Phòng:', soPhong),
                     const Divider(height: 30),
-                    _buildSummaryRow(Icons.event_available_rounded, 'Thời gian:', '09:30 AM - 23/04/2026'),
+                    _buildSummaryRow(Icons.event_available_rounded, 'Thời gian:', thoiGianHenFormatted),
                   ],
                 ),
               ),
@@ -75,14 +88,13 @@ class UrHoanTatDatLich extends StatelessWidget {
 
             const Spacer(),
 
-            // --- Nút bấm điều hướng ---
+            // --- Nút bấm điều hướng luồng ---
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      // Quay lại trang chủ hoặc danh sách lịch hẹn của User
                       Navigator.popUntil(context, (route) => route.isFirst);
                     },
                     style: ElevatedButton.styleFrom(
@@ -92,13 +104,19 @@ class UrHoanTatDatLich extends StatelessWidget {
                     ),
                     child: const Text(
                       'Về trang chủ',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () {
-                      // Logic chuyển sang trang lịch sử xem phòng của User
+                      // Chuyển hướng thông minh sang trang lịch sử động của chính khách đó
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UrLichSuXemPhong(maKhach: maKhach),
+                        ),
+                      );
                     },
                     child: const Text(
                       'Xem lịch sử đặt lịch',
@@ -124,7 +142,14 @@ class UrHoanTatDatLich extends StatelessWidget {
         const SizedBox(width: 12),
         Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
         const Spacer(),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
+        Expanded(
+          child: Text(
+            value, 
+            textAlign: TextAlign.end,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

@@ -1,5 +1,5 @@
 using System;
-
+using System.Text.Json.Serialization;
 namespace PhongTroAPI.DTOs
 {
     public class CreateLichHenDto
@@ -11,6 +11,7 @@ namespace PhongTroAPI.DTOs
         public string? SdtKhach { get; set; } 
 
         // Giữ thêm trường này làm fallback phòng hờ màn hình Add/Edit đang gọi
+        [JsonIgnore]
         public string? SDTKhach 
         { 
             get => SdtKhach; 

@@ -1,14 +1,3 @@
-USE master;
-GO
-
--- Xóa database cũ nếu đang tồn tại (kể cả khi đang có người kết nối)
-IF EXISTS (SELECT name FROM sys.databases WHERE name = N'QuanLyPhongTro')
-BEGIN
-    ALTER DATABASE [QuanLyPhongTro] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE [QuanLyPhongTro];
-END
-GO
-
 CREATE DATABASE [QuanLyPhongTro]
 GO
 USE [QuanLyPhongTro]
@@ -23,16 +12,6 @@ GO
 -- 1. TẠO CÁC BẢNG (TABLES)
 -- =========================================================
 
--- BẢNG MỚI: Ngân hàng
-CREATE TABLE [dbo].[NganHang](
-	[MaNganHang] [int] IDENTITY(1,1) NOT NULL,
-	[TenNganHang] [nvarchar](150) NOT NULL,
-	[TenVietTat] [nvarchar](50) NULL,
-	[MaBin] [nvarchar](20) NOT NULL,
-PRIMARY KEY CLUSTERED ([MaNganHang] ASC)
-) ON [PRIMARY]
-GO
-
 CREATE TABLE [dbo].[NguoiQuanLy](
 	[MaQuanLy] [int] IDENTITY(1,1) NOT NULL,
 	[HoTen] [nvarchar](100) NOT NULL,
@@ -40,9 +19,6 @@ CREATE TABLE [dbo].[NguoiQuanLy](
 	[Email] [varchar](100) NULL,
 	[TrangThai] [nvarchar](50) NULL,
 	[NgayTao] [datetime] NULL,
-	[SoTaiKhoan] [nvarchar](50) NULL,
-	[TenTaiKhoan] [nvarchar](150) NULL,
-	[MaNganHang] [int] NULL,
 PRIMARY KEY CLUSTERED ([MaQuanLy] ASC)
 ) ON [PRIMARY]
 GO
@@ -135,7 +111,6 @@ CREATE TABLE [dbo].[HopDongThue](
     [TienCoc] [decimal](18, 2) NULL,
     [TrangThai] [nvarchar](50) NULL,
     [NgayTao] [datetime] NULL,
-    [ChuKy] [nvarchar](max) NULL,
 PRIMARY KEY CLUSTERED ([MaHopDong] ASC)
 ) ON [PRIMARY]
 GO
@@ -220,40 +195,6 @@ PRIMARY KEY CLUSTERED ([MaThongBao] ASC)
 ) ON [PRIMARY]
 GO
 
--- BẢNG MỚI: Tin Nhắn
-CREATE TABLE [dbo].[TinNhan](
-    [MaTinNhan] [int] IDENTITY(1,1) NOT NULL,
-    [MaNguoiGui] [int] NULL,
-    [VaiTroNguoiGui] [nvarchar](50) NOT NULL,
-    [MaNguoiNhan] [int] NULL,
-    [VaiTroNguoiNhan] [nvarchar](50) NOT NULL,
-    [NoiDung] [nvarchar](max) NOT NULL,
-    [NgayGui] [datetime] DEFAULT (getdate()),
-    [DaDoc] [bit] DEFAULT ((0)),
-PRIMARY KEY CLUSTERED ([MaTinNhan] ASC)
-) ON [PRIMARY]
-GO
-
-
--- BẢNG MỚI: Chỉ Số Điện Nước (hỗ trợ quản lý điện nước hàng tháng)
-CREATE TABLE [dbo].[ChiSoDienNuoc](
-    [MaChiSo] [int] IDENTITY(1,1) NOT NULL,
-    [MaPhong] [int] NOT NULL,
-    [Thang] [int] NOT NULL,
-    [Nam] [int] NOT NULL,
-    [ChiSoDienCu] [int] NOT NULL DEFAULT(0),
-    [ChiSoDienMoi] [int] NULL,
-    [ChiSoNuocCu] [int] NOT NULL DEFAULT(0),
-    [ChiSoNuocMoi] [int] NULL,
-    [DaLapHoaDon] [bit] NOT NULL DEFAULT(0),
-    [NgayCapNhat] [datetime] NULL DEFAULT(getdate()),
-PRIMARY KEY CLUSTERED ([MaChiSo] ASC),
-CONSTRAINT [UQ_ChiSo_Phong_Thang_Nam] UNIQUE ([MaPhong], [Thang], [Nam])
-) ON [PRIMARY]
-GO
-
-ALTER TABLE [dbo].[ChiSoDienNuoc] WITH CHECK ADD FOREIGN KEY([MaPhong]) REFERENCES [dbo].[Phong] ([MaPhong])
-GO
 
 -- =========================================================
 -- 2. TẠO CÁC VIEWS
@@ -443,7 +384,17 @@ INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [Ti
 SET IDENTITY_INSERT [dbo].[HopDongThue] OFF
 GO
 
--- Hóa Đơn (Dữ liệu mới) - Để trống ban đầu theo yêu cầu của người dùng
+-- Hóa Đơn (Dữ liệu mới)
+SET IDENTITY_INSERT [dbo].[HoaDon] ON 
+INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
+VALUES (1, 2, 1, 10, 2024, CAST(2200000.00 AS Decimal(18,2)), 1250, 1342, CAST(3500.00 AS Decimal(18,2)), 430, 438, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi: 100.000đ', CAST(0.00 AS Decimal(18,2)), NULL, CAST(2782000.00 AS Decimal(18,2)), N'Đã thanh toán', GETDATE(), CAST(N'2024-10-05' AS Date), CAST(N'2024-10-04' AS Date))
+
+INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
+VALUES (2, 12, 2, 10, 2024, CAST(2000000.00 AS Decimal(18,2)), 2100, 2185, CAST(3500.00 AS Decimal(18,2)), 150, 156, CAST(20000.00 AS Decimal(18,2)), CAST(150000.00 AS Decimal(18,2)), N'Wifi: 100k, Rác: 50k', CAST(50000.00 AS Decimal(18,2)), N'Phạt vứt rác sai quy định', CAST(2617500.00 AS Decimal(18,2)), N'Chưa thanh toán', GETDATE(), CAST(N'2024-10-05' AS Date), NULL)
+
+INSERT [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], [TongTien], [TrangThai], [NgayLap], [HanThanhToan], [NgayThanhToan])
+VALUES (3, 24, 3, 9, 2024, CAST(2900000.00 AS Decimal(18,2)), 300, 450, CAST(3500.00 AS Decimal(18,2)), 80, 92, CAST(20000.00 AS Decimal(18,2)), CAST(100000.00 AS Decimal(18,2)), N'Wifi', CAST(0.00 AS Decimal(18,2)), NULL, CAST(3765000.00 AS Decimal(18,2)), N'Quá hạn', GETDATE(), CAST(N'2024-09-05' AS Date), NULL)
+SET IDENTITY_INSERT [dbo].[HoaDon] OFF
 GO
 
 -- Tài Khoản (Dữ liệu mới)
@@ -461,7 +412,10 @@ INSERT [dbo].[SuCo] ([MaSuCo], [MaPhong], [MaKhach], [TieuDe], [MoTa], [TrangTha
 SET IDENTITY_INSERT [dbo].[SuCo] OFF
 GO
 
--- Lịch Sử Thanh Toán (Dữ liệu mới) - Để trống ban đầu theo yêu cầu của người dùng
+-- Lịch Sử Thanh Toán (Dữ liệu mới)
+SET IDENTITY_INSERT [dbo].[LichSuThanhToan] ON
+INSERT [dbo].[LichSuThanhToan] ([MaThanhToan], [MaHoaDon], [SoTien], [PhuongThuc], [NguoiGhiNhan]) VALUES (1, 1, CAST(2782000.00 AS Decimal(18,2)), N'Chuyển khoản', 1)
+SET IDENTITY_INSERT [dbo].[LichSuThanhToan] OFF
 GO
 
 -- Thông Báo (Dữ liệu mới)
@@ -471,15 +425,6 @@ INSERT [dbo].[ThongBao] ([MaThongBao], [MaKhach], [TieuDe], [NoiDung]) VALUES (2
 SET IDENTITY_INSERT [dbo].[ThongBao] OFF
 GO
 
--- Dữ liệu mẫu ChiSoDienNuoc (Đã chuyển xuống sau khi đã insert Phong)
-SET IDENTITY_INSERT [dbo].[ChiSoDienNuoc] ON
-INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (1, 2, 10, 2024, 1250, 1342, 430, 438, 1)
-INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (2, 12, 10, 2024, 2100, 2185, 150, 156, 1)
-INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (3, 24, 9, 2024, 300, 450, 80, 92, 1)
-INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (4, 5, 10, 2024, 800, 865, 200, 210, 0)
-INSERT [dbo].[ChiSoDienNuoc] ([MaChiSo], [MaPhong], [Thang], [Nam], [ChiSoDienCu], [ChiSoDienMoi], [ChiSoNuocCu], [ChiSoNuocMoi], [DaLapHoaDon]) VALUES (5, 8, 10, 2024, 1500, NULL, 350, NULL, 0)
-SET IDENTITY_INSERT [dbo].[ChiSoDienNuoc] OFF
-GO
 -- =========================================================
 -- 4. TẠO CONSTRAINTS, MẶC ĐỊNH VÀ FOREIGN KEYS
 -- =========================================================
@@ -656,30 +601,69 @@ ALTER TABLE [dbo].[LichSuGiaHan] WITH CHECK ADD FOREIGN KEY([MaHopDong]) REFEREN
 GO
 ALTER TABLE [dbo].[OGhep] WITH CHECK ADD FOREIGN KEY([MaKhach]) REFERENCES [dbo].[KhachThue] ([MaKhach])
 GO
-ALTER TABLE [dbo].[NguoiQuanLy] WITH CHECK ADD CONSTRAINT [FK_NguoiQuanLy_NganHang] FOREIGN KEY([MaNganHang]) REFERENCES [dbo].[NganHang] ([MaNganHang])
+
+-- 1. Xóa các cột cũ nếu đã lỡ tạo sai tên
+ALTER TABLE [dbo].[HopDongThue] DROP COLUMN IF EXISTS [ChuKy];
+ALTER TABLE [dbo].[HopDongThue] DROP COLUMN IF EXISTS [UrlChuKyCloud];
+ALTER TABLE [dbo].[HopDongThue] DROP COLUMN IF EXISTS [DigitalSignatureRSA];
 GO
 
--- Cập nhật TrangThai = N'Hoạt động' cho các dòng bị NULL
-UPDATE [dbo].[TaiKhoan]
-SET [TrangThai] = N'Hoạt động'
-WHERE [TrangThai] IS NULL OR [TrangThai] = ''
+-- 2. Thêm chính xác 2 cột chuẩn lưu Base64 và khóa bảo mật RSA
+ALTER TABLE [dbo].[HopDongThue] ADD 
+    [ChuKyBase64] [nvarchar](max) NULL,
+    [MaBaoMatRSA] [nvarchar](max) NULL;
 GO
 
--- Seed ngân hàng
-INSERT INTO [dbo].[NganHang] ([TenNganHang], [TenVietTat], [MaBin]) VALUES 
-(N'Ngân hàng TMCP Công Thương Việt Nam', N'VietinBank', N'970415'),
-(N'Ngân hàng TMCP Ngoại thương Việt Nam', N'Vietcombank', N'970436'),
-(N'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam', N'BIDV', N'970418'),
-(N'Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam', N'Agribank', N'970405'),
-(N'Ngân hàng TMCP Kỹ Thương Việt Nam', N'Techcombank', N'970407'),
-(N'Ngân hàng TMCP Quân đội', N'MBBank', N'970422'),
-(N'Ngân hàng TMCP Á Châu', N'ACB', N'970416'),
-(N'Ngân hàng TMCP Sài Gòn Thương Tín', N'Sacombank', N'970403'),
-(N'Ngân hàng TMCP Việt Nam Thịnh Vượng', N'VPBank', N'970432'),
-(N'Ngân hàng TMCP Tiên Phong', N'TPBank', N'970423')
+select * from Phong
+select * from LichHenXemPhong
+
+-- 1. Thêm cột 'ChuKy' còn thiếu vào bảng HopDongThue
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'HopDongThue' AND COLUMN_NAME = 'ChuKy')
+BEGIN
+    ALTER TABLE HopDongThue ADD ChuKy INT NULL; -- Hoặc NVARCHAR(50) tùy theo code C# ông viết kiểu gì nha
+END
 GO
 
--- Kiểm tra kết quả
-SELECT MaTaiKhoan, TenDangNhap, VaiTro, TrangThai 
-FROM [dbo].[TaiKhoan]
+-- 2. Kiểm tra xem bảng NganHang đã có chưa, nếu chưa có thì tạo bảng dummy để tránh sập code join
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[NganHang]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[NganHang](
+        [MaNganHang] INT IDENTITY(1,1) PRIMARY KEY,
+        [MaBin] NVARCHAR(20) NULL,
+        [TenNganHang] NVARCHAR(100) NULL,
+        [TenVietTat] NVARCHAR(50) NULL
+    );
+END
+GO
+
+-- 3. Kiểm tra xem bảng ChiSoDienNuoc đã có chưa, nếu chưa thì tạo luôn
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ChiSoDienNuoc]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[ChiSoDienNuoc](
+        [MaChiSo] INT IDENTITY(1,1) PRIMARY KEY,
+        [MaPhong] INT NULL,
+        [Thang] INT NULL,
+        [Nam] INT NULL,
+        [ChiSoDienCu] FLOAT NULL,
+        [ChiSoDienMoi] FLOAT NULL,
+        [ChiSoNuocCu] FLOAT NULL,
+        [ChiSoNuocMoi] FLOAT NULL,
+        [DaLapHoaDon] BIT NULL,
+        [NgayCapNhat] DATETIME NULL
+    );
+END
+GO
+
+
+
+UPDATE [dbo].[HopDongThue]
+SET [MaPhong] = 2 
+WHERE [MaKhach] = 3;
+
+-- 2. Cập nhật hóa đơn tháng 5 năm 2026 của Phòng số 2 thành 4.250.000đ để test chia tiền
+-- (Trong DB gốc của ông phòng 2 mới chỉ có hóa đơn tháng 10/2024 thôi)
+SET IDENTITY_INSERT [dbo].[HoaDon] ON;
+INSERT INTO [dbo].[HoaDon] ([MaHoaDon], [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], [TienDichVu], [TongTien], [TrangThai], [NgayLap])
+VALUES (15, 2, 1, 5, 2026, 2200000, 100, 200, 3500, 10, 20, 20000, 150000, 4250000, N'Chưa thanh toán', GETDATE());
+SET IDENTITY_INSERT [dbo].[HoaDon] OFF;
 GO
