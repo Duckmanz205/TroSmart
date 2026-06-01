@@ -87,6 +87,8 @@ class RoomDetailView extends StatelessWidget {
       context,
       MaterialPageRoute(builder: (context) => UrChat(
         initialMessage: 'Tôi muốn liên hệ xem phòng ${room.soPhong} - ${room.tenCoSo}',
+        receiverId: room.nguoiQuanLyId > 0 ? room.nguoiQuanLyId : 1,
+        receiverName: room.tenNguoiQuanLy.isNotEmpty ? room.tenNguoiQuanLy : 'Chủ trọ - Anh An',
       )),
     );
   }

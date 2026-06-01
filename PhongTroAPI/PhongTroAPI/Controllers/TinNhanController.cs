@@ -128,5 +128,52 @@ namespace PhongTroAPI.Controllers
 
             return Ok(recentChats.OrderByDescending(c => ((dynamic)c).NgayGui ?? DateTime.MinValue));
         }
+
+        // GET: api/TinNhan/User/1/Recent
+        [HttpGet("User/{maKhach}/Recent")]
+        public async Task<ActionResult<IEnumerable<object>>> GetRecentChatsForUser(int maKhach)
+        {
+            var messages = await _context.TinNhans
+                .Where(t => (t.MaNguoiGui == maKhach && t.VaiTroNguoiGui == "User") ||
+                            (t.MaNguoiNhan == maKhach && t.VaiTroNguoiNhan == "User"))
+                .ToListAsync();
+
+            var adminIdsWithMessages = messages
+                .Select(t => t.VaiTroNguoiGui == "Admin" ? t.MaNguoiGui : t.MaNguoiNhan)
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .Distinct()
+                .ToList();
+
+            var recentChats = new List<object>();
+
+            foreach (var adminId in adminIdsWithMessages)
+            {
+                var adminMessages = messages
+                    .Where(t => (t.MaNguoiGui == adminId && t.VaiTroNguoiGui == "Admin") ||
+                                (t.MaNguoiNhan == adminId && t.VaiTroNguoiNhan == "Admin"))
+                    .OrderByDescending(t => t.NgayGui)
+                    .ToList();
+
+                var lastMessage = adminMessages.FirstOrDefault();
+                
+                var admin = await _context.NguoiQuanLies.FindAsync(adminId);
+                string tenAdmin = admin?.HoTen ?? "Admin " + adminId;
+
+                var unreadCount = adminMessages.Count(t => t.MaNguoiNhan == maKhach && t.VaiTroNguoiNhan == "User" && t.DaDoc == false);
+
+                recentChats.Add(new
+                {
+                    MaAdmin = adminId,
+                    TenAdmin = tenAdmin,
+                    LastMessage = lastMessage?.NoiDung ?? "Chưa có tin nhắn nào",
+                    NgayGui = (DateTime?)lastMessage?.NgayGui,
+                    IsUnread = unreadCount > 0,
+                    UnreadCount = unreadCount
+                });
+            }
+
+            return Ok(recentChats.OrderByDescending(c => ((dynamic)c).NgayGui ?? DateTime.MinValue));
+        }
     }
 }
