@@ -10,6 +10,8 @@ class PhongViewModel {
   final int soNguoiToiDa;
   final String trangThai;
   final String? moTa;
+  final int nguoiQuanLyId;
+  final String tenNguoiQuanLy;
 
   final String? hinhAnhPhong;
   final List<String> tienIches;
@@ -30,6 +32,8 @@ class PhongViewModel {
     required this.soNguoiToiDa,
     required this.trangThai,
     required this.moTa,
+    required this.nguoiQuanLyId,
+    required this.tenNguoiQuanLy,
     required this.hinhAnhPhong,
     required this.tienIches,
     required this.latitude,
@@ -50,6 +54,8 @@ class PhongViewModel {
       soNguoiToiDa: _toInt(json['soNguoiToiDa']),
       trangThai: _toString(json['trangThai']),
       moTa: json['moTa']?.toString(),
+      nguoiQuanLyId: _toInt(json['nguoiQuanLyId']),
+      tenNguoiQuanLy: _toString(json['tenNguoiQuanLy']),
       hinhAnhPhong: json['hinhAnhPhong']?.toString(),
       tienIches: _toStringList(json['tienIches']),
 

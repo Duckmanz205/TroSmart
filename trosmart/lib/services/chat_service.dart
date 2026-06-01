@@ -50,4 +50,20 @@ class ChatService {
       throw Exception('Lỗi kết nối server: $e');
     }
   }
+
+  // Lấy danh sách chat gần đây của User
+  Future<List<Map<String, dynamic>>> getRecentChatsForUser(int maKhach) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/TinNhan/User/$maKhach/Recent');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load recent chats: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Lỗi kết nối server: $e');
+    }
+  }
 }

@@ -45,5 +45,26 @@ namespace PhongTroAPI.Controllers
 
             return CreatedAtAction("GetThongBaos", new { id = thongBao.MaThongBao }, thongBao);
         }
+
+        // GET: api/ThongBao/danh-sach-khach
+        [HttpGet("danh-sach-khach")]
+        public async Task<ActionResult<IEnumerable<object>>> GetDanhSachKhach()
+        {
+            // Get all active contracts to find current tenants
+            var khachThues = await _context.HopDongThues
+                .Include(hd => hd.MaKhachNavigation)
+                .Include(hd => hd.MaPhongNavigation)
+                .Where(hd => hd.TrangThai == "Đang hiệu lực" || hd.TrangThai == "Đã ký")
+                .Select(hd => new
+                {
+                    MaKhach = hd.MaKhach,
+                    HoTen = hd.MaKhachNavigation.HoTen,
+                    SoPhong = hd.MaPhongNavigation.SoPhong
+                })
+                .Distinct()
+                .ToListAsync();
+            
+            return Ok(khachThues);
+        }
     }
 }
