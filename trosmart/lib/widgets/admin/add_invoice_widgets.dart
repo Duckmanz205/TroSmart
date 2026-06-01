@@ -160,9 +160,8 @@ class _InvoiceFormCardState extends State<InvoiceFormCard> {
               if (value != null) controller.selectRoom(value);
             },
           ),
-          
-          const SizedBox(height: 24),
-          const FormLabel(label: 'CHỈ SỐ ĐIỆN', subLabel: '(⚡ 3.500đ/kWh)'),
+          const SizedBox(height: 32),
+          FormLabel(label: 'CHỈ SỐ ĐIỆN', subLabel: '(⚡ ${formatCurrency(controller.donGiaDien)}/kWh)'),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -173,7 +172,7 @@ class _InvoiceFormCardState extends State<InvoiceFormCard> {
           ),
           
           const SizedBox(height: 24),
-          const FormLabel(label: 'CHỈ SỐ NƯỚC', subLabel: '(💧 20.000đ/m3)'),
+          FormLabel(label: 'CHỈ SỐ NƯỚC', subLabel: '(💧 ${formatCurrency(controller.donGiaNuoc)}/m3)'),
           const SizedBox(height: 8),
           Row(
             children: [

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Entities;
@@ -49,6 +49,8 @@ namespace PhongTroAPI.Controllers
                     moTa = cs.MoTa,
                     latitude = cs.Latitude,
                     longitude = cs.Longitude,
+                    donGiaDien = cs.DonGiaDien,
+                    donGiaNuoc = cs.DonGiaNuoc,
 
                     tenQuanLy = cs.MaQuanLyNavigation != null ? cs.MaQuanLyNavigation.HoTen : null,
                     soDienThoaiQuanLy = cs.MaQuanLyNavigation != null ? cs.MaQuanLyNavigation.Sdt : null,
@@ -346,6 +348,39 @@ namespace PhongTroAPI.Controllers
                 image.IsMain
             });
         }
+
+        //upload/thêm ảnh cho 1 cơ sở qua URL
+        [HttpPost("{id}/images/url")]
+        public async Task<IActionResult> UploadImageUrl(int id, [FromBody] CoSoImageUrlDto dto)
+        {
+            var coSo = await _context.CoSos.FindAsync(id);
+            if (coSo == null)
+                return NotFound("Không tìm thấy cơ sở");
+
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Url))
+                return BadRequest("URL ảnh không hợp lệ");
+
+            var hasMain = await _context.Set<HinhAnhCoSo>()
+                .AnyAsync(x => x.MaCoSo == id && x.IsMain);
+
+            var image = new HinhAnhCoSo
+            {
+                MaCoSo = id,
+                UrlAnh = dto.Url.Trim(),
+                IsMain = !hasMain
+            };
+
+            _context.Set<HinhAnhCoSo>().Add(image);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                image.MaAnh,
+                image.MaCoSo,
+                image.UrlAnh,
+                image.IsMain
+            });
+        }
         //đặt một ảnh thành ảnh đại diện của cơ sở.
         [HttpPut("images/{maAnh}/set-main")]
         public async Task<IActionResult> SetMainImage(int maAnh)
@@ -515,5 +550,25 @@ namespace PhongTroAPI.Controllers
                 tienIch.TenTienIch
             });
         }
+
+        // PATCH: cập nhật giá điện nước của cơ sở
+        [HttpPatch("{id}/utility-prices")]
+        public async Task<IActionResult> UpdateUtilityPrices(int id, [FromBody] PhongTroAPI.DTOs.UpdateUtilityPricesDto dto)
+        {
+            var coso = await _context.CoSos.FindAsync(id);
+            if (coso == null)
+                return NotFound("Không tìm thấy cơ sở");
+
+            coso.DonGiaDien = dto.DonGiaDien;
+            coso.DonGiaNuoc = dto.DonGiaNuoc;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Cập nhật đơn giá thành công", donGiaDien = coso.DonGiaDien, donGiaNuoc = coso.DonGiaNuoc });
+        }
+    }
+
+    public class CoSoImageUrlDto
+    {
+        public string Url { get; set; } = string.Empty;
     }
 }

@@ -41,6 +41,35 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchRecentChatsForUser(int maKhach) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      _allChats = await _chatService.getRecentChatsForUser(maKhach);
+      recentChats = List.from(_allChats);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void filterUserChats(String query) {
+    if (query.trim().isEmpty) {
+      recentChats = List.from(_allChats);
+    } else {
+      final lowerQuery = query.toLowerCase();
+      recentChats = _allChats.where((chat) {
+        final name = (chat['tenAdmin'] ?? '').toString().toLowerCase();
+        return name.contains(lowerQuery);
+      }).toList();
+    }
+    notifyListeners();
+  }
+
   Future<void> fetchChatHistory(int maAdmin, int maKhach) async {
     isLoading = true;
     errorMessage = null;

@@ -246,59 +246,214 @@ class UtilityFilterSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.utilityBorder),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int?>(
-                  value: controller.selectedCoSoId,
-                  isExpanded: true,
-                  hint: const Row(
-                    children: [
-                      Icon(LucideIcons.mapPin, color: Colors.grey, size: 20),
-                      SizedBox(width: 12),
-                      Text('Tất cả cơ sở', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent)),
-                    ],
-                  ),
-                  icon: const Icon(LucideIcons.chevronDown, color: Colors.grey, size: 20),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Row(
-                        children: [
-                          Icon(LucideIcons.mapPin, color: Colors.grey, size: 20),
-                          SizedBox(width: 12),
-                          Text('Tất cả cơ sở', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent)),
-                        ],
-                      ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.utilityBorder),
                     ),
-                    ...controller.facilities.map((facility) {
-                      return DropdownMenuItem<int?>(
-                        value: facility['maCoSo'] as int?,
-                        child: Row(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int?>(
+                        value: controller.selectedCoSoId,
+                        isExpanded: true,
+                        hint: const Row(
                           children: [
-                            const Icon(LucideIcons.mapPin, color: AppColors.adminDarkPurple, size: 20),
-                            const SizedBox(width: 12),
-                            Text(
-                              facility['tenCoSo'] as String,
-                              style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent),
-                            ),
+                            Icon(LucideIcons.mapPin, color: Colors.grey, size: 20),
+                            SizedBox(width: 12),
+                            Text('Tất cả cơ sở', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent)),
                           ],
                         ),
-                      );
-                    }),
-                  ],
-                  onChanged: (value) {
-                    controller.changeCoSo(value);
-                  },
+                        icon: const Icon(LucideIcons.chevronDown, color: Colors.grey, size: 20),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Row(
+                              children: [
+                                Icon(LucideIcons.mapPin, color: Colors.grey, size: 20),
+                                SizedBox(width: 12),
+                                Text('Tất cả cơ sở', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent)),
+                              ],
+                            ),
+                          ),
+                          ...controller.facilities.map((facility) {
+                            return DropdownMenuItem<int?>(
+                              value: facility['maCoSo'] as int?,
+                              child: Row(
+                                children: [
+                                  const Icon(LucideIcons.mapPin, color: AppColors.adminDarkPurple, size: 20),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    facility['tenCoSo'] as String,
+                                    style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkAccent),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          controller.changeCoSo(value);
+                        },
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                if (controller.selectedCoSoId != null) ...[
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      _showPriceConfigDialog(context, controller);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.adminDarkPurple,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(LucideIcons.settings, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showPriceConfigDialog(BuildContext context, UtilityController controller) {
+    if (controller.selectedCoSoId == null) return;
+    
+    // Tìm cơ sở đang chọn để lấy đơn giá hiện tại
+    final selectedFacility = controller.facilities.firstWhere(
+      (f) => f['maCoSo'] == controller.selectedCoSoId,
+      orElse: () => <String, dynamic>{},
+    );
+    final String facilityName = selectedFacility['tenCoSo'] ?? 'Cơ sở';
+    
+    // Tìm phòng thuộc cơ sở này để lấy giá trị đơn giá hiện thời của điện và nước
+    double currentDien = 3500;
+    double currentNuoc = 20000;
+    try {
+      final room = controller.rooms.firstWhere((r) => r['maCoSo'] == controller.selectedCoSoId);
+      currentDien = (room['donGiaDien'] ?? 3500.0).toDouble();
+      currentNuoc = (room['donGiaNuoc'] ?? 20000.0).toDouble();
+    } catch (_) {}
+    
+    final dienController = TextEditingController(text: currentDien.toInt().toString());
+    final nuocController = TextEditingController(text: currentNuoc.toInt().toString());
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(28),
+              topRight: Radius.circular(28),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Cấu hình giá: $facilityName',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.adminDarkPurple),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(LucideIcons.x, color: Colors.grey),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
+              
+              // Ô nhập Giá Điện
+              const Text('Đơn giá điện (⚡ đ/kWh)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: dienController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Nhập giá điện, ví dụ: 3500',
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Ô nhập Giá Nước
+              const Text('Đơn giá nước (💧 đ/m³)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: nuocController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Nhập giá nước, ví dụ: 20000',
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              ElevatedButton(
+                onPressed: () async {
+                  final double? dien = double.tryParse(dienController.text);
+                  final double? nuoc = double.tryParse(nuocController.text);
+                  if (dien == null || nuoc == null || dien < 0 || nuoc < 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Vui lòng nhập đơn giá hợp lệ.'), backgroundColor: Colors.red),
+                    );
+                    return;
+                  }
+                  
+                  Navigator.pop(context); // Đóng bottom sheet
+                  
+                  final ok = await controller.updateUtilityPrices(controller.selectedCoSoId!, dien, nuoc);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(ok ? 'Cập nhật đơn giá cơ sở thành công!' : 'Lỗi cập nhật đơn giá'),
+                        backgroundColor: ok ? AppColors.accentTeal : Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.adminDarkPurple,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Lưu đơn giá', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -343,6 +498,8 @@ class RoomUtilityCard extends StatelessWidget {
   final ValueChanged<String>? onNuocMoiChanged;
   final VoidCallback? onSave;
   final bool isInvoiceCreated;
+  final double donGiaDien;
+  final double donGiaNuoc;
 
   const RoomUtilityCard({
     super.key,
@@ -359,6 +516,8 @@ class RoomUtilityCard extends StatelessWidget {
     this.onNuocMoiChanged,
     this.onSave,
     this.isInvoiceCreated = false,
+    this.donGiaDien = 3500,
+    this.donGiaNuoc = 20000,
   });
 
   @override
@@ -526,7 +685,7 @@ class RoomUtilityCard extends StatelessWidget {
             dienMoi,
             onChanged: isInvoiceCreated ? null : onDienMoiChanged,
             consumption: hasDien ? '${dMoi - dCu} kWh' : null,
-            cost: hasDien ? '${((dMoi - dCu) * 3500).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
+            cost: hasDien ? '${((dMoi - dCu) * donGiaDien).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
           ),
         ),
         const SizedBox(width: 12),
@@ -539,7 +698,7 @@ class RoomUtilityCard extends StatelessWidget {
             nuocMoi,
             onChanged: isInvoiceCreated ? null : onNuocMoiChanged,
             consumption: hasNuoc ? '${nMoi - nCu} m³' : null,
-            cost: hasNuoc ? '${((nMoi - nCu) * 20000).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
+            cost: hasNuoc ? '${((nMoi - nCu) * donGiaNuoc).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ' : null,
           ),
         ),
       ],

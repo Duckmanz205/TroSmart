@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Entities;
@@ -36,9 +36,20 @@ namespace PhongTroAPI.Controllers
                     p.TrangThai,
                     p.MoTa,
                     p.NgayTao,
+                    NguoiQuanLyId = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo).Select(cs => cs.MaQuanLy).FirstOrDefault() ?? 1,
+                    TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
+                        .FirstOrDefault() ?? "Admin",
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
@@ -70,9 +81,20 @@ namespace PhongTroAPI.Controllers
                     p.TrangThai,
                     p.MoTa,
                     p.NgayTao,
+                    NguoiQuanLyId = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo).Select(cs => cs.MaQuanLy).FirstOrDefault() ?? 1,
+                    TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
+                        .FirstOrDefault() ?? "Admin",
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
@@ -126,6 +148,10 @@ namespace PhongTroAPI.Controllers
                     p.TrangThai,
                     p.MoTa,
                     p.NgayTao,
+                    NguoiQuanLyId = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo).Select(cs => cs.MaQuanLy).FirstOrDefault() ?? 1,
+                    TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
+                        .FirstOrDefault() ?? "Admin",
 
                     TenCoSo = _context.CoSos
                         .Where(cs => cs.MaCoSo == p.MaCoSo)
@@ -173,9 +199,20 @@ namespace PhongTroAPI.Controllers
                     p.TrangThai,
                     p.MoTa,
                     p.NgayTao,
+                    NguoiQuanLyId = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo).Select(cs => cs.MaQuanLy).FirstOrDefault() ?? 1,
+                    TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
+                        .FirstOrDefault() ?? "Admin",
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
@@ -207,6 +244,10 @@ namespace PhongTroAPI.Controllers
                     p.TrangThai,
                     p.MoTa,
                     p.NgayTao,
+                    NguoiQuanLyId = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo).Select(cs => cs.MaQuanLy).FirstOrDefault() ?? 1,
+                    TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
+                        .FirstOrDefault() ?? "Admin",
 
                     TenCoSo = _context.CoSos
                         .Where(cs => cs.MaCoSo == p.MaCoSo)
@@ -524,9 +565,20 @@ namespace PhongTroAPI.Controllers
                     p.TrangThai,
                     p.MoTa,
                     p.NgayTao,
+                    NguoiQuanLyId = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo).Select(cs => cs.MaQuanLy).FirstOrDefault() ?? 1,
+                    TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
+                        .FirstOrDefault() ?? "Admin",
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
@@ -619,11 +671,22 @@ namespace PhongTroAPI.Controllers
                     p.SoNguoiToiDa,
                     p.TrangThai,
                     p.MoTa,
+                    NguoiQuanLyId = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo).Select(cs => cs.MaQuanLy).FirstOrDefault() ?? 1,
+                    TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
+                        .FirstOrDefault() ?? "Admin",
 
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .OrderBy(h => h.MaAnh)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
 
                     TienIches = p.MaTienIches
