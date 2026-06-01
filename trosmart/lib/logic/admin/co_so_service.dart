@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/admin/co_so_model.dart';
 import '../../models/admin/co_so_detail_model.dart';
@@ -141,6 +142,23 @@ class CoSoService {
 }
 
   Future<void> deleteCoSo(int maCoSo) async {
+    // 1. Fetch images to delete them from Supabase first
+    try {
+      final images = await getCoSoImages(maCoSo);
+      final supabase = Supabase.instance.client;
+      final fileNames = images.map((img) {
+        final uri = Uri.parse(img.urlAnh);
+        return uri.pathSegments.last;
+      }).toList();
+      
+      if (fileNames.isNotEmpty) {
+        await supabase.storage.from('trosmart-images').remove(fileNames);
+      }
+    } catch (e) {
+      print("Error deleting Supabase images of CoSo: $e");
+    }
+
+    // 2. Call backend to delete CoSo
     final uri = Uri.parse('$baseUrl/CoSo/$maCoSo');
 
     final response = await http.delete(uri);
@@ -172,25 +190,37 @@ Future<CoSoImageModel> uploadCoSoImage({
   required int maCoSo,
   required XFile file,
 }) async {
-  final uri = Uri.parse('$baseUrl/CoSo/$maCoSo/images');
+  // 1. Upload the image directly to Supabase Storage
+  final supabase = Supabase.instance.client;
+  final extension = file.name.split('.').last;
+  final fileName = 'coso_${maCoSo}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+  final fileBytes = await file.readAsBytes();
 
-  final request = http.MultipartRequest('POST', uri);
+  await supabase.storage
+      .from('trosmart-images')
+      .uploadBinary(fileName, fileBytes, fileOptions: const FileOptions(upsert: true));
 
-  final bytes = await file.readAsBytes();
-  request.files.add(
-    http.MultipartFile.fromBytes(
-      'file',
-      bytes,
-      filename: file.name,
-    ),
+  // 2. Get the public url
+  final publicUrl = supabase.storage
+      .from('trosmart-images')
+      .getPublicUrl(fileName);
+
+  // 3. Save this url in the Backend DB using our new URL endpoint
+  final uri = Uri.parse('$baseUrl/CoSo/$maCoSo/images/url');
+
+  final response = await http.post(
+    uri,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'url': publicUrl,
+    }),
   );
-
-  final streamed = await request.send();
-  final response = await http.Response.fromStream(streamed);
 
   if (response.statusCode != 200 && response.statusCode != 201) {
     throw Exception(
-      'Không upload được ảnh cơ sở. '
+      'Không lưu được ảnh vào backend. '
       'Status: ${response.statusCode}, Body: ${response.body}',
     );
   }
@@ -211,7 +241,21 @@ Future<void> setMainCoSoImage(int maAnh) async {
   }
 }
 
-Future<void> deleteCoSoImage(int maAnh) async {
+Future<void> deleteCoSoImage(int maAnh, String urlAnh) async {
+  // 1. Delete the image from Supabase Storage if it is a Supabase URL
+  if (urlAnh.contains('supabase.co') || urlAnh.contains('trosmart-images')) {
+    try {
+      final uri = Uri.parse(urlAnh);
+      final fileName = uri.pathSegments.last;
+      final supabase = Supabase.instance.client;
+      await supabase.storage.from('trosmart-images').remove([fileName]);
+      print("Deleted image from Supabase Storage: $fileName");
+    } catch (e) {
+      print("Error deleting image from Supabase Storage: $e");
+    }
+  }
+
+  // 2. Call backend to delete the record in SQL Server DB
   final uri = Uri.parse('$baseUrl/CoSo/images/$maAnh');
 
   final response = await http.delete(uri);

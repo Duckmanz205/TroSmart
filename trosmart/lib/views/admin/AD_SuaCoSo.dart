@@ -55,6 +55,9 @@ class _EditCoSoViewState extends State<EditCoSoView> {
   bool _isLoadingTienIch = true;
   bool _isCreatingTienIch = false;
 
+  List<CoSoImageModel> _existingImages = [];
+  bool _isLoadingImages = true;
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +84,32 @@ class _EditCoSoViewState extends State<EditCoSoView> {
     }
 
     _loadTienIch();
+    _loadExistingImages();
+  }
+
+  Future<void> _loadExistingImages() async {
+    try {
+      final imgs = await _service.getCoSoImages(widget.coSo.maCoSo);
+      if (!mounted) return;
+      setState(() {
+        _existingImages = imgs;
+        _isLoadingImages = false;
+
+        // Cập nhật lại ảnh chính hiện tại từ danh sách tải về
+        if (imgs.isNotEmpty) {
+          final mainImg = imgs.firstWhere(
+            (e) => e.isMain,
+            orElse: () => imgs.first,
+          );
+          _existingDisplayImagePath = mainImg.urlAnh;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingImages = false;
+      });
+    }
   }
 
   String _normalizeLoaiHinh(String? value) {
@@ -766,10 +795,21 @@ class _EditCoSoViewState extends State<EditCoSoView> {
   }
 
   Widget _buildImageChooserList() {
-    final hasExistingImage = _existingDisplayImagePath != null &&
-        _existingDisplayImagePath!.trim().isNotEmpty;
+    if (_isLoadingImages) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Color(0xFF7B2CBF),
+          ),
+        ),
+      );
+    }
 
-    if (!hasExistingImage && _pickedImages.isEmpty) {
+    final hasExistingImages = _existingImages.isNotEmpty;
+
+    if (!hasExistingImages && _pickedImages.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -794,11 +834,11 @@ class _EditCoSoViewState extends State<EditCoSoView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (hasExistingImage) ...[
+        if (hasExistingImages) ...[
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Ảnh hiện tại từ hệ thống',
+              'Danh sách ảnh hiện có trên hệ thống',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -807,53 +847,101 @@ class _EditCoSoViewState extends State<EditCoSoView> {
             ),
           ),
           const SizedBox(height: 8),
-          GestureDetector(
-            onTap: _selectExistingImage,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: _selectedPickedImageIndex == null
-                    ? const Color(0xFFF4EDF8)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: _selectedPickedImageIndex == null
-                      ? const Color(0xFF7B2CBF)
-                      : Colors.black.withValues(alpha: 0.07),
-                  width: _selectedPickedImageIndex == null ? 1.4 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      width: 78,
-                      height: 78,
-                      child: _buildCurrentExistingThumb(
-                        _existingDisplayImagePath!,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Dùng ảnh cơ sở hiện tại',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF191622),
-                      ),
-                    ),
-                  ),
-                  if (_selectedPickedImageIndex == null)
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: Color(0xFF7B2CBF),
-                    ),
-                ],
-              ),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.76,
             ),
+            itemCount: _existingImages.length,
+            itemBuilder: (context, index) {
+              final img = _existingImages[index];
+              final isMain = _existingDisplayImagePath == img.urlAnh;
+
+              return Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: isMain ? const Color(0xFFF4EDF8) : const Color(0xFFF9F7FB),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isMain ? const Color(0xFF7B2CBF) : Colors.black.withValues(alpha: 0.06),
+                    width: isMain ? 1.4 : 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: _buildCurrentExistingThumb(img.urlAnh),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _confirmDeleteExistingImage(img),
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFF4D4F),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.delete_rounded,
+                                  size: 13,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (isMain)
+                            Positioned(
+                              left: 4,
+                              bottom: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF7B2CBF),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'Chính',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () => _setAsMainImage(img),
+                      child: Text(
+                        isMain ? 'Đang hiển thị' : 'Đặt làm chính',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isMain ? const Color(0xFF7B2CBF) : Colors.black87,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          decoration: isMain ? TextDecoration.none : TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 12),
         ],
@@ -981,6 +1069,102 @@ class _EditCoSoViewState extends State<EditCoSoView> {
         ),
       ),
     );
+  }
+
+  Future<void> _setAsMainImage(CoSoImageModel img) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _service.setMainCoSoImage(img.maAnh);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đã thay đổi ảnh đại diện chính của cơ sở')),
+      );
+
+      // Cập nhật lại giao diện
+      await _loadExistingImages();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể đặt ảnh chính: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteExistingImage(CoSoImageModel img) async {
+    if (img.isMain) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể xóa ảnh chính hiện tại. Vui lòng đặt ảnh khác làm ảnh chính trước!')),
+      );
+      return;
+    }
+
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            'Xác nhận xóa',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'Bạn có chắc chắn muốn xóa vĩnh viễn bức ảnh này khỏi hệ thống và cả bộ nhớ Cloud Supabase không?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF4D4F),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Xóa'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _service.deleteCoSoImage(img.maAnh, img.urlAnh);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đã xóa hình ảnh khỏi hệ thống thành công')),
+      );
+
+      // Cập nhật lại giao diện
+      await _loadExistingImages();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể xóa ảnh: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
 Widget _buildMapEditor() {

@@ -44,6 +44,13 @@ namespace PhongTroAPI.Controllers
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
                         .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
+                        .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
                         .Select(t => t.TenTienIch)
@@ -81,6 +88,13 @@ namespace PhongTroAPI.Controllers
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
@@ -192,6 +206,13 @@ namespace PhongTroAPI.Controllers
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
@@ -552,6 +573,13 @@ namespace PhongTroAPI.Controllers
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)
                         .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
+                        .FirstOrDefault(),
                     TienIches = p.MaTienIches
                         .OrderBy(t => t.TenTienIch)
                         .Select(t => t.TenTienIch)
@@ -652,6 +680,13 @@ namespace PhongTroAPI.Controllers
                         .Where(h => h.MaPhong == p.MaPhong)
                         .OrderBy(h => h.MaAnh)
                         .Select(h => h.UrlAnh)
+                        .FirstOrDefault(),
+
+                    HinhAnhCoSo = _context.HinhAnhCoSos
+                        .Where(x => x.MaCoSo == p.MaCoSo)
+                        .OrderByDescending(x => x.IsMain)
+                        .ThenBy(x => x.MaAnh)
+                        .Select(x => x.UrlAnh)
                         .FirstOrDefault(),
 
                     TienIches = p.MaTienIches

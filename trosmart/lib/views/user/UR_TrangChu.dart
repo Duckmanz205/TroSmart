@@ -117,16 +117,16 @@ class UserHomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text("Tiến độ thanh toán", style: TextStyle(fontSize: 11, color: Color(0xFF49454F))),
-                  Text("0%", style: TextStyle(fontSize: 11, color: Color(0xFF49454F))), // Text mẫu
+                children: [
+                  const Text("Tiến độ thanh toán", style: TextStyle(fontSize: 11, color: Color(0xFF49454F))),
+                  Text(invoice.trangThai == 'Đã thanh toán' ? "100%" : "0%", style: const TextStyle(fontSize: 11, color: Color(0xFF49454F))),
                 ],
               ),
               const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: LinearProgressIndicator(
-                  value: 0.1, // Thay đổi tùy theo logic
+                  value: invoice.trangThai == 'Đã thanh toán' ? 1.0 : 0.0,
                   backgroundColor: const Color(0xFFE6E1E5),
                   color: const Color(0xFF6750A4),
                   minHeight: 8,
@@ -137,15 +137,28 @@ class UserHomeScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: invoice.trangThai == 'Đã thanh toán' ? null : () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6750A4),
+                    disabledBackgroundColor: const Color(0xFFE6E1E5),
+                    disabledForegroundColor: const Color(0xFF49454F).withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 5,
+                    elevation: invoice.trangThai == 'Đã thanh toán' ? 0 : 5,
                     shadowColor: const Color(0x406750A4),
                   ),
-                  icon: const Icon(Icons.payment, color: Colors.white, size: 16),
-                  label: const Text("Thanh toán", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  icon: Icon(
+                    invoice.trangThai == 'Đã thanh toán' ? Icons.check_circle : Icons.payment, 
+                    color: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFF49454F).withValues(alpha: 0.5) : Colors.white, 
+                    size: 18
+                  ),
+                  label: Text(
+                    invoice.trangThai == 'Đã thanh toán' ? "Đã thanh toán" : "Thanh toán", 
+                    style: TextStyle(
+                      fontSize: 16, 
+                      fontWeight: FontWeight.bold, 
+                      color: invoice.trangThai == 'Đã thanh toán' ? const Color(0xFF49454F).withValues(alpha: 0.5) : Colors.white
+                    )
+                  ),
                 ),
               )
             ],

@@ -821,7 +821,9 @@ class _EnhancedRoomSearchCard extends StatelessWidget {
   }
 
   Widget _buildHeroHeader() {
-    final imageUrl = room.hinhAnhPhong?.trim();
+    final imageUrl = (room.hinhAnhPhong?.trim().isNotEmpty == true)
+        ? room.hinhAnhPhong?.trim()
+        : room.hinhAnhCoSo?.trim();
 
     return Stack(
       children: [
