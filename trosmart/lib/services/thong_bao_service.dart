@@ -54,4 +54,20 @@ class ThongBaoService {
       throw Exception('Lỗi gửi thông báo: $e');
     }
   }
+
+  // Lấy danh sách khách hàng để gửi thông báo (Admin)
+  Future<List<Map<String, dynamic>>> getDanhSachKhach() async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/ThongBao/danh-sach-khach');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load danh sách khách: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Lỗi kết nối server: $e');
+    }
+  }
 }

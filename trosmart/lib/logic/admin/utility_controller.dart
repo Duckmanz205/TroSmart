@@ -68,7 +68,9 @@ class UtilityController extends ChangeNotifier {
         unique[maCoSo] = tenCoSo;
       }
     }
-    return unique.entries.map((e) => {'maCoSo': e.key, 'tenCoSo': e.value}).toList();
+    return unique.entries
+        .map<Map<String, dynamic>>((e) => <String, dynamic>{'maCoSo': e.key, 'tenCoSo': e.value})
+        .toList();
   }
 
   void setSearchQuery(String query) {
@@ -217,6 +219,31 @@ class UtilityController extends ChangeNotifier {
       return _rooms.firstWhere((r) => r['maPhong'] == maPhong);
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Cập nhật đơn giá điện nước cho cơ sở
+  Future<bool> updateUtilityPrices(int maCoSo, double dien, double nuoc) async {
+    _setLoading(true);
+    _setError(null);
+    try {
+      await _service.updateUtilityPrices(maCoSo, dien, nuoc);
+      
+      // Cập nhật lại đơn giá cục bộ trong tất cả các phòng thuộc cơ sở này
+      for (var i = 0; i < _rooms.length; i++) {
+        if (_rooms[i]['maCoSo'] == maCoSo) {
+          _rooms[i]['donGiaDien'] = dien;
+          _rooms[i]['donGiaNuoc'] = nuoc;
+        }
+      }
+      
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 

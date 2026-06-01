@@ -42,6 +42,8 @@ public class UtilityReadingController : ControllerBase
                 p.TrangThai,
                 TenCoSo = p.MaCoSoNavigation != null ? p.MaCoSoNavigation.TenCoSo : "",
                 MaCoSo = p.MaCoSo,
+                DonGiaDien = p.MaCoSoNavigation != null ? p.MaCoSoNavigation.DonGiaDien : 3500,
+                DonGiaNuoc = p.MaCoSoNavigation != null ? p.MaCoSoNavigation.DonGiaNuoc : 20000,
                 // Lấy khách thuê từ hợp đồng đang hiệu lực
                 TenKhachThue = _context.HopDongThues
                     .Where(hd => hd.MaPhong == p.MaPhong && hd.TrangThai == "Đang hiệu lực")
@@ -91,6 +93,8 @@ public class UtilityReadingController : ControllerBase
                 r.TrangThai,
                 r.TenCoSo,
                 r.MaCoSo,
+                r.DonGiaDien,
+                r.DonGiaNuoc,
                 r.TenKhachThue,
                 MaChiSo = hasReading ? reading!.MaChiSo : (int?)null,
                 // Chỉ số cũ: lấy từ record hiện tại, nếu không có lấy từ hóa đơn mới nhất hoặc chỉ số mới tháng trước

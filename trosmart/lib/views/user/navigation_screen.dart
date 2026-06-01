@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
-import 'package:trosmart/views/user/UR_Chat.dart';
+import 'package:trosmart/views/user/UR_DanhSachChat.dart';
 import 'package:trosmart/views/user/UR_HopDong.dart';
 import 'package:trosmart/views/user/UR_OGhep.dart';
 import 'package:trosmart/views/user/UR_ThongBao.dart';
@@ -73,19 +73,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(
         index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
         children: [
-          const UserHomeScreen(),                                                       // 0
-          const PaymentDetailsScreen(),                                                 // 1
-          const UrChat(),                                                               // 2
-          const UrHopDong(),                                                            // 3
-          RoomSearchView(maKhach: widget.maPhong),                                                      // 4
-          const IssueReportingScreen(),                                                 // 5
-          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)),          // 6
-          
-          // 
-          UrOGhep(maPhong: widget.maPhong),                                              // 7
-          
-          const HistoryStatsScreen(),                                                   // 8
-          const UserProfileScreen(),                                                    // 9
+          const UserHomeScreen(),                       // 0
+          const PaymentDetailsScreen(),                 // 1
+          const UrDanhSachChat(),                           // 2
+          const UrHopDong(),                            // 3
+          const RoomSearchView(),                       // 4
+          const IssueReportingScreen(),                 // 5
+          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 6
+          const UrOGhep(),                              // 7
+          const HistoryStatsScreen(),                   // 8
+          const UserProfileScreen(),                    // 9
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

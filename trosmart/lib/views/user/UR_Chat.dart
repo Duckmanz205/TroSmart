@@ -9,8 +9,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class UrChat extends StatefulWidget {
   final String? initialMessage;
+  final int receiverId;
+  final String receiverName;
   
-  const UrChat({super.key, this.initialMessage});
+  const UrChat({
+    super.key, 
+    this.initialMessage,
+    this.receiverId = 1,
+    this.receiverName = 'Chủ trọ - Anh An',
+  });
 
   @override
   State<UrChat> createState() => _UrChatState();
@@ -19,8 +26,7 @@ class UrChat extends StatefulWidget {
 class _UrChatState extends State<UrChat> {
   final ChatController _chatController = ChatController();
   final TextEditingController _msgController = TextEditingController();
-  int _maKhach = 0; 
-  final int _maAdmin = 1; // Admin mặc định
+  int _maKhach = 0;
 
   @override
   void initState() {
@@ -36,7 +42,7 @@ class _UrChatState extends State<UrChat> {
     setState(() {
       _maKhach = prefs.getInt('ma_khach') ?? 1;
     });
-    _chatController.fetchChatHistory(_maAdmin, _maKhach);
+    _chatController.fetchChatHistory(widget.receiverId, _maKhach);
   }
 
   @override
@@ -52,7 +58,7 @@ class _UrChatState extends State<UrChat> {
       maTinNhan: 0,
       maNguoiGui: _maKhach,
       vaiTroNguoiGui: 'User',
-      maNguoiNhan: _maAdmin,
+      maNguoiNhan: widget.receiverId,
       vaiTroNguoiNhan: 'Admin',
       noiDung: _msgController.text.trim(),
       ngayGui: DateTime.now().toIso8601String(),
@@ -82,7 +88,9 @@ class _UrChatState extends State<UrChat> {
         body: SafeArea(
           child: Column(
             children: [
-              _ContactInfoBar(),
+              _ContactInfoBar(
+                receiverName: widget.receiverName,
+              ),
               Expanded(
                 child: Container(
                   color: AppTheme.bgLight,
@@ -142,6 +150,13 @@ class _UrChatState extends State<UrChat> {
 }
 
 class _ContactInfoBar extends StatelessWidget {
+  final String receiverName;
+
+  const _ContactInfoBar({
+    Key? key,
+    required this.receiverName,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -197,7 +212,7 @@ class _ContactInfoBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Chủ trọ - Anh An',
+                  receiverName,
                   style: AppTheme.bodyMd.copyWith(
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1F2937),

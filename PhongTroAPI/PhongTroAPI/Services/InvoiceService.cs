@@ -20,7 +20,7 @@ public class InvoiceService : IInvoiceService
     /// <summary>
     /// Lấy danh sách hóa đơn. Nếu month/year null thì lấy tất cả.
     /// </summary>
-    public async Task<List<InvoiceDto>> GetInvoicesAsync(int? month, int? year)
+    public async Task<List<InvoiceDto>> GetInvoicesAsync(int? month, int? year, int? maQuanLy = null)
     {
         var query = _context.HoaDons
             .Include(h => h.MaPhongNavigation)
@@ -31,6 +31,13 @@ public class InvoiceService : IInvoiceService
         if (month.HasValue && year.HasValue)
         {
             query = query.Where(h => h.Thang == month.Value && h.Nam == year.Value);
+        }
+
+        if (maQuanLy.HasValue)
+        {
+            query = query.Where(h => h.MaPhongNavigation != null &&
+                                     h.MaPhongNavigation.MaCoSoNavigation != null &&
+                                     h.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
         }
 
         var invoices = await query

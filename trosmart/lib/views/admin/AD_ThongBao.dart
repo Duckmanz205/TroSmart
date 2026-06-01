@@ -31,78 +31,145 @@ class _AD_ThongBaoState extends State<AD_ThongBao> {
   void _showCreateDialog() {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
-    final maKhachController = TextEditingController(text: '1'); // Default to 1 for testing
+    String targetType = 'Cá nhân';
+    int? selectedMaKhach;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Tạo thông báo mới', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Tiêu đề', border: OutlineInputBorder()),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Tạo thông báo mới', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: targetType,
+                      decoration: const InputDecoration(labelText: 'Gửi đến', border: OutlineInputBorder()),
+                      items: const [
+                        DropdownMenuItem(value: 'Cá nhân', child: Text('Cá nhân (Một phòng)')),
+                        DropdownMenuItem(value: 'Cả cơ sở', child: Text('Cả cơ sở (Tất cả phòng)')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) setState(() => targetType = value);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: 'Tiêu đề', border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: contentController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(labelText: 'Nội dung', border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 12),
+                    if (targetType == 'Cá nhân') ...[
+                      FutureBuilder<List<Map<String, dynamic>>>(
+                        future: ThongBaoService().getDanhSachKhach(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                            return const Text('Không tải được danh sách khách thuê.', style: TextStyle(color: Colors.red));
+                          }
+                          final List<Map<String, dynamic>> khachList = snapshot.data!;
+                          
+                          // Mặc định chọn người đầu tiên
+                          if (selectedMaKhach == null || !khachList.any((k) => k['maKhach'] == selectedMaKhach)) {
+                            // Cần delay setState nếu thực hiện ngay trong build phase
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              setState(() {
+                                selectedMaKhach = khachList.first['maKhach'];
+                              });
+                            });
+                          }
+
+                          return DropdownButtonFormField<int>(
+                            value: selectedMaKhach ?? khachList.first['maKhach'],
+                            isExpanded: true,
+                            decoration: const InputDecoration(labelText: 'Chọn Khách / Phòng', border: OutlineInputBorder()),
+                            items: khachList.map((khach) {
+                              return DropdownMenuItem<int>(
+                                value: khach['maKhach'],
+                                child: Text('${khach['hoTen']} - P.${khach['soPhong']}'),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null) setState(() => selectedMaKhach = value);
+                            },
+                          );
+                        },
+                      ),
+                    ] else ...[
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(labelText: 'Chọn cơ sở', border: OutlineInputBorder()),
+                        items: const [
+                          DropdownMenuItem(value: '1', child: Text('Cơ sở 1')),
+                          DropdownMenuItem(value: '2', child: Text('Cơ sở 2')),
+                        ],
+                        onChanged: (value) {},
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: contentController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Nội dung', border: OutlineInputBorder()),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Hủy'),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: maKhachController,
-                  decoration: const InputDecoration(labelText: 'Mã khách (ID)', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6D28D9)),
+                  onPressed: () async {
+                    if (titleController.text.isEmpty || contentController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Vui lòng nhập đủ thông tin!')),
+                      );
+                      return;
+                    }
+                    
+                    if (targetType == 'Cá nhân' && selectedMaKhach == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Vui lòng đợi load danh sách khách!')),
+                      );
+                      return;
+                    }
+
+                    // If "Cả cơ sở", logic to send to all would go here.
+                    final newTb = ThongBao(
+                      maThongBao: 0,
+                      maKhach: targetType == 'Cá nhân' ? selectedMaKhach! : 1,
+                      tieuDe: titleController.text,
+                      noiDung: contentController.text,
+                      loaiThongBao: 'Hệ thống',
+                      daDoc: false,
+                    );
+
+                    try {
+                      final success = await ThongBaoService().sendThongBao(newTb);
+                      if (success) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đã gửi thông báo thành công!')),
+                        );
+                        _loadThongBaos();
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Lỗi: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Gửi', style: TextStyle(color: Colors.white)),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6D28D9)),
-              onPressed: () async {
-                if (titleController.text.isEmpty || contentController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vui lòng nhập đủ thông tin!')),
-                  );
-                  return;
-                }
-
-                final newTb = ThongBao(
-                  maThongBao: 0,
-                  maKhach: int.tryParse(maKhachController.text) ?? 1,
-                  tieuDe: titleController.text,
-                  noiDung: contentController.text,
-                  loaiThongBao: 'Hệ thống',
-                  daDoc: false,
-                );
-
-                try {
-                  final success = await ThongBaoService().sendThongBao(newTb);
-                  if (success) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã gửi thông báo thành công!')),
-                    );
-                    _loadThongBaos();
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e')),
-                  );
-                }
-              },
-              child: const Text('Gửi', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+            );
+          },
         );
       },
     );
