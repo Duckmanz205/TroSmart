@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Entities;
@@ -16,6 +18,32 @@ namespace PhongTroAPI.Services
             _context = context;
         }
 
+        // Lấy toàn bộ danh sách hợp đồng (Dành cho trang AD_QLHopDong của Admin)
+        public List<HopDongRenderDto> GetAllHopDong()
+        {
+            return _context.HopDongThues
+                .Include(hd => hd.MaKhachNavigation)
+                .Include(hd => hd.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
+                .OrderByDescending(hd => hd.MaHopDong)
+                .Select(hd => new HopDongRenderDto
+                {
+                    MaHopDong = hd.MaHopDong,
+                    TenKhach = hd.MaKhachNavigation.HoTen ?? "N/A",
+                    CCCD = hd.MaKhachNavigation.Cccd ?? "N/A",
+                    SDT = hd.MaKhachNavigation.Sdt ?? "N/A",
+                    SoPhong = hd.MaPhongNavigation.SoPhong,
+                    TenCoSo = hd.MaPhongNavigation.MaCoSoNavigation.TenCoSo,
+                    GiaThue = hd.MaPhongNavigation.GiaThue,
+                    TienCoc = hd.TienCoc ?? 0m,
+                    NgayBatDau = hd.NgayBatDau,
+                    NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
+                    TrangThai = hd.TrangThai,
+                    UrlChuKySupabase = hd.UrlChuKyKhach // Áp dụng cột chứa link lưu từ đám mây
+                })
+                .ToList();
+        }
+
         // 1. Lập hợp đồng nháp ban đầu
         public bool CreateHopDong(CreateHopDongDto dto)
         {
@@ -29,7 +57,7 @@ namespace PhongTroAPI.Services
                 NgayBatDau = dto.NgayBatDau,
                 NgayKetThuc = dto.NgayKetThuc,
                 TienCoc = dto.TienCoc,
-                TrangThai = "Chờ khách ký", // Trạng thái ban đầu, cho phép chỉnh sửa
+                TrangThai = "Chờ khách ký", 
                 NgayTao = DateTime.Now
             };
 
@@ -37,7 +65,7 @@ namespace PhongTroAPI.Services
             return _context.SaveChanges() > 0;
         }
 
-        // LOGIC CHỐT 1: Cập nhật hợp đồng có bộ lọc khóa dữ liệu
+        // Cập nhật hợp đồng có bộ lọc khóa dữ liệu
         public bool UpdateHopDong(int maHopDong, CreateHopDongDto dto)
         {
             var hopDong = _context.HopDongThues.Find(maHopDong);
@@ -49,7 +77,6 @@ namespace PhongTroAPI.Services
                 throw new InvalidOperationException("Hợp đồng này đã được ký kết và đang có hiệu lực. Không thể chỉnh sửa điều khoản!");
             }
 
-            // Nếu hợp đồng vẫn đang chờ ký thì cho phép sửa bình thường
             hopDong.NgayBatDau = dto.NgayBatDau;
             hopDong.NgayKetThuc = dto.NgayKetThuc;
             hopDong.TienCoc = dto.TienCoc;
@@ -57,31 +84,51 @@ namespace PhongTroAPI.Services
             return _context.SaveChanges() > 0;
         }
 
-        // LOGIC CHỐT 2: Xử lý ký hợp đồng online bằng Signature Pad
-        public bool KyHopDongOnline(int maHopDong, string chuKyBase64)
+        // Xử lý ký số bảo mật SHA-256 kết hợp Supabase URL
+        public bool KyHopDongNangCao(KyHopDongNangCaoDto dto)
         {
-            var hopDong = _context.HopDongThues.Find(maHopDong);
+            var hopDong = _context.HopDongThues.Find(dto.MaHopDong);
             if (hopDong == null) return false;
 
-            // Nếu đã ký rồi thì không cho ký đè lại nữa
+            // Nếu đã ký rồi thì không cho ký đè tránh giả mạo ghi đè
             if (hopDong.TrangThai == "Đang hiệu lực") return false;
 
-            // Lưu trữ chuỗi ảnh chữ ký vào DB
-            hopDong.ChuKy = chuKyBase64;
-            
-            // Kích hoạt trạng thái có hiệu lực và tự động chuyển đổi trạng thái Phòng
-            hopDong.TrangThai = "Đang hiệu lực";
-
-            var phong = _context.Phongs.Find(hopDong.MaPhong);
-            if (phong != null)
+            try
             {
-                phong.TrangThai = "Đang thuê"; // Chính thức lấp phòng
-            }
+                // 🔐 THUẬT TOÁN KÝ SỐ: Tạo chuỗi định danh duy nhất từ các thông tin cốt lõi của hợp đồng
+                string stringToHash = $"{hopDong.MaHopDong}-{hopDong.MaPhong}-{hopDong.MaKhach}-{hopDong.NgayBatDau:yyyyMMdd}-{hopDong.TienCoc}";
+                
+                using (SHA256 sha256 = SHA256.Create())
+                {
+                    byte[] inputBytes = Encoding.UTF8.GetBytes(stringToHash);
+                    byte[] hashBytes = sha256.ComputeHash(inputBytes);
+                    
+                    // Gán mã băm chuỗi bảo mật vào trường ContractHash chống sửa đổi dữ liệu tận tầng gốc database
+                    hopDong.ContractHash = Convert.ToBase64String(hashBytes);
+                }
 
-            return _context.SaveChanges() > 0;
+                // Lưu các dữ liệu minh chứng ký số phân hệ Khách hàng
+                hopDong.UrlChuKyKhach = dto.UrlChuKySupabase; // Đường dẫn ảnh từ Supabase Storage gửi về
+                hopDong.PublicKeyKhach = dto.DevicePublicKey; // Khóa công khai của thiết bị di động
+                hopDong.NgayKy = DateTime.Now;               // Ghi nhận mốc thời gian ký thành công
+                hopDong.TrangThai = "Đang hiệu lực";
+
+                // Tự động lấp phòng trọ chuyển đổi trạng thái thực tế
+                var phong = _context.Phongs.Find(hopDong.MaPhong);
+                if (phong != null)
+                {
+                    phong.TrangThai = "Đang thuê"; 
+                }
+
+                return _context.SaveChanges() > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
-        // 4. Xem chi tiết hợp đồng (Lấy luôn cả chuỗi chữ ký trả về cho client)
+        // 4. Xem chi tiết hợp đồng
         public HopDongRenderDto? GetChiTietHopDong(int maHopDong)
         {
             return _context.HopDongThues
@@ -102,7 +149,7 @@ namespace PhongTroAPI.Services
                     NgayBatDau = hd.NgayBatDau,
                     NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
                     TrangThai = hd.TrangThai,
-                    ChuKyBase64 = hd.ChuKy // Gửi kèm chữ ký số về để Flutter render thành ảnh
+                    UrlChuKySupabase = hd.UrlChuKyKhach // Trả link ảnh của Supabase về để Flutter dùng Image.network hiển thị
                 })
                 .FirstOrDefault();
         }

@@ -49,6 +49,8 @@ dependencies:
   url_launcher: ^6.3.2
   dio: ^5.9.2
   shared_preferences: ^2.3.3
+  signature: ^5.5.0       # Hỗ trợ khung vẽ chữ ký tay cảm ứng
+  supabase_flutter: ^2.6.0
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
 import 'package:trosmart/views/user/UR_DanhSachChat.dart';
@@ -25,8 +27,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // 1. Quản lý bằng Tên Trang
   String _activePage = AppPages.home;
 
+  // Biến quản lý dữ liệu động cho hợp đồng
+  int _dynamicMaHopDong = 0; 
+  bool _isLoadingContract = true;
+  // Giả định maKhach = 1 (Sau này ông bốc từ Session đăng nhập SharedPreferences/Token ra nha)
+  final int _currentMaKhach = 1; 
+
   // 2. Danh sách các trang hiển thị trong IndexedStack
-  // Thứ tự này sẽ tương ứng với số index của IndexedStack
   final List<String> _pageOrder = [
     AppPages.home,              // 0: Trang chủ
     AppPages.payment,           // 1: Thanh toán
@@ -39,6 +46,43 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     AppPages.stats,             // 8: HistoryStatsScreen
     AppPages.profileDetail,     // 9: Cá nhân
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchActiveContract();
+  }
+
+  // 🌐 BỐC ĐỘNG HỢP ĐỒNG MỚI NHẤT CỦA USER TỪ ĐẦU BACKEND
+  Future<void> _fetchActiveContract() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5137/api/HopDong'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> contracts = jsonDecode(response.body);
+        
+        // Tìm đúng hợp đồng gắn liền với mã khách thuê hiện tại
+        final userContract = contracts.firstWhere(
+          (hd) => hd['maKhach'] == _currentMaKhach,
+          orElse: () => null,
+        );
+
+        if (userContract != null) {
+          setState(() {
+            _dynamicMaHopDong = userContract['maHopDong'];
+            _isLoadingContract = false;
+          });
+          return;
+        }
+      }
+      setState(() => _isLoadingContract = false);
+    } catch (e) {
+      setState(() => _isLoadingContract = false);
+      debugPrint("Lỗi nạp hợp đồng động tại MainNavigation: $e");
+    }
+  }
 
   // 3. Hàm điều hướng dùng chung
   void _navigateTo(String pageName) {
@@ -61,6 +105,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Nếu chưa load xong mã hợp đồng từ server thì hiện indicator quay cho chuyên nghiệp
+    if (_isLoadingContract) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Colors.purple)),
+      );
+    }
+
     return Scaffold(
       appBar: UserAppBar(), // Hiển thị tiêu đề động
       drawer: AppSidebar(
@@ -70,16 +121,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(
         index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
         children: [
-          const UserHomeScreen(),                       // 0
-          const PaymentDetailsScreen(),                 // 1
-          const UrDanhSachChat(),                           // 2
-          const UrHopDong(),                            // 3
-          const RoomSearchView(),                       // 4
-          const IssueReportingScreen(),                 // 5
-          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 6
-          const UrOGhep(),                              // 7
-          const HistoryStatsScreen(),                   // 8
-          const UserProfileScreen(),                    // 9
+          const UserHomeScreen(),                                                       // 0
+          const PaymentDetailsScreen(),                                                 // 1
+          const UrDanhSachChat(),                                                       // 2
+          
+          // 🌟 CHỖ SỬA CHỐT HẠ: Đã bỏ 'const' để nhận biến dữ liệu động bốc từ SQL Server lên
+          UrHopDong(maHopDong: _dynamicMaHopDong),                                      // 3
+          
+          const RoomSearchView(),                                                       // 4
+          const IssueReportingScreen(),                                                 // 5
+          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)),         // 6
+          const UrOGhep(),                                                              // 7
+          const HistoryStatsScreen(),                                                   // 8
+          const UserProfileScreen(),                                                    // 9
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

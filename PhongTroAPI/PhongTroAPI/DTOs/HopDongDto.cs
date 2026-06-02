@@ -25,6 +25,8 @@ namespace PhongTroAPI.DTOs
         public DateOnly NgayKetThuc { get; set; }
         public string? TrangThai { get; set; }
         public string? ChuKyBase64 { get; set; }
+
+        public string? UrlChuKySupabase { get; set; }
     }
 
     public class GiaHanHopDongDto

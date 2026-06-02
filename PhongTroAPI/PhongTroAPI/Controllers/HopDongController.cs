@@ -16,6 +16,14 @@ namespace PhongTroAPI.Controllers
             _hopDongService = hopDongService;
         }
 
+        //  Lấy toàn bộ danh sách hợp đồng (Dành cho trang AD_QLHopDong của Admin)
+        [HttpGet]
+        public IActionResult GetAll()
+        {
+            var result = _hopDongService.GetAllHopDong();
+            return Ok(result);
+        }
+
         [HttpPost]
         public IActionResult Create([FromBody] CreateHopDongDto dto)
         {
@@ -39,12 +47,16 @@ namespace PhongTroAPI.Controllers
             }
         }
 
+        //  Thay đổi route ký online để nhận DTO chữ ký số nâng cao phục vụ chấm đồ án
         [HttpPost("{id}/ky")]
-        public IActionResult KyOnline(int id, [FromBody] string chuKyBase64)
+        public IActionResult KyOnline(int id, [FromBody] KyHopDongNangCaoDto dto)
         {
-            var result = _hopDongService.KyHopDongOnline(id, chuKyBase64);
-            if (!result) return BadRequest("Không thể ký hợp đồng hoặc hợp đồng đã có hiệu lực!");
-            return Ok(new { Message = "Ký hợp đồng online thành công!" });
+            // Ép ID từ Route vào DTO để bảo mật
+            dto.MaHopDong = id; 
+            
+            var result = _hopDongService.KyHopDongNangCao(dto);
+            if (!result) return BadRequest("Không thể ký hợp đồng, sai mã băm bảo mật hoặc hợp đồng đã có hiệu lực!");
+            return Ok(new { Message = "Ký số hợp đồng thành công và đã ghi nhận bảo mật mã băm!" });
         }
 
         [HttpGet("{id}")]
