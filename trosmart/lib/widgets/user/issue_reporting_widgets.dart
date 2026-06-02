@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../shared/app_colors.dart';
+import '../../shared/api_constants.dart';
 import '../../models/su_co.dart';
 import '../../services/su_co_service.dart';
+import '../../logic/auth/auth_service.dart';
 
 /// --- TIÊU ĐỀ TRANG VÀ NÚT TẠO YÊU CẦU ---
 class ActionHeader extends StatelessWidget {
@@ -76,7 +80,53 @@ class _NewRequestFormState extends State<NewRequestForm> {
   final TextEditingController _descController = TextEditingController();
   bool _isSubmitting = false;
 
+  int? _maKhach;
+  int? _maPhong;
+  bool _isLoadingInfo = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserContractInfo();
+  }
+
+  Future<void> _loadUserContractInfo() async {
+    try {
+      final authService = AuthService();
+      _maKhach = await authService.getMaKhach();
+      if (_maKhach != null) {
+        final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong'));
+        if (response.statusCode == 200) {
+          final List<dynamic> contracts = jsonDecode(response.body);
+          for (var hd in contracts) {
+            var dynamicMaKhach = hd['MaKhach'] ?? hd['maKhach'] ?? hd['MAKHACH'] ?? hd['ma_khach'];
+            if (dynamicMaKhach != null && dynamicMaKhach.toString() == _maKhach.toString()) {
+              var rawMaPhong = hd['MaPhong'] ?? hd['maPhong'] ?? 0;
+              _maPhong = int.tryParse(rawMaPhong.toString()) ?? 0;
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải thông tin phòng từ hợp đồng: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingInfo = false;
+        });
+      }
+    }
+  }
+
   Future<void> _submitRequest() async {
+    if (_maKhach == null || _maPhong == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không tìm thấy thông tin phòng thuê của bạn để báo cáo sự cố!')),
+      );
+      return;
+    }
+
     if (_titleController.text.isEmpty || _descController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập đầy đủ tiêu đề và mô tả sự cố')),
@@ -89,8 +139,8 @@ class _NewRequestFormState extends State<NewRequestForm> {
     try {
       final suCo = SuCo(
         maSuCo: 0, // Backend tự tạo
-        maPhong: 1, // Giả lập phòng 1
-        maKhach: 1, // Giả lập khách 1
+        maPhong: _maPhong!,
+        maKhach: _maKhach!,
         tieuDe: _titleController.text,
         moTa: _descController.text,
       );
@@ -273,51 +323,78 @@ class IssueHistoryList extends StatefulWidget {
 }
 
 class _IssueHistoryListState extends State<IssueHistoryList> {
-  late Future<List<SuCo>> _futureSuCo;
+  List<SuCo>? _suCos;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _futureSuCo = SuCoService().getSuCoForUser(1); // Giả lập lấy mã khách = 1
+    _loadUserSuCos();
+  }
+
+  Future<void> _loadUserSuCos() async {
+    try {
+      final authService = AuthService();
+      final maKhach = await authService.getMaKhach();
+      if (maKhach != null) {
+        final list = await SuCoService().getSuCoForUser(maKhach);
+        if (mounted) {
+          setState(() {
+            _suCos = list;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _suCos = [];
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    } else if (_errorMessage != null) {
+      return Center(child: Text('Lỗi tải dữ liệu: $_errorMessage'));
+    } else if (_suCos == null || _suCos!.isEmpty) {
+      return const Center(child: Text('Bạn chưa báo cáo sự cố nào.'));
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: FutureBuilder<List<SuCo>>(
-        future: _futureSuCo,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Lỗi tải dữ liệu: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Bạn chưa báo cáo sự cố nào.'));
-          }
-
-          return Column(
-            children: snapshot.data!.map((suCo) {
-              final isCompleted = (suCo.trangThai ?? '').toLowerCase() == 'đã hoàn thành';
-              final color = isCompleted ? AppColors.tealDark : Colors.blue;
-              final dateStr = suCo.ngayBao != null ? '${suCo.ngayBao!.day}/${suCo.ngayBao!.month}/${suCo.ngayBao!.year}' : '';
-              
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: HistoryCard(
-                  title: suCo.tieuDe,
-                  date: dateStr,
-                  status: suCo.trangThai ?? 'Chờ xử lý',
-                  statusColor: color,
-                  child: isCompleted ? const CompletedStatusDetails() : const ProcessingStatusDetails(),
-                ),
-              );
-            }).toList(),
+      child: Column(
+        children: _suCos!.map((suCo) {
+          final isCompleted = (suCo.trangThai ?? '').toLowerCase() == 'đã hoàn thành';
+          final color = isCompleted ? AppColors.tealDark : Colors.blue;
+          final dateStr = suCo.ngayBao != null ? '${suCo.ngayBao!.day}/${suCo.ngayBao!.month}/${suCo.ngayBao!.year}' : '';
+          
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: HistoryCard(
+              title: suCo.tieuDe,
+              date: dateStr,
+              status: suCo.trangThai ?? 'Chờ xử lý',
+              statusColor: color,
+              child: isCompleted ? const CompletedStatusDetails() : const ProcessingStatusDetails(),
+            ),
           );
-        },
+        }).toList(),
       ),
     );
   }

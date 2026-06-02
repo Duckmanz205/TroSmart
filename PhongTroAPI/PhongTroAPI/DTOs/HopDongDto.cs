@@ -15,6 +15,7 @@ namespace PhongTroAPI.DTOs
     {
         public int MaHopDong { get; set; }
         public int MaKhach { get; set; }
+        public int MaPhong { get; set; }
         public string TenKhach { get; set; } = null!;
         public string CCCD { get; set; } = null!;
         public string SDT { get; set; } = null!;

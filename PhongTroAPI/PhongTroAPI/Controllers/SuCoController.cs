@@ -22,7 +22,7 @@ namespace PhongTroAPI.Controllers
         // GET: api/SuCo
         // Lấy danh sách tất cả sự cố (Dành cho Admin)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SuCo>>> GetSuCos()
+        public async Task<ActionResult<IEnumerable<SuCo>>> GetSuCos([FromQuery] int? maQuanLy)
         {
             var query = _context.SuCos
                 .Include(s => s.MaPhongNavigation)
@@ -30,16 +30,16 @@ namespace PhongTroAPI.Controllers
                 .Include(s => s.MaKhachNavigation)
                 .AsQueryable();
 
-            int? maQuanLy = null;
+            int? mqIdFinal = maQuanLy;
             var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
             if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
             {
-                maQuanLy = mqId;
+                mqIdFinal = mqId;
             }
 
-            if (maQuanLy.HasValue)
+            if (mqIdFinal.HasValue)
             {
-                query = query.Where(s => s.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
+                query = query.Where(s => s.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == mqIdFinal.Value);
             }
 
             return await query.OrderByDescending(s => s.NgayBao).ToListAsync();
