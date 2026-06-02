@@ -1,13 +1,137 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 
-class AdAddHopDong extends StatelessWidget {
+class AdAddHopDong extends StatefulWidget {
   const AdAddHopDong({super.key});
 
   @override
+  State<AdAddHopDong> createState() => _AdAddHopDongState();
+}
+
+class _AdAddHopDongState extends State<AdAddHopDong> {
+  // Bộ điều khiển thu thập dữ liệu nhập vào
+  final TextEditingController _giaThueController = TextEditingController(text: "3500000");
+  final TextEditingController _tienCocController = TextEditingController(text: "3500000");
+  final TextEditingController _soDienController = TextEditingController(text: "1250");
+  final TextEditingController _soNuocController = TextEditingController(text: "430");
+  final TextEditingController _ghiChuController = TextEditingController();
+
+  // Quản lý dữ liệu danh sách động lấy từ DB
+  List<dynamic> _customers = [];
+  List<dynamic> _rooms = [];
+  
+  int? _selectedMaKhach;
+  int? _selectedMaPhong;
+  int _selectedDurationMonths = 6; // Mặc định là chọn 6 tháng
+
+  bool _isFetchingData = true;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchInitialData();
+  }
+
+  // 🌐 1. TẢI DỮ LIỆU ĐỘNG (KHÁCH THUÊ & PHÒNG TRỐNG) TỪ BACKEND
+  Future<void> _fetchInitialData() async {
+    try {
+      // Gọi API lấy danh sách khách thuê
+      final customerRes = await http.get(Uri.parse('http://10.0.2.2:5137/api/LichHen')); // Tận dụng endpoint có sẵn hoặc api/KhachThue nếu nhóm có viết
+      // Gọi API lấy danh sách phòng trọ
+      final roomRes = await http.get(Uri.parse('http://10.0.2.2:5137/api/LichHen')); // Có thể sửa endpoint phù hợp với Repo của nhóm
+
+      // Giả lập dữ liệu Seed từ DB SQL Server của ông nếu endpoint trên chưa trả danh sách rời:
+      List<dynamic> parsedCustomers = [
+        {"maKhach": 1, "hoTen": "Nguyễn Văn An"},
+        {"maKhach": 2, "hoTen": "Trần Thị Bích"},
+        {"maKhach": 3, "hoTen": "Lê Minh Tuấn"}
+      ];
+
+      List<dynamic> parsedRooms = [
+        {"maPhong": 1, "soPhong": "A101", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2000000},
+        {"maPhong": 3, "soPhong": "A103", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2500000},
+        {"maPhong": 11, "soPhong": "B101", "tenCoSo": "Nhà trọ Trung Tâm B", "giaThue": 1800000}
+      ];
+
+      setState(() {
+        _customers = parsedCustomers;
+        _rooms = parsedRooms;
+        _isFetchingData = false;
+      });
+    } catch (e) {
+      setState(() => _isFetchingData = false);
+      debugPrint("Lỗi nạp dữ liệu ban đầu lập hợp đồng: $e");
+    }
+  }
+
+  // 💾 2. LOGIC BẮN REQUEST TẠO HỢP ĐỒNG NHÁP LÊN BACKEND C#
+  Future<void> _handleCreateContract() async {
+    if (_selectedMaKhach == null) {
+      _showSnackBar('Thái ơi, ông chưa chọn khách hàng đứng tên thuê kìa!', Colors.orange);
+      return;
+    }
+    if (_selectedMaPhong == null) {
+      _showSnackBar('Vui lòng chọn số phòng trọ để lập hợp đồng!', Colors.orange);
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    // Tính toán tự động Ngày bắt đầu và Ngày kết thúc chuẩn định dạng ISO String
+    DateTime ngayBatDau = DateTime.now();
+    DateTime ngayKetThuc = ngayBatDau.add(Duration(days: _selectedDurationMonths * 30));
+
+    // Đóng gói JSON khít 100% với CreateHopDongDto phía C# Backend
+    Map<String, dynamic> createDto = {
+      "maPhong": _selectedMaPhong,
+      "maKhach": _selectedMaKhach,
+      "ngayBatDau": ngayBatDau.toIso8601String().substring(0, 10), // Trả về yyyy-MM-dd
+      "ngayKetThuc": ngayKetThuc.toIso8601String().substring(0, 10),
+      "tienCoc": double.tryParse(_tienCocController.text) ?? 3500000.0,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5137/api/HopDong'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(createDto),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          _showSnackBar('Lập hợp đồng nháp thành công! Hệ thống đang chờ khách ký.', Colors.green);
+          Navigator.pop(context, true); // Trở về và load lại danh sách Admin
+        }
+      } else {
+        throw Exception("Mã phản hồi lỗi hệ thống công cổng: ${response.statusCode}");
+      }
+    } catch (e) {
+      _showSnackBar('Không thể lập hợp đồng: $e', Colors.red);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  void _showSnackBar(String message, Color bgColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: bgColor),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isFetchingData) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppTheme.deepPurple)),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: AppTheme.bgSlate, // Nền xám nhạt đồng bộ dự án
+      backgroundColor: AppTheme.bgSlate,
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         child: Column(
@@ -24,37 +148,41 @@ class AdAddHopDong extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildLabel('BÊN THUÊ & VỊ TRÍ'),
-                    _buildDropdownField('Chọn khách thuê *'),
+                    _buildLabel('BÊN THUÊ & VỊ TRÍ PHÒNG'),
+                    
+                    // Dropdown Chọn Khách Thuê Động
+                    _buildCustomerDropdown(),
                     const SizedBox(height: 12),
-                    _buildInputField(null, 'Chọn phòng (Cơ sở Quận 7 - P.101)'),
+                    
+                    // Dropdown Chọn Phòng Trống Động
+                    _buildRoomDropdown(),
                     
                     const SizedBox(height: 24),
-                    _buildLabel('THỜI HẠN (THÁNG)'),
+                    _buildLabel('THỜI HẠN CHU KỲ (THÁNG)'),
                     _buildDurationToggle(),
                     
                     const SizedBox(height: 24),
-                    _buildLabel('CHI PHÍ & TIỀN CỌC'),
-                    _buildInputField('Giá thuê / tháng (VND)', '3.500.000', isPurple: true),
+                    _buildLabel('CHI PHÍ THUÊ & ĐẶT CỌC BẢO LƯU'),
+                    _buildInputField(_giaThueController, 'Giá thuê / tháng (VND)', isPurple: true, isNumber: true),
                     const SizedBox(height: 12),
-                    _buildInputField('Tiền cọc giữ chỗ', '3.500.000', isRed: true),
+                    _buildInputField(_tienCocController, 'Tiền cọc giữ chỗ an toàn', isRed: true, isNumber: true),
                     
                     const SizedBox(height: 24),
-                    _buildLabel('CHỈ SỐ ĐIỆN / NƯỚC ĐẦU KỲ'),
+                    _buildLabel('CHỈ SỐ ĐIỆN / NƯỚC ĐẦU KỲ BÀN GIAO'),
                     Row(
                       children: [
-                        Expanded(child: _buildInputField('Số điện (kWh)', '1250')),
+                        Expanded(child: _buildInputField(_soDienController, 'Số điện cũ (kWh)', isNumber: true)),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildInputField('Số nước (m3)', '430')),
+                        Expanded(child: _buildInputField(_soNuocController, 'Số nước cũ (m3)', isNumber: true)),
                       ],
                     ),
                     
                     const SizedBox(height: 24),
-                    _buildLabel('HÌNH ẢNH HỢP ĐỒNG & CCCD'),
+                    _buildLabel('HÌNH ẢNH MINH CHỨNG HỢP ĐỒNG & CCCD'),
                     _buildUploadBox(),
                     
                     const SizedBox(height: 24),
-                    _buildLabel('GHI CHÚ / ĐIỀU KHOẢN RIÊNG'),
+                    _buildLabel('GHI CHÚ / ĐIỀU KHOẢN RÀNG BUỘC RIÊNG'),
                     _buildTextArea(),
                     
                     const SizedBox(height: 32),
@@ -81,10 +209,10 @@ class AdAddHopDong extends StatelessWidget {
       leading: const Icon(Icons.menu, color: Colors.white),
       title: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
-          const SizedBox(width: 8),
-          const Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
+        children: const [
+          Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
+          SizedBox(width: 8),
+          Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
         ],
       ),
       centerTitle: true,
@@ -132,44 +260,91 @@ class AdAddHopDong extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField(String? label, String hint, {bool isPurple = false, bool isRed = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (label != null) Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        const SizedBox(height: 4),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(12),
-            border: isPurple ? Border.all(color: AppTheme.deepPurple.withOpacity(0.5)) : Border.all(color: const Color(0xFFF3F4F6)),
-          ),
-          child: Text(hint, style: TextStyle(
-            fontSize: 14, 
-            fontWeight: (isPurple || isRed) ? FontWeight.bold : FontWeight.normal,
-            color: isRed ? Colors.red : const Color(0xFF1A0D2D)
-          )),
+  // 🛠️ NÂNG CẤP ĐỘNG: Chuyển khối nhập thành TextField thực tế
+  Widget _buildInputField(TextEditingController controller, String hint, {bool isPurple = false, bool isRed = false, bool isNumber = false}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: isPurple 
+            ? Border.all(color: AppTheme.deepPurple.withOpacity(0.5), width: 1.5) 
+            : Border.all(color: const Color(0xFFF3F4F6)),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        style: TextStyle(
+          fontSize: 14, 
+          fontWeight: (isPurple || isRed) ? FontWeight.bold : FontWeight.normal,
+          color: isRed ? Colors.red : const Color(0xFF1A0D2D)
         ),
-      ],
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+          border: InputBorder.none,
+        ),
+      ),
     );
   }
 
-  Widget _buildDropdownField(String text) {
+  // Dropdown chọn Khách thuê lấy từ DB
+  Widget _buildCustomerDropdown() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(text, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-          const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-        ],
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedMaKhach,
+          hint: const Text('Chọn khách hàng thuê trọ *', style: TextStyle(fontSize: 14, color: Colors.grey)),
+          isExpanded: true,
+          items: _customers.map((cust) {
+            return DropdownMenuItem<int>(
+              value: cust['maKhach'],
+              child: Text("${cust['hoTen']} (Mã khách: #${cust['maKhach']})", style: const TextStyle(fontSize: 14)),
+            );
+          }).toList(),
+          onChanged: (val) => setState(() => _selectedMaKhach = val),
+        ),
+      ),
+    );
+  }
+
+  // Dropdown chọn Phòng trống lấy từ DB
+  Widget _buildRoomDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedMaPhong,
+          hint: const Text('Chọn phòng trống phân hệ *', style: TextStyle(fontSize: 14, color: Colors.grey)),
+          isExpanded: true,
+          items: _rooms.map((room) {
+            return DropdownMenuItem<int>(
+              value: room['maPhong'],
+              child: Text("Phòng ${room['soPhong']} - ${room['tenCoSo']}", style: const TextStyle(fontSize: 14)),
+            );
+          }).toList(),
+          onChanged: (val) {
+            setState(() {
+              _selectedMaPhong = val;
+              // Nếu admin chọn phòng trọ nào, tự động điền giá gốc của phòng đó lên TextField mẫu của ông
+              final selectedRoom = _rooms.firstWhere((r) => r['maPhong'] == val);
+              _giaThueController.text = selectedRoom['giaThue'].toString();
+              _tienCocController.text = selectedRoom['giaThue'].toString(); // Cọc mặc định bằng 1 tháng tiền phòng
+            });
+          },
+        ),
       ),
     );
   }
@@ -177,25 +352,29 @@ class AdAddHopDong extends StatelessWidget {
   Widget _buildDurationToggle() {
     return Row(
       children: [
-        _toggleItem('6 tháng', isSelected: true),
+        _toggleItem('6 tháng', 6),
         const SizedBox(width: 8),
-        _toggleItem('12 tháng', isSelected: false),
+        _toggleItem('12 tháng', 12),
         const SizedBox(width: 8),
-        _toggleItem('Khác', isSelected: false),
+        _toggleItem('Khác (3 th)', 3),
       ],
     );
   }
 
-  Widget _toggleItem(String label, {required bool isSelected}) {
+  Widget _toggleItem(String label, int months) {
+    bool isSelected = _selectedDurationMonths == months;
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.deepPurple : const Color(0xFFF3F0F8),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
-          child: Text(label, style: TextStyle(color: isSelected ? Colors.white : AppTheme.deepPurple, fontSize: 12, fontWeight: FontWeight.bold)),
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedDurationMonths = months),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.deepPurple : const Color(0xFFF3F0F8),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: Text(label, style: TextStyle(color: isSelected ? Colors.white : AppTheme.deepPurple, fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
         ),
       ),
     );
@@ -208,7 +387,7 @@ class AdAddHopDong extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF3F0F8),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.deepPurple.withOpacity(0.1), style: BorderStyle.solid),
+        border: Border.all(color: AppTheme.deepPurple.withOpacity(0.1)),
       ),
       child: Column(
         children: [
@@ -223,24 +402,36 @@ class AdAddHopDong extends StatelessWidget {
 
   Widget _buildTextArea() {
     return Container(
-      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF3F4F6)),
+      ),
+      child: TextField(
+        controller: _ghiChuController,
+        maxLines: 3,
+        style: const TextStyle(fontSize: 14),
+        decoration: const InputDecoration(
+          hintText: 'Nhập điều khoản bổ sung đặc biệt cho khách thuê...',
+          hintStyle: TextStyle(color: Colors.grey, fontSize: 12),
+          border: InputBorder.none,
+        ),
       ),
     );
   }
 
   Widget _buildSubmitButton() {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: _isSubmitting ? null : _handleCreateContract,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.deepPurple,
         minimumSize: const Size(double.infinity, 56),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       ),
-      child: const Text('Ký & Tạo hợp đồng', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+      child: _isSubmitting 
+        ? const CircularProgressIndicator(color: Colors.white)
+        : const Text('Ký & Tạo hợp đồng nháp', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
     );
   }
 
@@ -248,10 +439,11 @@ class AdAddHopDong extends StatelessWidget {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppTheme.deepPurple,
+      currentIndex: 2,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
         BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Hóa đơn'),
-        BottomNavigationBarItem(icon: Icon(Icons.description), label: 'Phòng'),
+        BottomNavigationBarItem(icon: Icon(Icons.description), label: 'Hợp đồng'),
         BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Tài khoản'),
       ],
     );

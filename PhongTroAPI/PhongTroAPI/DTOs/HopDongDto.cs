@@ -14,6 +14,7 @@ namespace PhongTroAPI.DTOs
     public class HopDongRenderDto
     {
         public int MaHopDong { get; set; }
+        public int MaKhach { get; set; }
         public string TenKhach { get; set; } = null!;
         public string CCCD { get; set; } = null!;
         public string SDT { get; set; } = null!;

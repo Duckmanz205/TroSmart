@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
 import 'package:trosmart/views/user/UR_DanhSachChat.dart';
-import 'package:trosmart/views/user/UR_HopDong.dart';
 import 'package:trosmart/views/user/UR_OGhep.dart';
 import 'package:trosmart/views/user/UR_ThongBao.dart';
 import 'package:trosmart/views/user/UR_TrangChu.dart';
 import 'package:trosmart/views/user/UR_Frofile.dart';
 import 'package:trosmart/views/user/UR_TimKiemPhong.dart';
 import 'package:trosmart/views/user/UR_ThongKe.dart';
+import 'package:trosmart/views/user/UR_HopDong.dart'; // 🌟 1. IMPORT FILE CHINH CỦA ÔNG
 import 'package:trosmart/widgets/common/user/user_app_bar.dart';
 import 'app_sidebar.dart';
 import 'UR_ThanhToan.dart';
@@ -24,27 +25,15 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  // 1. Quản lý bằng Tên Trang
   String _activePage = AppPages.home;
-
-  // Biến quản lý dữ liệu động cho hợp đồng
   int _dynamicMaHopDong = 0; 
   bool _isLoadingContract = true;
-  // Giả định maKhach = 1 (Sau này ông bốc từ Session đăng nhập SharedPreferences/Token ra nha)
-  final int _currentMaKhach = 1; 
+  int _currentMaKhach = 0; 
 
-  // 2. Danh sách các trang hiển thị trong IndexedStack
   final List<String> _pageOrder = [
-    AppPages.home,              // 0: Trang chủ
-    AppPages.payment,           // 1: Thanh toán
-    AppPages.chat,              // 2: Chat
-    AppPages.contract,          // 3: Hợp đồng
-    AppPages.searchroom,        // 4: Tra cứu phòng
-    AppPages.reportIssue,       // 5: Báo cáo sự cố
-    AppPages.notifications,     // 6: UrThongBao 
-    AppPages.accommodationShare,// 7: Ở ghép
-    AppPages.stats,             // 8: HistoryStatsScreen
-    AppPages.profileDetail,     // 9: Cá nhân
+    AppPages.home, AppPages.payment, AppPages.chat, AppPages.contract,
+    AppPages.searchroom, AppPages.reportIssue, AppPages.notifications,
+    AppPages.accommodationShare, AppPages.stats, AppPages.profileDetail,
   ];
 
   @override
@@ -53,25 +42,52 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _fetchActiveContract();
   }
 
-  // 🌐 BỐC ĐỘNG HỢP ĐỒNG MỚI NHẤT CỦA USER TỪ ĐẦU BACKEND
   Future<void> _fetchActiveContract() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:5137/api/HopDong'),
-      );
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final saved = prefs.getInt('maKhach');
+        if (saved != null && saved > 0) {
+          _currentMaKhach = saved;
+        } else {
+          _currentMaKhach = 1; 
+        }
+      } catch (e) {
+        _currentMaKhach = 1;
+      }
+
+      final response = await http.get(Uri.parse('http://10.0.2.2:5137/api/HopDong'));
 
       if (response.statusCode == 200) {
-        final List<dynamic> contracts = jsonDecode(response.body);
-        
-        // Tìm đúng hợp đồng gắn liền với mã khách thuê hiện tại
-        final userContract = contracts.firstWhere(
-          (hd) => hd['maKhach'] == _currentMaKhach,
-          orElse: () => null,
-        );
+        final dynamic decoded = jsonDecode(response.body);
+        List<dynamic> contracts = [];
+        if (decoded is List) {
+          contracts = decoded;
+        } else if (decoded is Map) {
+          if (decoded.containsKey('data') && decoded['data'] is List) {
+            contracts = decoded['data'];
+          } else if (decoded.containsKey('value') && decoded['value'] is List) {
+            contracts = decoded['value'];
+          } else {
+            contracts = [decoded];
+          }
+        }
+
+        dynamic userContract;
+        for (var hd in contracts) {
+          if (hd == null || hd is! Map) continue;
+          var dynamicMaKhach = hd['MaKhach'] ?? hd['maKhach'] ?? hd['MAKHACH'] ?? hd['ma_khach'];
+
+          if (dynamicMaKhach != null && dynamicMaKhach.toString() == _currentMaKhach.toString()) {
+            userContract = hd;
+            break;
+          }
+        }
 
         if (userContract != null) {
           setState(() {
-            _dynamicMaHopDong = userContract['maHopDong'];
+            var rawMaHopDong = userContract['MaHopDong'] ?? userContract['maHopDong'] ?? 0;
+            _dynamicMaHopDong = int.tryParse(rawMaHopDong.toString()) ?? 0;
             _isLoadingContract = false;
           });
           return;
@@ -80,21 +96,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       setState(() => _isLoadingContract = false);
     } catch (e) {
       setState(() => _isLoadingContract = false);
-      debugPrint("Lỗi nạp hợp đồng động tại MainNavigation: $e");
+      debugPrint('Lỗi nạp hợp đồng động: $e');
     }
   }
 
-  // 3. Hàm điều hướng dùng chung
   void _navigateTo(String pageName) {
-    setState(() {
-      _activePage = pageName;
-    });
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context);
-    }
+    setState(() { _activePage = pageName; });
+    if (Navigator.canPop(context)) { Navigator.pop(context); }
   }
 
-  // Tính toán Index cho BottomNavigationBar
   int _getBottomNavIndex() {
     if (_activePage == AppPages.home) return 0;
     if (_activePage == AppPages.payment) return 1;
@@ -105,28 +115,31 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Nếu chưa load xong mã hợp đồng từ server thì hiện indicator quay cho chuyên nghiệp
-    if (_isLoadingContract) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Colors.purple)),
-      );
-    }
-
     return Scaffold(
-      appBar: UserAppBar(), // Hiển thị tiêu đề động
-      drawer: AppSidebar(
-        activePage: _activePage, 
-        onPageSelected: _navigateTo,
-      ),
+      appBar: UserAppBar(), 
+      drawer: AppSidebar(activePage: _activePage, onPageSelected: _navigateTo),
       body: IndexedStack(
-        index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
+        index: _pageOrder.indexOf(_activePage), 
         children: [
           const UserHomeScreen(),                                                       // 0
           const PaymentDetailsScreen(),                                                 // 1
           const UrDanhSachChat(),                                                       // 2
           
-          // 🌟 CHỖ SỬA CHỐT HẠ: Đã bỏ 'const' để nhận biến dữ liệu động bốc từ SQL Server lên
-          UrHopDong(maHopDong: _dynamicMaHopDong),                                      // 3
+          // 🌟 CHẠY FLOW CHUẨN: Đổ thẳng vào trang chi tiết hợp đồng xem trước của ông
+          _isLoadingContract
+              ? const Center(child: CircularProgressIndicator(color: Colors.purple))
+              : _dynamicMaHopDong == 0
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text(
+                          "Tài khoản của ông hiện chưa có hợp đồng thuê phòng nào được tạo nháp!",
+                          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  : UrHopDong(maHopDong: _dynamicMaHopDong),                            // 3
           
           const RoomSearchView(),                                                       // 4
           const IssueReportingScreen(),                                                 // 5
@@ -139,7 +152,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _getBottomNavIndex(),
         onTap: (index) {
-          // Ánh xạ từ số bấm ở dưới ra Tên trang tương ứng
           final bottomPages = [AppPages.home, AppPages.payment, AppPages.chat, AppPages.profileDetail];
           _navigateTo(bottomPages[index]);
         },

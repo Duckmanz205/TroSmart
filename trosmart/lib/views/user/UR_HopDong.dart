@@ -113,12 +113,17 @@ class _UrHopDongState extends State<UrHopDong> {
   }
 
   // Hàm rút gọn hiển thị tiền dạng triệu (M)
+  String _formatCurrency(dynamic amount) {
+    if (amount == null) return "0 VND";
+    final format = NumberFormat("#,##0", "vi_VN");
+    return "${format.format(amount)} VND";
+  }
+
   String _formatAmountToM(dynamic amount) {
     if (amount == null) return "0";
     try {
       double val = double.parse(amount.toString());
       double m = val / 1000000;
-      // Nếu là số nguyên thì bỏ phần thập phân (.0) cho sạch UI của ông
       return m % 1 == 0 ? m.toInt().toString() : m.toStringAsFixed(1);
     } catch (_) {
       return amount.toString();
@@ -197,24 +202,39 @@ class _UrHopDongState extends State<UrHopDong> {
                     const SizedBox(height: 12),
                     _buildPriceCard(
                       icon: Icons.wallet_outlined,
-                      iconBg: const Color(0xFF794F4),
+                      iconBg: const Color(0xFFF5F3FF),
                       label: 'TIỀN ĐẶT CỌC BẢO LƯU',
                       amount: _formatAmountToM(_contract!['tienCoc']),
                       currency: 'M',
                       currencyColor: AppTheme.deepPurple,
                       statusTag: daKy ? 'Đã nộp' : 'Chờ đối chiếu',
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     
+                    // Điều khoản & Quy định bổ sung tăng tính học thuật đồ án
+                    const Text('📜 ĐIỀU KHOẢN & QUY ĐỊNH', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF3F4F6))),
+                      child: const Text(
+                        'Điều 1: Trách nhiệm bên thuê phòng trọ HUIT\n'
+                        '1.1. Thanh toán tiền phòng đúng hạn thỏa thuận ngày 05 mỗi tháng.\n'
+                        '1.2. Giữ gìn vệ sinh chung, nghiêm chỉnh chấp hành quy định an ninh cơ sở.',
+                        style: TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF334155)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
                     // Minh chứng chữ ký kéo từ Supabase Storage nếu đã ký thành công
                     if (daKy && _contract!['urlChuKySupabase'] != null && _contract!['urlChuKySupabase'].toString().isNotEmpty) ...[
                       const Text('CHỮ KÝ ĐIỆN TỬ ĐÃ XÁC THỰC', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
                       const SizedBox(height: 8),
                       Container(
-                        height: 100, width: 200,
+                        height: 120, width: double.infinity,
                         decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFF3F4F6)),
-                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                          borderRadius: BorderRadius.circular(16),
                           color: const Color(0xFFF9FAFB),
                         ),
                         child: Image.network(_contract!['urlChuKySupabase'], fit: BoxFit.contain),
@@ -383,17 +403,17 @@ class _UrHopDongState extends State<UrHopDong> {
     );
   }
 
-  // --- Bottom Action Buttons (ĐÃ THÊM LOGIC KHÓA DỮ LIỆU) ---
+  // --- Bottom Action Buttons (ĐỒNG BỘ FLOW ĐIỀU HƯỚNG KÝ ONLINE) ---
   Widget _buildBottomButtons(bool daKy) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(color: Colors.white),
+      decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFF3F4F6)))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           OutlinedButton.icon(
             onPressed: () {
-              // Xử lý xuất/tải file PDF hợp đồng nếu có cấu hình thêm
+              // Thao tác tải PDF dự phòng mở rộng
             },
             icon: const Icon(Icons.download_outlined, color: Color(0xFF1F2937)),
             label: const Text('Tải hợp đồng (PDF)', style: TextStyle(color: Color(0xFF1F2937), fontWeight: FontWeight.bold)),
@@ -401,33 +421,34 @@ class _UrHopDongState extends State<UrHopDong> {
           ),
           const SizedBox(height: 12),
           
-          // NÚT CHỨC NĂNG CHÍNH ĐA NĂNG: Thay đổi trạng thái động dựa trên biến "daKy"
+          // 🌟 NÚT CHUYỂN TRANG THEO FLOW ÔNG YÊU CẦU
           ElevatedButton.icon(
             icon: Icon(daKy ? Icons.lock_outline : Icons.border_color_outlined, color: Colors.white),
-            // TỰ ĐỘNG ĐỔI TEXT: Đã ký thì hiện chữ Đang hiệu lực khóa, chưa ký hiện Tiến hành ký
             label: Text(
-              daKy ? 'HỢP ĐỒNG ĐANG CÓ HIỆU LỰC' : 'TIẾN HÀNH KÝ ONLINE ngay', 
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+              daKy ? 'HỢP ĐỒNG ĐANG CÓ HIỆU LỰC' : 'TIẾN HÀNH KÝ ONLINE NGAY', 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)
             ),
             style: ElevatedButton.styleFrom(
-              // Nếu đã ký thì vô hiệu màu xám để chặn bấm, chưa ký hiện màu tím nghệ thuật
               backgroundColor: daKy ? Colors.grey.shade400 : AppTheme.deepPurple, 
               minimumSize: const Size(double.infinity, 56), 
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), 
               elevation: 0
             ),
             onPressed: daKy ? null : () async {
-              // ➔ CHƯA KÝ: Kích hoạt điều hướng sang màn hình vẽ chữ ký tay tay cảm ứng
+              // ➔ CHƯA KÝ: Thỏa mãn bấm nút mới mở toàn màn hình trang vẽ chữ ký UrKyHopDongOnline của ông
               bool? success = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => UrKyHopDongOnline(
                     maHopDong: widget.maHopDong,
-                    maKhach: _contract!['maKhach'] ?? 1,
+                    maKhach: int.tryParse((
+                      _contract!['MaKhach'] ?? _contract!['maKhach'] ?? _contract!['MAKHACH'] ?? _contract!['ma_khach'] ?? 1
+                    ).toString()) ?? 1,
                   ),
                 ),
               );
-              // Nếu từ màn hình ký số online bấm thành công back về -> kích hoạt load lại dữ liệu mới nhất
+              
+              // Nếu từ màn hình ký số online bấm xác nhận thành công và back về -> Kích hoạt tải lại dữ liệu cập nhật trạng thái mới liền
               if (success == true) {
                 _fetchChiTietHopDong();
               }

@@ -62,11 +62,15 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
     }
   }
 
-  //  2. XỬ LÝ CHUYỂN ĐỔI BỨC VẼ THÀNH BYTES VÀ ĐẨY LÊN STORAGE SUPABASE
+  // 📸 2. XỬ LÝ CHUYỂN ĐỔI BỨC VẼ THÀNH BYTES VÀ ĐẨY LÊN STORAGE SUPABASE
   Future<String?> _uploadSignatureToSupabase() async {
     try {
-      // Mẹo chụp lại vùng RepaintBoundary để xuất thành dữ liệu ảnh PNG
-      final RenderRepaintBoundary boundary = _globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      // Đợi một frame ngắn đảm bảo UI chữ ký đã được vẽ kết xuất hoàn chỉnh
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      final RenderRepaintBoundary? boundary = _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return null;
@@ -90,51 +94,78 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
     }
   }
 
-  // 🔐 XỬ LÝ TIẾN TRÌNH KÝ SỐ BẢO MẬT SHA-256 XUỐNG SERVER
-  Future<void> _handleSignContract() async {
+  // 🔐 3. XỬ LÝ TIẾN TRÌNH KÝ SỐ BẢO MẬT SHA-256 XUỐNG SERVER
+ Future<void> _handleSignContract() async {
     if (!_agreed || !_hasSigned) return;
 
     setState(() => _isSubmitting = true);
 
     try {
-      // Đẩy ảnh lên đám mây nhận link
+      // 1. Đẩy ảnh lên đám mây nhận link URL từ Supabase
       String? publicUrl = await _uploadSignatureToSupabase();
       if (publicUrl == null) throw Exception("Đẩy bằng chứng chữ ký lên Supabase thất bại.");
 
-      // Khóa công khai định danh giả lập thiết bị di động phục vụ thuật toán xác thực
+      // Khóa công khai định danh giả lập thiết bị di động
       String devicePublicKey = "HUIT_MOBILE_SIGNATURE_KEY_RSA2048_KH_${widget.maKhach}";
 
-      // Bắn lệnh POST sang route chuẩn Controller mới nâng cao mã băm
+      // 🌟 2. BẮN ĐÚNG ROUTE SWAGGER VÀ KHỚP ĐỊNH DẠNG PASCALCASE CỦA DTO C#
       final response = await http.post(
         Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}/ky'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "urlChuKySupabase": publicUrl,
-          "devicePublicKey": devicePublicKey
+          "MaHopDong": widget.maHopDong,          // 🌟 BẮT BUỘC: Điền để vượt qua vòng check (id != dto.MaHopDong)
+          "UrlChuKySupabase": publicUrl,          // 🌟 Viết hoa chữ U theo DTO C#
+          "DevicePublicKey": devicePublicKey      // 🌟 Viết hoa chữ D theo DTO C#
         }),
       );
 
-      if (response.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ký số hợp đồng thành công! Phòng đã được đưa vào trạng thái Đang thuê.'), backgroundColor: Colors.green),
-          );
-          Navigator.pop(context, true); // Trở về màn hình trước và kích hoạt refresh lại danh sách
+      debugPrint("Kết quả ký số từ Server C#: ${response.statusCode} - ${response.body}");
+
+      // 🌟 3. XỬ LÝ KẾT QUẢ ĐẦY ĐỦ TRƯỜNG HỢP: Trả về văn bản thô "true" hoặc JSON
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        bool isSuccess = false;
+        
+        if (response.body.isNotEmpty) {
+          try {
+            final decoded = jsonDecode(response.body);
+            isSuccess = decoded == true || (decoded is Map && decoded['success'] == true);
+          } catch (_) {
+            // Đón đầu trường hợp C# chỉ trả về chuỗi văn bản thô "true"
+            isSuccess = response.body.toLowerCase().contains('true');
+          }
+        } else {
+          isSuccess = true; 
+        }
+
+        if (isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🎉 Ký số hợp đồng thành công! Phòng đã được đưa vào trạng thái Đang thuê.'), 
+                backgroundColor: Colors.green
+              ),
+            );
+            
+            // Bắn kết quả true về trang cha (UR_HopDong.dart) để tự kích hoạt reload dữ liệu
+            Navigator.pop(context, true); 
+          }
+          return;
+        } else {
+          throw Exception("Backend xử lý thất bại hoặc hợp đồng đã được ký trước đó.");
         }
       } else {
-        throw Exception("Server phản hồi lỗi code: ${response.statusCode}");
+        throw Exception("Server phản hồi lỗi code: ${response.statusCode}\nChi tiết: ${response.body}");
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi thực thi ký hợp đồng điện tử: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('❌ Lỗi thực thi ký hợp đồng điện tử: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
-
   // Hàm định dạng hiển thị tiền tệ
   String _formatCurrency(dynamic number) {
     if (number == null) return "0 VND";
@@ -184,12 +215,11 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
                   _buildSectionTitle(Icons.people_alt_outlined, 'THÔNG TIN CÁC BÊN'),
                   _buildPartyCard('BÊN CHO THUÊ (CHỦ TRỌ)', 'Nguyễn Văn A', '079099123456', '0901 234 567', '123 Đường ABC, Quận Tân Bình, TP.HCM'),
                   const SizedBox(height: 12),
-                  // Đổ động thông tin của khách thuê thực tế đang mở hợp đồng
-                  _buildPartyCard('BÊN THUÊ (KHÁCH HÀNG)', _contractData!['tenKhach'], _contractData!['cccd'], _contractData!['sdt'], 'Địa chỉ thường trú hệ thống khách thuê'),
+                  _buildPartyCard('BÊN THUÊ (KHÁCH HÀNG)', _contractData!['tenKhach'] ?? 'Chưa rõ tên', _contractData!['cccd'] ?? 'Chưa cập nhật', _contractData!['sdt'] ?? 'Chưa cập nhật', 'Địa chỉ thường trú hệ thống khách thuê'),
                   
                   const SizedBox(height: 24),
                   _buildSectionTitle(Icons.home_outlined, 'THÔNG TIN PHÒNG THUÊ'),
-                  _buildRoomCard(_contractData!['soPhong'], _contractData!['tenCoSo']),
+                  _buildRoomCard(_contractData!['soPhong'] ?? '?', _contractData!['tenCoSo'] ?? 'Cơ sở mặc định'),
                   
                   const SizedBox(height: 24),
                   _buildSectionTitle(Icons.attach_money, 'GIÁ THUÊ & DỊCH VỤ'),
@@ -235,7 +265,7 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: Colors.amber.shade100, borderRadius: BorderRadius.circular(12)),
-            child: Text(_contractData!['trangThai'].toString().toUpperCase(), style: TextStyle(color: Colors.amber.shade900, fontSize: 10, fontWeight: FontWeight.bold)),
+            child: Text((_contractData!['trangThai'] ?? 'Nháp').toString().toUpperCase(), style: TextStyle(color: Colors.amber.shade900, fontSize: 10, fontWeight: FontWeight.bold)),
           )
         ],
       ),
@@ -355,7 +385,7 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
     );
   }
 
-  Widget _buildDurationCard(String ngayBD, String ngayKT) {
+  Widget _buildDurationCard(String? ngayBD, String? ngayKT) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
@@ -409,17 +439,27 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
           ]
         ),
         
-        // 🌟 CHIẾN THUẬT QUAN TRỌNG: Bọc khung vẽ trong RepaintBoundary để xuất bytes hình ảnh
+        // 🌟 FIX LỖI TRÀN NÉT VẼ: Thêm ClipRRect + Phủ nền trắng toàn diện bảo vệ vùng chụp ảnh
         RepaintBoundary(
           key: _globalKey,
           child: Container(
             height: 180, 
             width: double.infinity,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.bgGray200, width: 2)),
-            child: GestureDetector(
-              onPanUpdate: (d) => setState(() { _signaturePoints.add(d.localPosition); _hasSigned = true; }),
-              onPanEnd: (_) => setState(() => _signaturePoints.add(null)),
-              child: CustomPaint(painter: _SignaturePainter(_signaturePoints)),
+            decoration: BoxDecoration(
+              color: Colors.white, 
+              borderRadius: BorderRadius.circular(12), 
+              border: Border.all(color: AppTheme.bgGray200, width: 2)
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: GestureDetector(
+                onPanUpdate: (d) => setState(() { _signaturePoints.add(d.localPosition); _hasSigned = true; }),
+                onPanEnd: (_) => setState(() => _signaturePoints.add(null)),
+                child: CustomPaint(
+                  painter: _SignaturePainter(_signaturePoints),
+                  size: Size.infinite,
+                ),
+              ),
             ),
           ),
         ),
@@ -430,7 +470,7 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
   Widget _buildAgreeCheckbox() {
     return Row(
       children: [
-        Checkbox(value: _agreed, activeColor: AppTheme.deepPurple, onChanged: (v) => setState(() => _agreed = v!)),
+        Checkbox(value: _agreed, activeColor: AppTheme.deepPurple, onChanged: (v) => setState(() => _agreed = v ?? false)),
         const Expanded(child: Text('Tôi đã đọc kĩ, cam kết hiểu và đồng ý hoàn toàn với các điều khoản pháp lý số của hợp đồng này.', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary))),
       ]
     );
@@ -473,13 +513,26 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
 class _SignaturePainter extends CustomPainter {
   final List<Offset?> points;
   _SignaturePainter(this.points);
+  
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = AppTheme.deepPurple..strokeWidth = 3.5..strokeCap = StrokeCap.round;
+    // Ép canvas vẽ nền trắng cứng trước khi vẽ nét mực để chống lỗi ảnh rỗng/đen trên một số dòng máy
+    final bgPaint = Paint()..color = Colors.white;
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
+
+    final paint = Paint()
+      ..color = AppTheme.deepPurple
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+      
     for (int i = 0; i < points.length - 1; i++) {
-      if (points[i] != null && points[i + 1] != null) canvas.drawLine(points[i]!, points[i + 1]!, paint);
+      if (points[i] != null && points[i + 1] != null) {
+        canvas.drawLine(points[i]!, points[i + 1]!, paint);
+      }
     }
   }
+  
   @override
   bool shouldRepaint(_SignaturePainter oldDelegate) => true;
 }
