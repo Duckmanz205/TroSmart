@@ -1,15 +1,103 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../shared/app_theme.dart';
+import '../../shared/api_constants.dart';
 
 class AdDeleteLich extends StatefulWidget {
-  const AdDeleteLich({super.key});
+  final Map<String, dynamic> lichHenData;
+
+  const AdDeleteLich({super.key, required this.lichHenData});
 
   @override
   State<AdDeleteLich> createState() => _AdDeleteLichState();
 }
 
 class _AdDeleteLichState extends State<AdDeleteLich> {
-  bool _sendNotify = true; // Trạng thái Switch gửi thông báo
+  bool _sendNotify = true;
+  bool _isLoading = false;
+  String _selectedReason = 'Khách báo bận / Dời lịch';
+  
+  late int _maLichHen;
+  late String _customerName;
+  late String _soPhong;
+  late String _formattedDateTime;
+
+  final List<String> _reasons = [
+    'Khách báo bận / Dời lịch',
+    'Khách không đến / Không liên lạc được',
+    'Phòng đã có người khác cọc trước',
+    'Chủ nhà bận đột xuất',
+    'Lý do khác'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    //  ĐỒNG BỘ ÉP CHUỖI AN TOÀN: Đọc cả hai kiểu key hoa/thường và lót sẵn text tránh gãy biến late
+    final data = widget.lichHenData;
+    _maLichHen = data['MaLichHen'] ?? data['maLichHen'] ?? 0;
+    _customerName = data['HoTenKhach'] ?? data['hoTenKhach'] ?? 'Khách thuê';
+    _soPhong = (data['SoPhong'] ?? data['soPhong'] ?? '101').toString();
+    
+    final thoiGianHenVal = data['ThoiGianHen'] ?? data['thoiGianHen'];
+    if (thoiGianHenVal != null) {
+      DateTime date = DateTime.parse(thoiGianHenVal);
+      _formattedDateTime = "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} | ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+    } else {
+      _formattedDateTime = "18:36 | 31/05/2026";
+    }
+  }
+
+  // 🌟 HÀM FIX LỖI CHÍ MẠNG: Gọi chuẩn API HttpDelete xóa cứng vĩnh viễn dữ liệu khỏi SQL Server
+  Future<void> _executeDeleteLichHen() async {
+    if (_maLichHen == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ma lich hen không hop le!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // 🌟 ĐỒNG BỘ: Chuyển hoàn toàn sang http.delete và truyền ID trực tiếp lên URL
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.baseUrl}/LichHen/$_maLichHen'),
+        headers: {"Content-Type": "application/json"},
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        // Hiện thông báo sạch (Không kèm emoji lạ tránh lỗi kẹt font Noto treo UI)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Da xoa vinh vien lich hen khoi he thong!'), 
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+        // Đóng màn hình và truyền giá trị true về để trang danh sách AD_LichCongViec gọi lại _fetchLichHens() làm mới UI
+        Navigator.pop(context, true); 
+      } else {
+        // In log ra debug console để ông dễ kiểm soát lỗi hệ thống ngầm
+        debugPrint('Lỗi Server Code: ${response.statusCode} - Body: ${response.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Huy lich hen that bai!'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      debugPrint('Lỗi kết nối client: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Loi ket noi den may chu API!'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,49 +107,37 @@ class _AdDeleteLichState extends State<AdDeleteLich> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildSubHeader(context),
+            _buildHeader(context),
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- Icon X đỏ xác nhận ---
-                  _buildDeleteIllustration(),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Xác nhận hủy lịch?',
-                    style: TextStyle(color: Color(0xFFFF4D4D), fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  _buildPreviewCard(),
                   const SizedBox(height: 24),
-
-                  // --- Card Thông tin lịch hẹn ---
-                  _buildAppointmentInfoCard(),
+                  const Text('Lý do hủy lịch', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 8),
+                  _buildReasonDropdown(),
                   const SizedBox(height: 24),
-
-                  // --- Form Lý do và Tùy chọn ---
-                  _buildCancelForm(),
-                  const SizedBox(height: 16),
-                  
-                  const Text(
-                    'Lưu ý: Sau khi xóa, lịch hẹn này sẽ chuyển vào mục "Đã hủy" và không thể khôi phục.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  _buildNotifySwitch(),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Lưu ý: Sau khi xác nhận xóa, bản ghi lịch hẹn này sẽ bị loại bỏ vĩnh viễn khỏi cơ sở dữ liệu.',
+                    style: TextStyle(color: Colors.grey.withOpacity(0.8), fontSize: 11),
                   ),
-                  
                   const SizedBox(height: 40),
-
-                  // --- Nút hành động ---
-                  _buildActionButtons(context),
+                  _isLoading 
+                      ? const Center(child: CircularProgressIndicator(color: Colors.red))
+                      : _buildActionButtons(),
                 ],
               ),
-            ),
+            )
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // --- AppBar chuẩn TroSmart ---
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       flexibleSpace: Container(
@@ -70,134 +146,130 @@ class _AdDeleteLichState extends State<AdDeleteLich> {
         ),
       ),
       leading: const Icon(Icons.menu, color: Colors.white),
-      title: Row(
+      title: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
-          const SizedBox(width: 8),
-          const Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
+          Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
+          SizedBox(width: 8),
+          Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
         ],
       ),
       centerTitle: true,
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0x4C2DDCB1)),
-              ),
-              child: const Text('Chủ trọ', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+        Container(
+          margin: const EdgeInsets.only(right: 12),
+          alignment: Alignment.center,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0x4C2DDCB1)),
             ),
+            child: const Text('Chủ trọ', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
           ),
         )
       ],
     );
   }
 
-  Widget _buildSubHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-      color: AppTheme.deepPurple,
-      child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      color: Colors.white,
+      child: Column(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+            child: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.red, size: 32),
           ),
-          const SizedBox(width: 12),
-          const Text('Hủy / Xóa lịch hẹn', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text('Xác nhận hủy lịch?', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 20)),
         ],
       ),
     );
   }
 
-  Widget _buildDeleteIllustration() {
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: const BoxDecoration(color: Color(0xFFFFF1F0), shape: BoxShape.circle),
-      child: const Icon(Icons.close_rounded, color: Color(0xFFFF4D4D), size: 48),
-    );
-  }
-
-  Widget _buildAppointmentInfoCard() {
+  Widget _buildPreviewCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('LỊCH HẸN VỚI', style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const Text('Anh Tuấn - Xem phòng P.101', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          Text('LỊCH HẸN VỚI', style: TextStyle(color: Colors.grey.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text('$_customerName - Xem phòng P.$_soPhong', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+          const SizedBox(height: 12),
           Row(
-            children: const [
-              Icon(Icons.calendar_month_outlined, size: 16, color: AppTheme.deepPurple),
-              SizedBox(width: 6),
-              Text('09:30 AM | 23/04/2026', style: TextStyle(color: AppTheme.deepPurple, fontWeight: FontWeight.bold, fontSize: 14)),
+            children: [
+              const Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.deepPurple),
+              const SizedBox(width: 8),
+              Text(_formattedDateTime, style: const TextStyle(color: AppTheme.deepPurple, fontWeight: FontWeight.bold, fontSize: 13)),
             ],
-          ),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildCancelForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Lý do hủy lịch', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('Khách báo bận / Dời lịch', style: TextStyle(fontSize: 14)),
-              Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-            ],
-          ),
+  Widget _buildReasonDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedReason,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+          style: const TextStyle(color: Colors.black87, fontSize: 14),
+          onChanged: (String? newValue) {
+            if (newValue != null) setState(() => _selectedReason = newValue);
+          },
+          items: _reasons.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
         ),
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: const Color(0xFFF3F0F8), borderRadius: BorderRadius.circular(12)),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Gửi thông báo hủy cho khách', style: TextStyle(fontSize: 13)),
-              Switch(
-                value: _sendNotify,
-                onChanged: (v) => setState(() => _sendNotify = v),
-                activeColor: AppTheme.deepPurple,
-              )
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildNotifySwitch() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(color: const Color(0xFFF3F0F8), borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Gửi thông báo hủy cho khách', style: TextStyle(fontSize: 13, color: Colors.black87)),
+          Switch(
+            value: _sendNotify,
+            onChanged: (v) => setState(() => _sendNotify = v),
+            activeColor: AppTheme.deepPurple,
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
     return Column(
       children: [
         ElevatedButton(
-          onPressed: () {},
+          onPressed: _executeDeleteLichHen,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF5252),
-            minimumSize: const Size(double.infinity, 56),
+            backgroundColor: Colors.redAccent,
+            minimumSize: const Size(double.infinity, 54),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
             elevation: 0,
           ),
@@ -207,25 +279,12 @@ class _AdDeleteLichState extends State<AdDeleteLich> {
         OutlinedButton(
           onPressed: () => Navigator.pop(context),
           style: OutlinedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 56),
+            minimumSize: const Size(double.infinity, 54),
             side: const BorderSide(color: AppTheme.deepPurple),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
           ),
-          child: const Text('Quay lại', style: TextStyle(color: AppTheme.deepPurple, fontWeight: FontWeight.bold)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: AppTheme.deepPurple,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
-        BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Hóa đơn'),
-        BottomNavigationBarItem(icon: Icon(Icons.business_outlined), label: 'Phòng'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Tài khoản'),
+          child: const Text('Quay lại', style: TextStyle(color: AppTheme.deepPurple, fontWeight: FontWeight.bold, fontSize: 16)),
+        )
       ],
     );
   }

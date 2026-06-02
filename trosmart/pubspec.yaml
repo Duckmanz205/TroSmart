@@ -48,7 +48,10 @@ dependencies:
   flutter_dotenv: ^5.1.0
   url_launcher: ^6.3.2
   dio: ^5.9.2
-  shared_preferences: ^2.3.3
+  shared_preferences: ^2.5.5
+  signature: ^5.5.0       # Hỗ trợ khung vẽ chữ ký tay cảm ứng
+  path_provider: ^2.0.14     # Hỗ trợ truy cập thư mục lưu trữ trên thiết bị
+  open_filex: ^3.2.1        # Hỗ trợ tự động mở
 
 dev_dependencies:
   flutter_test:

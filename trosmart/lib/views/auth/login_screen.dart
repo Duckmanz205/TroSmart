@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'package:trosmart/logic/auth/auth_service.dart';
 import 'package:trosmart/views/admin/navigation_screen_admin.dart';
 import 'package:trosmart/views/user/navigation_screen.dart';
@@ -32,7 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _handleLogin() async {
-    // Dùng email controller hoặc phone controller tùy tab — đều gửi lên với key tenDangNhap
     final String tenDangNhap = isLoginByEmail
         ? _emailController.text.trim()
         : _phoneController.text.trim();
@@ -52,6 +52,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authResponse = await _authService.login(tenDangNhap, matKhau);
       if (!mounted) return;
+
+      // 🌟 2. FIX LINH HOẠT CHỐT HẠ: Tự động lưu maKhach thực tế của phiên đăng nhập vào máy
+      // Đảm bảo thuộc tính của authResponse trùng với biến trả về từ Backend (VD: authResponse.maKhach)
+      final prefs = await SharedPreferences.getInstance();
+      if (authResponse.maKhach != null) {
+        await prefs.setInt('maKhach', authResponse.maKhach!);
+        debugPrint("Đã lưu linh hoạt maKhach đăng nhập: ${authResponse.maKhach}");
+      }
 
       // Điều hướng theo VaiTro
       if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy') {
@@ -177,29 +185,31 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Nút Đăng nhập
+                  // Nút Đăng nhập hoặc vòng xoay Loading chờ API
                   SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: ElevatedButton(
-                      onPressed: _handleLogin, // Liên kết với hàm xử lý
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6A3092),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 8,
-                        shadowColor: const Color(0x592DDCB1),
-                      ),
-                      child: const Text(
-                        "Đăng nhập",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF6A3092)))
+                        : ElevatedButton(
+                            onPressed: _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6A3092),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 8,
+                              shadowColor: const Color(0x592DDCB1),
+                            ),
+                            child: const Text(
+                              "Đăng nhập",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 24),
 
@@ -290,7 +300,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Các Widget phụ trợ
   Widget _buildHeader() {
     return Container(
       height: 100,
@@ -458,7 +467,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const Icon(
             Icons.circle,
             size: 20,
-          ), // Thay bằng Image.asset(iconPath) sau khi có file ảnh
+          ), 
           const SizedBox(width: 8),
           Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
