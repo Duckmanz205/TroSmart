@@ -1,7 +1,8 @@
-using System;
 using Microsoft.AspNetCore.Mvc;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Services;
+using System;
+using System.Threading.Tasks;
 
 namespace PhongTroAPI.Controllers
 {
@@ -9,58 +10,57 @@ namespace PhongTroAPI.Controllers
     [Route("api/[controller]")]
     public class OGhepController : ControllerBase
     {
-        private readonly OGhepService _oGhepService;
+        private readonly OGhepService _oGhepService; // : Gọi đúng Service tương ứng
 
         public OGhepController(OGhepService oGhepService)
         {
             _oGhepService = oGhepService;
         }
 
+        // GET: api/OGhep/chi-tiet/{maPhong}
+        [HttpGet("chi-tiet/{maPhong}")]
+        public IActionResult GetChiTietOGhep(int maPhong)
+        {
+            var result = _oGhepService.GetChiTietOGhepTheoPhong(maPhong);
+            
+            if (result == null)
+                return NotFound(new { message = "Không tìm thấy phòng yêu cầu hoặc phòng chưa được kích hoạt hệ thống!" });
+
+            return Ok(result);
+        }
+
+        // BỔ SUNG ĐỦ LUỒNG ROUTER CRUD ĐỂ APP MOBILE GỌI ĐƯỢC
         [HttpPost]
         public IActionResult Create([FromBody] CreateOGhepDto dto)
         {
-            var result = _oGhepService.CreateOGhep(dto);
-            if (!result) return BadRequest("Không thể tạo bài đăng ở ghép!");
-            return Ok(new { Message = "Tạo bài đăng ở ghép thành công!" });
+            var res = _oGhepService.CreateOGhep(dto);
+            return res ? Ok(true) : BadRequest("Thất bại, vui lòng kiểm tra mã khách thuê.");
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var result = _oGhepService.GetAllOGheps();
-            return Ok(result);
+            return Ok(_oGhepService.GetAllOGheps());
         }
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var result = _oGhepService.GetOGhepById(id);
-            if (result == null) return NotFound("Không tìm thấy bài đăng!");
-            return Ok(result);
+            var data = _oGhepService.GetOGhepById(id);
+            if (data == null) return NotFound("Bài đăng không tồn tại!");
+            return Ok(data);
         }
 
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] CreateOGhepDto dto)
         {
-            var result = _oGhepService.UpdateOGhep(id, dto);
-            if (!result) return NotFound("Không tìm thấy bài đăng!");
-            return Ok(new { Message = "Cập nhật bài đăng thành công!" });
-        }
-
-        [HttpPut("{id}/trang-thai")]
-        public IActionResult UpdateTrangThai(int id, [FromBody] string trangThai)
-        {
-            var result = _oGhepService.UpdateTrangThai(id, trangThai);
-            if (!result) return NotFound("Không tìm thấy bài đăng!");
-            return Ok(new { Message = "Cập nhật trạng thái bài đăng thành công!" });
+            return _oGhepService.UpdateOGhep(id, dto) ? Ok(true) : BadRequest("Cập nhật bài đăng thất bại.");
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var result = _oGhepService.DeleteOGhep(id);
-            if (!result) return NotFound("Không tìm thấy bài đăng!");
-            return Ok(new { Message = "Xóa bài đăng thành công!" });
+            return _oGhepService.DeleteOGhep(id) ? Ok(true) : BadRequest("Xóa bài đăng thất bại.");
         }
     }
 }

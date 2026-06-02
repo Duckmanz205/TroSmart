@@ -4,6 +4,8 @@ using Microsoft.IdentityModel.Tokens;
 using PhongTroAPI.Entities;
 using System.Text;
 using PhongTroAPI.Services;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,11 +13,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<QuanLyPhongTroContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Controllers
+//  CONFIG CONTROLLERS: Tối ưu hóa cấu hình JSON chống mất trường MaKhach
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    // 1. Chống vòng lặp vô hạn khi Include các bảng liên kết quan hệ
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    
+    // 2. Ép giữ nguyên quy tắc đặt tên chữ cái đầu viết thường (camelCase) đồng bộ với Flutter
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    
+    // 3.  Ép buộc trả ra toàn bộ các trường, kể cả khi mang giá trị bằng 0 hoặc null
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
 });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -45,7 +55,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// ✅ THÊM CORS CHO FLUTTER WEB
+//  THÊM CORS CHO FLUTTER WEB
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFlutterWeb", policy =>

@@ -14,6 +14,7 @@ namespace PhongTroAPI.DTOs
     public class HopDongRenderDto
     {
         public int MaHopDong { get; set; }
+        public int MaKhach { get; set; }
         public string TenKhach { get; set; } = null!;
         public string CCCD { get; set; } = null!;
         public string SDT { get; set; } = null!;
@@ -25,6 +26,8 @@ namespace PhongTroAPI.DTOs
         public DateOnly NgayKetThuc { get; set; }
         public string? TrangThai { get; set; }
         public string? ChuKyBase64 { get; set; }
+
+        public string? UrlChuKySupabase { get; set; }
     }
 
     public class GiaHanHopDongDto

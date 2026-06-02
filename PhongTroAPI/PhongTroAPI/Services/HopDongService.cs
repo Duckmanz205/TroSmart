@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json; 
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Entities;
@@ -16,7 +19,39 @@ namespace PhongTroAPI.Services
             _context = context;
         }
 
-        // 1. Lập hợp đồng nháp ban đầu
+        // 1. LẤY TOÀN BỘ DANH SÁCH HỢP ĐỒNG
+        public List<HopDongRenderDto> GetAllHopDong()
+        {
+            return _context.HopDongThues
+                .Include(hd => hd.MaKhachNavigation)
+                .Include(hd => hd.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
+                .OrderByDescending(hd => hd.MaHopDong)
+                .Select(hd => new HopDongRenderDto
+                {
+                    MaHopDong = hd.MaHopDong,
+                    MaKhach = hd.MaKhach,
+                    TenKhach = hd.MaKhachNavigation.HoTen ?? "N/A",
+                    CCCD = hd.MaKhachNavigation.Cccd ?? "N/A",
+                    SDT = hd.MaKhachNavigation.Sdt ?? "N/A",
+                    SoPhong = hd.MaPhongNavigation.SoPhong,
+                    TenCoSo = hd.MaPhongNavigation.MaCoSoNavigation.TenCoSo,
+                    GiaThue = hd.MaPhongNavigation.GiaThue,
+                    TienCoc = hd.TienCoc ?? 0m,
+                    NgayBatDau = hd.NgayBatDau,
+                    NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
+                    TrangThai = hd.TrangThai,
+                    UrlChuKySupabase = hd.ChuKy 
+                })
+                .ToList() 
+                .Select(dto => {
+                    dto.UrlChuKySupabase = ExtractSupabaseUrl(dto.UrlChuKySupabase);
+                    return dto;
+                })
+                .ToList();
+        }
+
+        // 2. TẠO HỢP ĐỒNG NHÁP
         public bool CreateHopDong(CreateHopDongDto dto)
         {
             var phong = _context.Phongs.Find(dto.MaPhong);
@@ -29,7 +64,7 @@ namespace PhongTroAPI.Services
                 NgayBatDau = dto.NgayBatDau,
                 NgayKetThuc = dto.NgayKetThuc,
                 TienCoc = dto.TienCoc,
-                TrangThai = "Chờ khách ký", // Trạng thái ban đầu, cho phép chỉnh sửa
+                TrangThai = "Chờ khách ký", 
                 NgayTao = DateTime.Now
             };
 
@@ -37,19 +72,17 @@ namespace PhongTroAPI.Services
             return _context.SaveChanges() > 0;
         }
 
-        // LOGIC CHỐT 1: Cập nhật hợp đồng có bộ lọc khóa dữ liệu
+        // 3. CẬP NHẬT ĐIỀU KHOẢN HỢP ĐỒNG NHÁP
         public bool UpdateHopDong(int maHopDong, CreateHopDongDto dto)
         {
             var hopDong = _context.HopDongThues.Find(maHopDong);
             if (hopDong == null) return false;
 
-            // KIỂM TRA QUYỀN KHÓA: Nếu trạng thái đã có hiệu lực pháp lý thì chặn ngay!
             if (hopDong.TrangThai == "Đang hiệu lực" || hopDong.TrangThai == "Đã ký")
             {
                 throw new InvalidOperationException("Hợp đồng này đã được ký kết và đang có hiệu lực. Không thể chỉnh sửa điều khoản!");
             }
 
-            // Nếu hợp đồng vẫn đang chờ ký thì cho phép sửa bình thường
             hopDong.NgayBatDau = dto.NgayBatDau;
             hopDong.NgayKetThuc = dto.NgayKetThuc;
             hopDong.TienCoc = dto.TienCoc;
@@ -57,57 +90,80 @@ namespace PhongTroAPI.Services
             return _context.SaveChanges() > 0;
         }
 
-        // LOGIC CHỐT 2: Xử lý ký hợp đồng online bằng Signature Pad
-        public bool KyHopDongOnline(int maHopDong, string chuKyBase64)
+        // 4. KÝ SỐ NÂNG CAO (SHA-256 & BỌC JSON VÀO CỘT CHỮ KÝ)
+        public bool KyHopDongNangCao(KyHopDongNangCaoDto dto)
         {
-            var hopDong = _context.HopDongThues.Find(maHopDong);
+            var hopDong = _context.HopDongThues.Find(dto.MaHopDong);
             if (hopDong == null) return false;
-
-            // Nếu đã ký rồi thì không cho ký đè lại nữa
             if (hopDong.TrangThai == "Đang hiệu lực") return false;
 
-            // Lưu trữ chuỗi ảnh chữ ký vào DB
-            hopDong.ChuKy = chuKyBase64;
-            
-            // Kích hoạt trạng thái có hiệu lực và tự động chuyển đổi trạng thái Phòng
-            hopDong.TrangThai = "Đang hiệu lực";
-
-            var phong = _context.Phongs.Find(hopDong.MaPhong);
-            if (phong != null)
+            try
             {
-                phong.TrangThai = "Đang thuê"; // Chính thức lấp phòng
-            }
+                string stringToHash = $"{hopDong.MaHopDong}-{hopDong.MaPhong}-{hopDong.MaKhach}-{hopDong.NgayBatDau:yyyyMMdd}-{hopDong.TienCoc}";
+                string contractHash = "";
 
-            return _context.SaveChanges() > 0;
+                using (SHA256 sha256 = SHA256.Create())
+                {
+                    byte[] inputBytes = Encoding.UTF8.GetBytes(stringToHash);
+                    byte[] hashBytes = sha256.ComputeHash(inputBytes);
+                    contractHash = Convert.ToBase64String(hashBytes);
+                }
+
+                var signaturePayload = new
+                {
+                    ContractHash = contractHash,
+                    UrlChuKyKhach = dto.UrlChuKySupabase,
+                    PublicKeyKhach = dto.DevicePublicKey,
+                    NgayKy = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+
+                hopDong.ChuKy = JsonSerializer.Serialize(signaturePayload); 
+                hopDong.TrangThai = "Đang hiệu lực";
+
+                var phong = _context.Phongs.Find(hopDong.MaPhong);
+                if (phong != null)
+                {
+                    phong.TrangThai = "Đang thuê"; 
+                }
+
+                return _context.SaveChanges() > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
-        // 4. Xem chi tiết hợp đồng (Lấy luôn cả chuỗi chữ ký trả về cho client)
+        // 5. XEM CHI TIẾT HỢP ĐỒNG
         public HopDongRenderDto? GetChiTietHopDong(int maHopDong)
         {
-            return _context.HopDongThues
+            var hd = _context.HopDongThues
                 .Include(hd => hd.MaKhachNavigation)
                 .Include(hd => hd.MaPhongNavigation)
                     .ThenInclude(p => p.MaCoSoNavigation)
-                .Where(hd => hd.MaHopDong == maHopDong)
-                .Select(hd => new HopDongRenderDto
-                {
-                    MaHopDong = hd.MaHopDong,
-                    TenKhach = hd.MaKhachNavigation.HoTen ?? "N/A",
-                    CCCD = hd.MaKhachNavigation.Cccd ?? "N/A",
-                    SDT = hd.MaKhachNavigation.Sdt ?? "N/A",
-                    SoPhong = hd.MaPhongNavigation.SoPhong,
-                    TenCoSo = hd.MaPhongNavigation.MaCoSoNavigation.TenCoSo,
-                    GiaThue = hd.MaPhongNavigation.GiaThue,
-                    TienCoc = hd.TienCoc ?? 0m,
-                    NgayBatDau = hd.NgayBatDau,
-                    NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
-                    TrangThai = hd.TrangThai,
-                    ChuKyBase64 = hd.ChuKy // Gửi kèm chữ ký số về để Flutter render thành ảnh
-                })
-                .FirstOrDefault();
+                .FirstOrDefault(hd => hd.MaHopDong == maHopDong);
+
+            if (hd == null) return null;
+
+            return new HopDongRenderDto
+            {
+                MaHopDong = hd.MaHopDong,
+                MaKhach = hd.MaKhach,
+                TenKhach = hd.MaKhachNavigation.HoTen ?? "N/A",
+                CCCD = hd.MaKhachNavigation.Cccd ?? "N/A",
+                SDT = hd.MaKhachNavigation.Sdt ?? "N/A",
+                SoPhong = hd.MaPhongNavigation.SoPhong,
+                TenCoSo = hd.MaPhongNavigation.MaCoSoNavigation.TenCoSo,
+                GiaThue = hd.MaPhongNavigation.GiaThue,
+                TienCoc = hd.TienCoc ?? 0m,
+                NgayBatDau = hd.NgayBatDau,
+                NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
+                TrangThai = hd.TrangThai,
+                UrlChuKySupabase = ExtractSupabaseUrl(hd.ChuKy) 
+            };
         }
 
-        // 5. Gia hạn hợp đồng (Giữ nguyên logic tạo phụ lục bảo lưu dữ liệu cũ)
+        // 6. GIA HẠN HỢP ĐỒNG (LƯU VẾT LỊCH SỬ)
         public bool GiaHanHopDong(int maHopDong, GiaHanHopDongDto dto)
         {
             var hopDong = _context.HopDongThues.Find(maHopDong);
@@ -126,6 +182,61 @@ namespace PhongTroAPI.Services
 
             hopDong.NgayKetThuc = dto.NgayKetThucMoi;
             return _context.SaveChanges() > 0;
+        }
+
+        //  7. XÓA HỢP ĐỒNG (DỌN RÁC KHÓA NGOẠI TRƯỚC KHI XÓA)
+        public bool DeleteHopDong(int maHopDong)
+        {
+            var hopDong = _context.HopDongThues.Find(maHopDong);
+            if (hopDong == null) return false;
+
+            if (hopDong.TrangThai == "Đang hiệu lực" || hopDong.TrangThai == "Đã ký")
+            {
+                throw new InvalidOperationException("Hợp đồng đang có hiệu lực pháp lý, tuyệt đối không được xóa.");
+            }
+
+            try
+            {
+                // Gỡ trạng thái phòng về "Trống"
+                var phong = _context.Phongs.Find(hopDong.MaPhong);
+                if (phong != null) phong.TrangThai = "Trống";
+
+                // Xóa lịch sử gia hạn dính tới hợp đồng này
+                var lichSu = _context.LichSuGiaHans.Where(x => x.MaHopDong == maHopDong).ToList();
+                if (lichSu.Any()) _context.LichSuGiaHans.RemoveRange(lichSu);
+
+                // Lưu ý: Mở comment dòng dưới nếu có bảng Hóa Đơn dính khóa ngoại tới Hợp đồng
+                // var hoaDons = _context.HoaDons.Where(x => x.MaHopDong == maHopDong).ToList();
+                // if (hoaDons.Any()) _context.HoaDons.RemoveRange(hoaDons);
+
+                _context.HopDongThues.Remove(hopDong);
+                return _context.SaveChanges() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi xóa DB: " + ex.InnerException?.Message);
+                return false;
+            }
+        }
+
+        // 🛠️ HÀM PHỤ TRỢ: BÓC TÁCH JSON
+        private static string? ExtractSupabaseUrl(string? rawDbValue)
+        {
+            if (string.IsNullOrEmpty(rawDbValue)) return null;
+            if (!rawDbValue.Trim().StartsWith("{")) return rawDbValue; 
+
+            try
+            {
+                using (JsonDocument doc = JsonDocument.Parse(rawDbValue))
+                {
+                    if (doc.RootElement.TryGetProperty("UrlChuKyKhach", out JsonElement urlElement))
+                    {
+                        return urlElement.GetString();
+                    }
+                }
+            }
+            catch { }
+            return rawDbValue;
         }
     }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'Ur_DatLichXemPhong.dart';
 import '../../models/admin/phong_view_model.dart';
 import '../../shared/api_constants.dart';
 import 'UR_Chat.dart';
@@ -75,15 +76,32 @@ class RoomDetailView extends StatelessWidget {
     return 'Trạng thái phòng chưa xác định.';
   }
 
-  void _showBookingMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đặt lịch xem phòng ${room.soPhong}'),
-      ),
-    );
+ Future<void> _showBookingMessage(BuildContext context) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Bốc mã khách đăng nhập từ máy, fallback bằng 1 (khach1) để bao test nghiệm thu
+      final int currentMaKhach = prefs.getInt('maKhach') ?? 1;
+
+      if (!context.mounted) return;
+
+      // Đẩy khách sang form đặt lịch kèm trọn bộ tham số phòng đang xem
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UrDatLichXemPhong(
+            maPhong: room.maPhong,
+            maKhach: currentMaKhach,
+            soPhong: room.soPhong,
+            tenCoSo: room.tenCoSo,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint("Lỗi điều hướng luồng đặt lịch: $e");
+    }
   }
 
-  void _showContactMessage(BuildContext context) {
+  Future<void> _showContactMessage(BuildContext context) async {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => UrChat(
