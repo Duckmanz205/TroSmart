@@ -20,17 +20,26 @@ namespace PhongTroAPI.Services
         }
 
         // 1. LẤY TOÀN BỘ DANH SÁCH HỢP ĐỒNG
-        public List<HopDongRenderDto> GetAllHopDong()
+        public List<HopDongRenderDto> GetAllHopDong(int? maQuanLy = null)
         {
-            return _context.HopDongThues
+            var query = _context.HopDongThues
                 .Include(hd => hd.MaKhachNavigation)
                 .Include(hd => hd.MaPhongNavigation)
                     .ThenInclude(p => p.MaCoSoNavigation)
+                .AsQueryable();
+
+            if (maQuanLy.HasValue)
+            {
+                query = query.Where(hd => hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
+            }
+
+            return query
                 .OrderByDescending(hd => hd.MaHopDong)
                 .Select(hd => new HopDongRenderDto
                 {
                     MaHopDong = hd.MaHopDong,
                     MaKhach = hd.MaKhach,
+                    MaPhong = hd.MaPhong,
                     TenKhach = hd.MaKhachNavigation.HoTen ?? "N/A",
                     CCCD = hd.MaKhachNavigation.Cccd ?? "N/A",
                     SDT = hd.MaKhachNavigation.Sdt ?? "N/A",
@@ -149,6 +158,7 @@ namespace PhongTroAPI.Services
             {
                 MaHopDong = hd.MaHopDong,
                 MaKhach = hd.MaKhach,
+                MaPhong = hd.MaPhong,
                 TenKhach = hd.MaKhachNavigation.HoTen ?? "N/A",
                 CCCD = hd.MaKhachNavigation.Cccd ?? "N/A",
                 SDT = hd.MaKhachNavigation.Sdt ?? "N/A",

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:trosmart/shared/app_theme.dart';
 import 'package:trosmart/views/auth/login_screen.dart';
+import '../../services/khach_thue_service.dart';
+import '../../models/khach_thue.dart';
+import '../../logic/auth/auth_service.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
@@ -18,8 +21,107 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool contractReminder = true;
   bool biometricAuth = false;
 
+  KhachThue? _profile;
+  bool _isLoadingProfile = true;
+  final KhachThueService _profileService = KhachThueService();
+  final AuthService _authService = AuthService();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _cccdController = TextEditingController();
+
+  int? _maKhach;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    try {
+      _maKhach = await _authService.getMaKhach();
+      if (_maKhach != null) {
+        final profile = await _profileService.getCustomerProfile(_maKhach!);
+        setState(() {
+          _profile = profile;
+          _nameController.text = profile.hoTen ?? '';
+          _phoneController.text = profile.sdt ?? '';
+          _emailController.text = profile.email ?? '';
+          _cccdController.text = profile.cccd ?? '';
+          _isLoadingProfile = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingProfile = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải thông tin cá nhân: $e");
+      setState(() {
+        _isLoadingProfile = false;
+      });
+    }
+  }
+
+  Future<void> _updateProfile() async {
+    if (_profile == null) return;
+    final updated = KhachThue(
+      maKhach: _profile!.maKhach,
+      hoTen: _nameController.text.trim(),
+      sdt: _phoneController.text.trim(),
+      email: _emailController.text.trim(),
+      cccd: _cccdController.text.trim(),
+      gioiTinh: _profile!.gioiTinh,
+      diaChiThuongTru: _profile!.diaChiThuongTru,
+      ngaySinh: _profile!.ngaySinh,
+      ngayCapCccd: _profile!.ngayCapCccd,
+      noiCapCccd: _profile!.noiCapCccd,
+      trangThai: _profile!.trangThai,
+    );
+
+    try {
+      final success = await _profileService.updateCustomerProfile(updated);
+      if (success) {
+        setState(() {
+          _profile = updated;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Cập nhật thông tin thành công!", style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Cập nhật thất bại. Vui lòng kiểm tra lại."), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _cccdController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingProfile) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF14B8A6)),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -38,7 +140,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
-
 
   Widget _buildProfileSummary() {
     return Column(
@@ -63,7 +164,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 10))],
               ),
               alignment: Alignment.center,
-              child: const Text("B", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white)),
+              child: Text(
+                _profile?.hoTen != null && _profile!.hoTen!.isNotEmpty 
+                    ? _profile!.hoTen![0].toUpperCase() 
+                    : "U", 
+                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
             ),
             Positioned(
               right: 0,
@@ -72,7 +178,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE5E7EB), // Gray dot for offline/status
+                  color: const Color(0xFF14B8A6), // Active green
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
@@ -81,9 +187,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        const Text("Bùi Minh Khoa", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
+        Text(_profile?.hoTen ?? "Khách thuê", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
         const SizedBox(height: 4),
-        const Text("+84 912 345 678", style: TextStyle(fontSize: 14, color: Color(0xFF718096))),
+        Text(_profile?.sdt ?? "Chưa bổ sung số điện thoại", style: const TextStyle(fontSize: 14, color: Color(0xFF718096))),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -105,26 +211,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text("Thông tin cá nhân", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-            TextButton(
-              onPressed: () {},
-              child: const Text("Chỉnh sửa", style: TextStyle(fontSize: 12, color: Color(0xFF0D9488))),
-            ),
+            const SizedBox(),
           ],
         ),
         const SizedBox(height: 16),
-        _buildTextField("HỌ VÀ TÊN", "Bùi Minh Khoa"),
+        _buildEditTextField("HỌ VÀ TÊN", _nameController),
         const SizedBox(height: 20),
-        _buildTextField("SỐ ĐIỆN THOẠI", "+84 912 345 678"),
+        _buildEditTextField("SỐ ĐIỆN THOẠI", _phoneController),
         const SizedBox(height: 20),
-        _buildTextField("EMAIL", "bui.minhkhoa@gmail.com"),
+        _buildEditTextField("EMAIL", _emailController),
         const SizedBox(height: 20),
-        _buildTextField("SỐ CCCD / CMND", "079 203 012 345", isVerified: true),
+        _buildEditTextField("SỐ CCCD / CMND", _cccdController, isVerified: true),
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: _updateProfile,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFB794F4), // Màu tím sáng
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -138,7 +241,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, String value, {bool isVerified = false}) {
+  Widget _buildEditTextField(String label, TextEditingController controller, {bool isVerified = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -155,7 +258,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           child: Row(
             children: [
               Expanded(
-                child: Text(value, style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937))),
+                child: TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+                ),
               ),
               if (isVerified)
                 const Text("Đã xác thực", style: TextStyle(fontSize: 10, color: Color(0xFF0D9488), fontWeight: FontWeight.w500)),

@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart'; // Đọc thư mục lưu trữ điện thoại
 import 'package:open_filex/open_filex.dart';       // Tự động mở file PDF sau khi tải xong
 import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdQLHopDong extends StatefulWidget {
   const AdQLHopDong({super.key});
@@ -39,7 +40,8 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
       if (!mounted) return;
       setState(() => _isLoading = true);
 
-      final response = await http.get(Uri.parse('http://10.0.2.2:5137/api/HopDong'));
+      final maQuanLy = await AuthService().getMaQuanLy();
+      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong?maQuanLy=$maQuanLy'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         if (mounted) {

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
+import '../../shared/api_constants.dart';
 
 class UrKyHopDongOnline extends StatefulWidget {
   final int maHopDong; // Nhận động từ màn hình danh sách/chi tiết
@@ -45,7 +46,7 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
   Future<void> _fetchChiTietHopDong() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}'),
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'),
       );
 
       if (response.statusCode == 200) {
@@ -110,7 +111,7 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
 
       // 🌟 2. BẮN ĐÚNG ROUTE SWAGGER VÀ KHỚP ĐỊNH DẠNG PASCALCASE CỦA DTO C#
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}/ky'),
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}/ky'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "MaHopDong": widget.maHopDong,          // 🌟 BẮT BUỘC: Điền để vượt qua vòng check (id != dto.MaHopDong)

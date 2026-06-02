@@ -8,8 +8,9 @@ class SuCoService {
   final AuthService _authService = AuthService();
 
   // Lấy tất cả sự cố (Admin)
-  Future<List<SuCo>> getAllSuCo() async {
-    final url = Uri.parse('${ApiConstants.baseUrl}/SuCo');
+  Future<List<SuCo>> getAllSuCo({int? maQuanLy}) async {
+    final queryParams = maQuanLy != null ? '?maQuanLy=$maQuanLy' : '';
+    final url = Uri.parse('${ApiConstants.baseUrl}/SuCo$queryParams');
     try {
       final token = await _authService.getToken();
       final response = await http.get(

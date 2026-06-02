@@ -6,6 +6,7 @@ import '../../widgets/admin/incident_management_widgets.dart';
 
 import '../../models/su_co.dart';
 import '../../services/su_co_service.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AD_SuCo extends StatefulWidget {
   const AD_SuCo({super.key});
@@ -34,7 +35,8 @@ class _AD_SuCoState extends State<AD_SuCo> {
       _errorMessage = null;
     });
     try {
-      final list = await SuCoService().getAllSuCo();
+      final maQuanLy = await AuthService().getMaQuanLy();
+      final list = await SuCoService().getAllSuCo(maQuanLy: maQuanLy);
       setState(() {
         _allSuCos = list;
       });

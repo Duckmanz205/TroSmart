@@ -114,4 +114,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyMaQuanLy);
   }
+
+  Future<int?> getMaKhach() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keyMaKhach);
+  }
 }

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart'; //
 import '../../views/user/UR_HoanTatDatLich.dart';
+import '../../services/khach_thue_service.dart';
 
 class UrDatLichXemPhong extends StatefulWidget {
   final int? maPhong; // Nhận từ trang Chi tiết phòng xem
@@ -57,9 +58,28 @@ class _UrDatLichXemPhongState extends State<UrDatLichXemPhong> {
   //  1. TỰ ĐỘNG ĐIỀN THÔNG TIN TÀI KHOẢN TỪ DATABASE SQL SERVER
   Future<void> _fetchThongTinKhach() async {
     try {
+      if (widget.maKhach > 0) {
+        try {
+          final profile = await KhachThueService().getCustomerProfile(
+            widget.maKhach,
+          );
+          if (mounted) {
+            setState(() {
+              _nameController.text = profile.hoTen ?? '';
+              _phoneController.text = profile.sdt ?? '';
+            });
+            return;
+          }
+        } catch (_) {
+          // fallback to shared preferences
+        }
+      }
+
       final prefs = await SharedPreferences.getInstance();
       String? savedName =
-          prefs.getString('hoTen') ?? prefs.getString('fullName');
+          prefs.getString('ho_ten') ??
+          prefs.getString('hoTen') ??
+          prefs.getString('fullName');
       String? savedPhone =
           prefs.getString('sdt') ?? prefs.getString('phoneNumber');
 

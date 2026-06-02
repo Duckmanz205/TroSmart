@@ -4,7 +4,8 @@ import '../../logic/user/user_payment_controller.dart';
 import 'package:intl/intl.dart';
 
 class UserHomeScreen extends StatelessWidget {
-  const UserHomeScreen({super.key});
+  final VoidCallback? onNavigateToPayment;
+  const UserHomeScreen({super.key, this.onNavigateToPayment});
 
   String _formatCurrency(double amount) {
     final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
@@ -137,7 +138,7 @@ class UserHomeScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: invoice.trangThai == 'Đã thanh toán' ? null : () {},
+                  onPressed: invoice.trangThai == 'Đã thanh toán' ? null : onNavigateToPayment,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6750A4),
                     disabledBackgroundColor: const Color(0xFFE6E1E5),

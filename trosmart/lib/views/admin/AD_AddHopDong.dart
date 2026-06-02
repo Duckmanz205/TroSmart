@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
+import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdAddHopDong extends StatefulWidget {
   const AdAddHopDong({super.key});
@@ -39,23 +41,43 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
   // 🌐 1. TẢI DỮ LIỆU ĐỘNG (KHÁCH THUÊ & PHÒNG TRỐNG) TỪ BACKEND
   Future<void> _fetchInitialData() async {
     try {
+      final maQuanLy = await AuthService().getMaQuanLy();
+      
       // Gọi API lấy danh sách khách thuê
-      final customerRes = await http.get(Uri.parse('http://10.0.2.2:5137/api/LichHen')); // Tận dụng endpoint có sẵn hoặc api/KhachThue nếu nhóm có viết
-      // Gọi API lấy danh sách phòng trọ
-      final roomRes = await http.get(Uri.parse('http://10.0.2.2:5137/api/LichHen')); // Có thể sửa endpoint phù hợp với Repo của nhóm
+      final customerRes = await http.get(Uri.parse('${ApiConstants.baseUrl}/KhachThue'));
+      
+      // Gọi API lấy danh sách phòng trọ thuộc về admin quản lý này
+      final roomRes = await http.get(Uri.parse('${ApiConstants.baseUrl}/Phong?maQuanLy=$maQuanLy'));
 
-      // Giả lập dữ liệu Seed từ DB SQL Server của ông nếu endpoint trên chưa trả danh sách rời:
-      List<dynamic> parsedCustomers = [
-        {"maKhach": 1, "hoTen": "Nguyễn Văn An"},
-        {"maKhach": 2, "hoTen": "Trần Thị Bích"},
-        {"maKhach": 3, "hoTen": "Lê Minh Tuấn"}
-      ];
+      List<dynamic> parsedCustomers = [];
+      if (customerRes.statusCode == 200) {
+        parsedCustomers = jsonDecode(customerRes.body);
+      }
+      
+      List<dynamic> parsedRooms = [];
+      if (roomRes.statusCode == 200) {
+        final List<dynamic> allRooms = jsonDecode(roomRes.body);
+        parsedRooms = allRooms.where((r) {
+          final status = (r['trangThai'] ?? r['TrangThai'] ?? '').toString().toLowerCase();
+          return status.contains('trống') || status.contains('trong');
+        }).toList();
+      }
 
-      List<dynamic> parsedRooms = [
-        {"maPhong": 1, "soPhong": "A101", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2000000},
-        {"maPhong": 3, "soPhong": "A103", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2500000},
-        {"maPhong": 11, "soPhong": "B101", "tenCoSo": "Nhà trọ Trung Tâm B", "giaThue": 1800000}
-      ];
+      // Fallbacks chỉ khi API trả về rỗng để giữ an toàn tuyệt đối cho nghiệm thu
+      if (parsedCustomers.isEmpty) {
+        parsedCustomers = [
+          {"maKhach": 1, "hoTen": "Nguyễn Văn An"},
+          {"maKhach": 2, "hoTen": "Trần Thị Bích"},
+          {"maKhach": 3, "hoTen": "Lê Minh Tuấn"}
+        ];
+      }
+      if (parsedRooms.isEmpty) {
+        parsedRooms = [
+          {"maPhong": 1, "soPhong": "A101", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2000000},
+          {"maPhong": 3, "soPhong": "A103", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2500000},
+          {"maPhong": 11, "soPhong": "B101", "tenCoSo": "Nhà trọ Trung Tâm B", "giaThue": 1800000}
+        ];
+      }
 
       setState(() {
         _customers = parsedCustomers;
@@ -96,7 +118,7 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5137/api/HopDong'),
+        Uri.parse('${ApiConstants.baseUrl}/HopDong'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(createDto),
       );

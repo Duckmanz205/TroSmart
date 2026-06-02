@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart'; // 🌟 THÊM: Đ�
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
 import 'package:intl/intl.dart';
+import '../../logic/auth/auth_service.dart';
 
 class UrOGhep extends StatefulWidget {
   final int? maPhong; 
@@ -32,9 +33,8 @@ class _UrOGhepState extends State<UrOGhep> { // Sửa tên State cho chuẩn c�
       _idPhongHienTai = widget.maPhong!;
     } else {
       try {
-        // Dự phòng nếu tab cha không truyền xuống, bốc từ SharedPreferences hoặc gọi API hợp đồng nháp
-        final prefs = await SharedPreferences.getInstance();
-        final currentMaKhach = prefs.getInt('maKhach') ?? 1;
+        final authService = AuthService();
+        final currentMaKhach = await authService.getMaKhach() ?? 1;
 
         final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong'));
         if (response.statusCode == 200) {
