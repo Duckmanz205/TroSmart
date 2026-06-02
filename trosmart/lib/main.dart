@@ -6,11 +6,13 @@ import 'package:trosmart/views/auth/login_screen.dart';
 import 'package:trosmart/views/admin/navigation_screen_admin.dart';
 import 'package:trosmart/views/user/navigation_screen.dart';
 import 'shared/app_theme.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+ 
   // Load the environment variables from the .env file
+  await initializeDateFormatting('vi', null);
+  
   await dotenv.load(fileName: ".env");
 
   await Supabase.initialize(

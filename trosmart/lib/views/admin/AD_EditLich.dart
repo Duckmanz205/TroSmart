@@ -1,86 +1,260 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
+import '../../shared/api_config.dart';
 
 class AdEditLich extends StatefulWidget {
-  const AdEditLich({super.key});
+  // Nhận dữ liệu của lịch hẹn cần chỉnh sửa từ màn hình danh sách truyền sang
+  final Map<String, dynamic> lichHenData;
+
+  const AdEditLich({super.key, required this.lichHenData});
 
   @override
   State<AdEditLich> createState() => _AdEditLichState();
 }
 
 class _AdEditLichState extends State<AdEditLich> {
-  bool _sendNotify = true; // Trạng thái của Switch gửi thông báo
+  // --- LOGIC CONTROLLERS ---
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _titleController;
+  late TextEditingController _nameController;  // 🌟 THÊM MỚI: Sửa riêng tên khách
+  late TextEditingController _phoneController; // 🌟 THÊM MỚI: Sửa riêng số điện thoại
+  late TextEditingController _noteController;
+
+  // --- STATE VARIABLES ---
+  bool _sendNotify = true;
+  bool _isLoading = false;
+  late DateTime _selectedDate;
+  late TimeOfDay _selectedTime;
+  late Map<String, dynamic> _currentLichHen;
+
+  // Thông tin định danh dưới SQL Server
+  late int _maLichHen;
+  late int _maPhong;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentLichHen = widget.lichHenData;
+    _maLichHen = _currentLichHen['MaLichHen'] ?? _currentLichHen['maLichHen'] ?? 0;
+    _maPhong = _currentLichHen['MaPhong'] ?? _currentLichHen['maPhong'] ?? 1; // Mặc định phòng 1 nếu lỗi
+    
+    // Đổ dữ liệu cũ lên form gõ chữ (Hỗ trợ cả trường hợp key hoa hoặc thường từ API)
+    _titleController = TextEditingController(text: _currentLichHen['Tiêu đề'] ?? 'Lịch hẹn xem phòng');
+    _nameController = TextEditingController(text: _currentLichHen['HoTenKhach'] ?? _currentLichHen['hoTenKhach'] ?? '');
+    _phoneController = TextEditingController(text: _currentLichHen['SDTKhach'] ?? _currentLichHen['sdtKhach'] ?? '');
+    _noteController = TextEditingController(text: _currentLichHen['GhiChu'] ?? _currentLichHen['ghiChu'] ?? '');
+    
+    // Phân tích DateTime cũ từ API để đổ lên bộ chọn thời gian
+    final thoiGianHenVal = _currentLichHen['ThoiGianHen'] ?? _currentLichHen['thoiGianHen'];
+    if (thoiGianHenVal != null) {
+      DateTime originalDateTime = DateTime.parse(thoiGianHenVal);
+      _selectedDate = originalDateTime;
+      _selectedTime = TimeOfDay(hour: originalDateTime.hour, minute: originalDateTime.minute);
+    } else {
+      _selectedDate = DateTime.now();
+      _selectedTime = TimeOfDay.now();
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  // --- HÀM MỞ BỘ CHỌN NGÀY THẬT ---
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  // --- HÀM MỞ BỘ CHỌN GIỜ THẬT ---
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
+  // --- CÁC TÙY CHỌN DỜI GIỜ NHANH ---
+  void _quickAdjustTime(int minutes) {
+    DateTime currentDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+    DateTime adjusted = currentDateTime.add(Duration(minutes: minutes));
+    setState(() {
+      _selectedDate = adjusted;
+      _selectedTime = TimeOfDay(hour: adjusted.hour, minute: adjusted.minute);
+    });
+  }
+
+  void _shiftToAfternoon() {
+    setState(() {
+      _selectedTime = const TimeOfDay(hour: 14, minute: 0); // Mặc định dời sang 2:00 PM
+    });
+  }
+
+  // --- LOGIC GỬI LỆNH CẬP NHẬT LÊN BACKEND C# (.NET) ---
+  void _handleSaveUpdate() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    // Gộp ngày giờ mới thành chuỗi ISO 8601 chuẩn chỉnh
+    final DateTime finalUpdatedDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
+    try {
+      // 🌟 ĐỒNG BỘ JSON: Đóng gói chuẩn xác khít 100% các trường thuộc CreateLichHenDto bên C#
+      final Map<String, dynamic> updateBody = {
+        'MaPhong': _maPhong,
+        'HoTenKhach': _nameController.text.trim(),
+        'SDTKhach': _phoneController.text.trim(),
+        'ThoiGianHen': finalUpdatedDateTime.toIso8601String(),
+        'GhiChu': _noteController.text.trim(),
+      };
+
+      // Gọi API PUT thường cập nhật thông tin lịch hẹn lên SQL Server
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/LichHen/$_maLichHen'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(updateBody),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('🎉 Cập nhật lịch hẹn thành công!'), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context, true); // Trả về true để màn hình danh sách tự reload dữ liệu mới
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cập nhật thất bại. Vui lòng kiểm tra lại dữ liệu!'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi kết nối API: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final String dateString = DateFormat('dd/MM/yyyy').format(_selectedDate);
+    final String timeString = _selectedTime.format(context);
+
     return Scaffold(
       backgroundColor: AppTheme.bgSlate,
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildSubHeader(context),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    )
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('THÔNG TIN CHUNG'),
-                    _buildInputField('Tiêu đề lịch hẹn', 'Hẹn xem phòng P.101', hasBorder: true),
-                    
-                    const SizedBox(height: 24),
-                    _buildLabel('THỜI GIAN MỚI'),
-                    Row(
-                      children: [
-                        Expanded(child: _buildSelectBox('23/04/2026')),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildSelectBox('09:30 AM')),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTimeQuickOptions(),
-                    
-                    const SizedBox(height: 24),
-                    _buildLabel('ĐỐI TÁC & ĐỊA ĐIỂM'),
-                    _buildInputField(null, 'Anh Tuấn - 0908 123 456'),
-                    const SizedBox(height: 12),
-                    _buildInputField(null, 'Cơ sở Quận 7 - Luxury'),
-                    
-                    const SizedBox(height: 24),
-                    _buildLabel('TÙY CHỌN CẬP NHẬT'),
-                    _buildNotifySwitch(),
-                    
-                    const SizedBox(height: 24),
-                    _buildLabel('Ghi chú nội bộ', isMuted: true),
-                    _buildTextArea(),
-                    
-                    const SizedBox(height: 32),
-                    _buildSubmitButton(),
-                  ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildSubHeader(context),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel('MỤC ĐÍCH / TIÊU ĐỀ'),
+                      _buildInputField('Tiêu đề lịch hẹn', _titleController),
+                      
+                      const SizedBox(height: 24),
+                      _buildLabel('THỜI GIAN HẸN MỚI'),
+                      Row(
+                        children: [
+                          Expanded(child: _buildSelectBox(dateString, () => _selectDate(context))),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildSelectBox(timeString, () => _selectTime(context))),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTimeQuickOptions(),
+                      
+                      const SizedBox(height: 24),
+                      _buildLabel('TÊN KHÁCH HÀNG'), // 🌟 ĐẤY Ô GÕ CHỮ ĐỘNG
+                      _buildInputField('Nhập tên khách hàng', _nameController),
+
+                      const SizedBox(height: 24),
+                      _buildLabel('SỐ ĐIỆN THOẠI KHÁCH'), // 🌟 ĐẤY Ô GÕ CHỮ ĐỘNG
+                      _buildInputField('Nhập số điện thoại', _phoneController, keyboardType: TextInputType.phone),
+                      
+                      const SizedBox(height: 24),
+                      _buildLabel('ĐỊA ĐIỂM CỐ ĐỊNH'),
+                      _buildReadOnlyField(null, 'Mã số phòng ID đang hẹn: $_maPhong'),
+                      
+                      const SizedBox(height: 24),
+                      _buildLabel('TÙY CHỌN CẬP NHẬT'),
+                      _buildNotifySwitch(),
+                      
+                      const SizedBox(height: 24),
+                      _buildLabel('GHI CHÚ NỘI BỘ', isMuted: true),
+                      _buildTextArea(_noteController),
+                      
+                      const SizedBox(height: 32),
+                      _isLoading 
+                          ? const Center(child: CircularProgressIndicator(color: AppTheme.deepPurple))
+                          : _buildSubmitButton(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // --- AppBar Gradient ---
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       flexibleSpace: Container(
@@ -89,12 +263,12 @@ class _AdEditLichState extends State<AdEditLich> {
         ),
       ),
       leading: const Icon(Icons.menu, color: Colors.white),
-      title: Row(
+      title: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
-          const SizedBox(width: 8),
-          const Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
+          Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
+          SizedBox(width: 8),
+          Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
         ],
       ),
       centerTitle: true,
@@ -117,7 +291,6 @@ class _AdEditLichState extends State<AdEditLich> {
     );
   }
 
-  // --- Header phụ màu tím ---
   Widget _buildSubHeader(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -133,7 +306,7 @@ class _AdEditLichState extends State<AdEditLich> {
           const Expanded(
             child: Text('Chỉnh sửa lịch hẹn', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
           ),
-          Text('ID: #L882', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+          Text('ID: #L$_maLichHen', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
         ],
       ),
     );
@@ -150,48 +323,82 @@ class _AdEditLichState extends State<AdEditLich> {
     );
   }
 
-  Widget _buildInputField(String? label, String value, {bool hasBorder = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (label != null) Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        const SizedBox(height: 4),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(12),
-            border: hasBorder ? Border.all(color: AppTheme.deepPurple.withOpacity(0.5)) : Border.all(color: const Color(0xFFF3F4F6)),
-          ),
-          child: Text(value, style: const TextStyle(fontSize: 14, color: Color(0xFF1A0D2D))),
+  Widget _buildInputField(String hint, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 14, color: Color(0xFF1A0D2D)),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Color(0xFFCCCCCC), fontSize: 14),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(14),
+          isDense: true,
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildSelectBox(String text) {
+  Widget _buildReadOnlyField(String? label, String value) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.deepPurple.withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
-      child: Text(text, style: const TextStyle(fontSize: 14)),
+      child: Text(value, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+    );
+  }
+
+  Widget _buildSelectBox(String text, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.deepPurple.withOpacity(0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(text, style: const TextStyle(fontSize: 14)),
+            Icon(Icons.arrow_drop_down, color: AppTheme.deepPurple, size: 18),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildTimeQuickOptions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: ['+30 phút', '+1 giờ', 'Dời sang chiều'].map((opt) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: const Color(0xFFF3EDF7), borderRadius: BorderRadius.circular(8)),
-          child: Text(opt, style: TextStyle(color: AppTheme.deepPurple, fontSize: 11)),
-        );
-      }).toList(),
+      children: [
+        _buildQuickOptButton('+30 phút', () => _quickAdjustTime(30)),
+        _buildQuickOptButton('+1 giờ', () => _quickAdjustTime(60)),
+        _buildQuickOptButton('Dời sang chiều', _shiftToAfternoon),
+      ],
+    );
+  }
+
+  Widget _buildQuickOptButton(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(color: const Color(0xFFF3EDF7), borderRadius: BorderRadius.circular(8)),
+        child: Text(label, style: TextStyle(color: AppTheme.deepPurple, fontSize: 11, fontWeight: FontWeight.w500)),
+      ),
     );
   }
 
@@ -213,20 +420,30 @@ class _AdEditLichState extends State<AdEditLich> {
     );
   }
 
-  Widget _buildTextArea() {
+  Widget _buildTextArea(TextEditingController controller) {
     return Container(
+      width: double.infinity,
       height: 80,
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
+      child: TextField(
+        controller: controller,
+        maxLines: null,
+        style: const TextStyle(fontSize: 14),
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.all(12),
+        ),
+      ),
     );
   }
 
   Widget _buildSubmitButton() {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: _handleSaveUpdate,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.deepPurple,
         minimumSize: const Size(double.infinity, 56),
@@ -240,6 +457,12 @@ class _AdEditLichState extends State<AdEditLich> {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppTheme.deepPurple,
+      currentIndex: 2,
+      onTap: (int index) {
+        if (index != 2) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
         BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Hóa đơn'),
