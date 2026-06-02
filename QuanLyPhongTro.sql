@@ -685,3 +685,13 @@ GO
 SELECT MaTaiKhoan, TenDangNhap, VaiTro, TrangThai 
 FROM [dbo].[TaiKhoan]
 GO
+
+-- Bổ sung thêm các trường phục vụ xác thực chữ ký số chống sửa đổi dữ liệu hợp đồng
+ALTER TABLE [dbo].[HopDongThue] ADD 
+    [UrlChuKyKhach] [nvarchar](max) NULL,  -- Lưu link ảnh chữ ký vẽ từ Flutter lên Supabase
+    [ContractHash] [varchar](255) NULL,   -- Mã SHA-255 băm toàn bộ nội dung hợp đồng để chống sửa đổi
+    [PublicKeyKhach] [varchar](max) NULL,  -- Lưu khóa công khai của khách hàng để đối chiếu ký số
+    [NgayKy] [datetime] NULL
+GO
+
+SELECT MaKhach, HoTen, Sdt FROM KhachThue WHERE HoTen LIKE N'%Nguyễn Văn An%'
