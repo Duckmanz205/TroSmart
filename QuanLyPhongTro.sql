@@ -695,3 +695,34 @@ ALTER TABLE [dbo].[HopDongThue] ADD
 GO
 
 SELECT MaKhach, HoTen, Sdt FROM KhachThue WHERE HoTen LIKE N'%Nguyễn Văn An%'
+---- du lieu o ghep------
+-- 1. CẬP NHẬT TRẠNG THÁI PHÒNG 2 SANG "ĐANG THUÊ" ĐỂ ĐỒNG BỘ VỚI HỢP ĐỒNG
+UPDATE [dbo].[Phong]
+SET [TrangThai] = N'Đang thuê'
+WHERE [MaPhong] = 2;
+
+-- 2. SEED DỮ LIỆU HOÁ ĐƠN MỚI NHẤT CHO PHÒNG 2 (ĐỂ APP CÓ CĂN CỨ CHIA TIỀN ĐIỆN NƯỚC)
+INSERT INTO [dbo].[HoaDon] 
+(
+    [MaPhong], [MaKhach], [Thang], [Nam], [TienPhong], 
+    [ChiSoDienCu], [ChiSoDienMoi], [DonGiaDien], 
+    [ChiSoNuocCu], [ChiSoNuocMoi], [DonGiaNuoc], 
+    [TienDichVu], [MoTaDichVu], [PhuPhi], [MoTaPhuPhi], 
+    [TongTien], [TrangThai], [NgayLap], [HanThanhToan]
+) 
+VALUES 
+(
+    2, 1, 6, 2026, 2200000.00, 
+    1250, 1350, 3500.00,  -- Tiền điện = (1350-1250)*3500 = 350.000đ
+    430, 440, 20000.00,   -- Tiền nước = (440-430)*20000 = 200.000đ
+    50000.00, N'Internet cáp quang', 0.00, NULL, 
+    2800000.00, N'Chưa thanh toán', CAST(N'2026-06-01' AS Date), CAST(N'2026-06-05' AS Date)
+);
+
+-- 3. KIỂM TRA LẠI LUỒNG LOGIC XEM ĐÃ KHỚP NHAU CHƯA
+SELECT p.SoPhong, h.TrangThai AS TrangThaiHopDong, hd.TongTien AS TienHoaDonThang
+FROM Phong p
+JOIN HopDongThue h ON p.MaPhong = h.MaPhong
+JOIN HoaDon hd ON p.MaPhong = hd.MaPhong
+WHERE h.MaKhach = 1;
+GO
