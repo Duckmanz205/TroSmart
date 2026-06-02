@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
-import 'package:trosmart/views/user/UR_Chat.dart';
+import 'package:trosmart/views/user/UR_DanhSachChat.dart';
 import 'package:trosmart/views/user/UR_HopDong.dart';
 import 'package:trosmart/views/user/UR_OGhep.dart';
 import 'package:trosmart/views/user/UR_ThongBao.dart';
