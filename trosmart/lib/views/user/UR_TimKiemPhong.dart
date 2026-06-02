@@ -3,6 +3,7 @@ import 'package:trosmart/logic/auth/auth_service.dart';
 
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_view_model.dart';
+import '../../shared/api_constants.dart';
 import 'UR_ChiTietPhong.dart';
 import 'UR_DatLichXemPhong.dart';
 
@@ -838,6 +839,7 @@ class _EnhancedRoomSearchCard extends StatelessWidget {
     final imageUrl = (room.hinhAnhPhong?.trim().isNotEmpty == true)
         ? room.hinhAnhPhong?.trim()
         : room.hinhAnhCoSo?.trim();
+    final formattedPath = ApiConstants.formatImageUrl(imageUrl);
 
     return Stack(
       children: [
@@ -849,9 +851,9 @@ class _EnhancedRoomSearchCard extends StatelessWidget {
           child: SizedBox(
             height: 156,
             width: double.infinity,
-            child: imageUrl != null && imageUrl.isNotEmpty
+            child: formattedPath != null && formattedPath.isNotEmpty
                 ? Image.network(
-                    imageUrl,
+                    formattedPath,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return _buildImagePlaceholder();

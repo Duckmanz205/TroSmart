@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
 
 import '../../logic/admin/phong_service.dart';
+import '../../logic/auth/auth_service.dart';
 import '../../models/admin/phong_model.dart';
+import '../../shared/api_constants.dart';
 import 'AD_ThemPhong.dart';
 import 'AD_ChiTietPhong.dart';
 
 class PhongManagementView extends StatefulWidget {
-  final int maCoSo;
-  final String tenCoSo;
+  final int? maCoSo;
+  final String? tenCoSo;
 
-  const PhongManagementView({
-    super.key,
-    required this.maCoSo,
-    required this.tenCoSo,
-  });
+  const PhongManagementView({super.key, this.maCoSo, this.tenCoSo});
 
   @override
-  State<PhongManagementView> createState() =>
-      _PhongManagementViewState();
+  State<PhongManagementView> createState() => _PhongManagementViewState();
 }
 
-class _PhongManagementViewState
-    extends State<PhongManagementView> {
+class _PhongManagementViewState extends State<PhongManagementView> {
   final PhongService _service = PhongService();
-  final TextEditingController _searchController =
-      TextEditingController();
+  final AuthService _authService = AuthService();
+  final TextEditingController _searchController = TextEditingController();
 
   late Future<List<PhongModel>> _futurePhongs;
+  int? _maQuanLy;
 
   String _keyword = '';
   String _statusFilter = 'Tất cả';
@@ -34,7 +31,12 @@ class _PhongManagementViewState
   @override
   void initState() {
     super.initState();
-    _futurePhongs = _service.getByCoSo(widget.maCoSo);
+    _futurePhongs = _loadPhongs();
+  }
+
+  Future<List<PhongModel>> _loadPhongs() async {
+    _maQuanLy = await _authService.getMaQuanLy();
+    return _service.getAll(maQuanLy: _maQuanLy);
   }
 
   @override
@@ -45,8 +47,7 @@ class _PhongManagementViewState
 
   Future<void> _reload() async {
     setState(() {
-      _futurePhongs =
-          _service.getByCoSo(widget.maCoSo);
+      _futurePhongs = _service.getAll(maQuanLy: _maQuanLy);
     });
   }
 
@@ -58,42 +59,31 @@ class _PhongManagementViewState
         (x) => x.toLowerCase().contains(keyword),
       );
 
-      final matchKeyword = keyword.isEmpty ||
+      final matchKeyword =
+          keyword.isEmpty ||
           item.soPhong.toLowerCase().contains(keyword) ||
           item.trangThai.toLowerCase().contains(keyword) ||
-          (item.moTa?.toLowerCase().contains(keyword) ??
-              false) ||
-          (item.tang
-                  ?.toString()
-                  .contains(keyword) ??
-              false) ||
+          (item.moTa?.toLowerCase().contains(keyword) ?? false) ||
+          (item.tang?.toString().contains(keyword) ?? false) ||
           matchTienIch;
 
       final matchStatus =
-          _statusFilter == 'Tất cả' ||
-              item.trangThai == _statusFilter;
+          _statusFilter == 'Tất cả' || item.trangThai == _statusFilter;
 
       return matchKeyword && matchStatus;
     }).toList();
   }
 
-  int _countStatus(
-      List<PhongModel> list,
-      String status,
-      ) {
-    return list
-        .where((x) => x.trangThai == status)
-        .length;
+  int _countStatus(List<PhongModel> list, String status) {
+    return list.where((x) => x.trangThai == status).length;
   }
 
   Future<void> _openAddPhong() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => AddPhongView(
-          maCoSo: widget.maCoSo,
-          tenCoSo: widget.tenCoSo,
-        ),
+        builder: (_) =>
+            AddPhongView(maCoSo: widget.maCoSo!, tenCoSo: widget.tenCoSo!),
       ),
     );
 
@@ -104,16 +94,12 @@ class _PhongManagementViewState
     }
   }
 
-  Future<void> _openPhongDetail(
-      PhongModel room,
-      ) async {
+  Future<void> _openPhongDetail(PhongModel room) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PhongDetailView(
-          maPhong: room.maPhong,
-          tenCoSo: widget.tenCoSo,
-        ),
+        builder: (_) =>
+            PhongDetailView(maPhong: room.maPhong, tenCoSo: widget.tenCoSo!),
       ),
     );
 
@@ -135,48 +121,33 @@ class _PhongManagementViewState
         icon: const Icon(Icons.add_rounded),
         label: const Text(
           'Thêm phòng',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
       body: SafeArea(
         child: FutureBuilder<List<PhongModel>>(
           future: _futurePhongs,
           builder: (context, snapshot) {
-            if (snapshot.connectionState ==
-                ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF8A36B0),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFF8A36B0)),
               );
             }
 
             if (snapshot.hasError) {
-              return _buildError(
-                snapshot.error.toString(),
-              );
+              return _buildError(snapshot.error.toString());
             }
 
             final data = snapshot.data ?? [];
-            final filteredData =
-            _applyFilter(data);
+            final filteredData = _applyFilter(data);
 
             return RefreshIndicator(
               onRefresh: _reload,
               child: SingleChildScrollView(
-                physics:
-                const AlwaysScrollableScrollPhysics(),
-                padding:
-                const EdgeInsets.fromLTRB(
-                    18,
-                    14,
-                    18,
-                    100),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 100),
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildBackRow(),
                     const SizedBox(height: 14),
@@ -255,7 +226,7 @@ class _PhongManagementViewState
 
   Widget _buildSubHeader(int total) {
     return Text(
-      '${widget.tenCoSo} — $total phòng',
+      'Tất cả cơ sở — $total phòng',
       style: TextStyle(
         color: Colors.black.withValues(alpha: 0.65),
         fontSize: 13,
@@ -269,8 +240,7 @@ class _PhongManagementViewState
       children: [
         Expanded(
           child: _statCard(
-            value:
-            '${_countStatus(list, 'Đang thuê')}',
+            value: '${_countStatus(list, 'Đang thuê')}',
             label: 'Đang thuê',
             color: const Color(0xFF19D8B3),
           ),
@@ -278,8 +248,7 @@ class _PhongManagementViewState
         const SizedBox(width: 10),
         Expanded(
           child: _statCard(
-            value:
-            '${_countStatus(list, 'Trống')}',
+            value: '${_countStatus(list, 'Trống')}',
             label: 'Còn trống',
             color: const Color(0xFFF5A623),
           ),
@@ -287,8 +256,7 @@ class _PhongManagementViewState
         const SizedBox(width: 10),
         Expanded(
           child: _statCard(
-            value:
-            '${_countStatus(list, 'Bảo trì')}',
+            value: '${_countStatus(list, 'Bảo trì')}',
             label: 'Bảo trì',
             color: const Color(0xFFFF4D4F),
           ),
@@ -306,12 +274,10 @@ class _PhongManagementViewState
       height: 78,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-        BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
-        mainAxisAlignment:
-        MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             value,
@@ -325,9 +291,7 @@ class _PhongManagementViewState
           Text(
             label,
             style: TextStyle(
-              color:
-              Colors.black.withValues(
-                  alpha: 0.6),
+              color: Colors.black.withValues(alpha: 0.6),
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -338,23 +302,16 @@ class _PhongManagementViewState
   }
 
   Widget _buildFilterChips() {
-    final filters = [
-      'Tất cả',
-      'Đang thuê',
-      'Trống',
-      'Bảo trì'
-    ];
+    final filters = ['Tất cả', 'Đang thuê', 'Trống', 'Bảo trì'];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: filters.map((filter) {
-          final selected =
-              _statusFilter == filter;
+          final selected = _statusFilter == filter;
 
           return Padding(
-            padding:
-            const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
               onTap: () {
                 setState(() {
@@ -362,30 +319,20 @@ class _PhongManagementViewState
                 });
               },
               child: Container(
-                padding:
-                const EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 9,
                 ),
                 decoration: BoxDecoration(
-                  color: selected
-                      ? const Color(
-                      0xFF7430A3)
-                      : Colors.white,
-                  borderRadius:
-                  BorderRadius.circular(
-                      20),
+                  color: selected ? const Color(0xFF7430A3) : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   filter,
                   style: TextStyle(
-                    color: selected
-                        ? Colors.white
-                        : const Color(
-                        0xFF17151F),
+                    color: selected ? Colors.white : const Color(0xFF17151F),
                     fontSize: 11,
-                    fontWeight:
-                    FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -407,16 +354,12 @@ class _PhongManagementViewState
           });
         },
         decoration: InputDecoration(
-          hintText:
-          'Tìm phòng hoặc tiện ích...',
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-          ),
+          hintText: 'Tìm phòng hoặc tiện ích...',
+          prefixIcon: const Icon(Icons.search_rounded),
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius:
-            BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide.none,
           ),
         ),
@@ -424,24 +367,16 @@ class _PhongManagementViewState
     );
   }
 
-  Widget _buildRoomList(
-      List<PhongModel> rooms,
-      ) {
+  Widget _buildRoomList(List<PhongModel> rooms) {
     return ListView.separated(
       itemCount: rooms.length,
       shrinkWrap: true,
-      physics:
-      const NeverScrollableScrollPhysics(),
-      separatorBuilder: (_, __) =>
-      const SizedBox(height: 14),
+      physics: const NeverScrollableScrollPhysics(),
+      separatorBuilder: (_, __) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
         final room = rooms[index];
 
-        return _RoomCard(
-          room: room,
-          onTap: () =>
-              _openPhongDetail(room),
-        );
+        return _RoomCard(room: room, onTap: () => _openPhongDetail(room));
       },
     );
   }
@@ -452,22 +387,15 @@ class _PhongManagementViewState
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-        BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: const Column(
         children: [
-          Icon(
-            Icons.meeting_room_outlined,
-            color: Color(0xFF7430A3),
-            size: 40,
-          ),
+          Icon(Icons.meeting_room_outlined, color: Color(0xFF7430A3), size: 40),
           SizedBox(height: 10),
           Text(
             'Không có phòng phù hợp',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w900),
           ),
         ],
       ),
@@ -475,9 +403,7 @@ class _PhongManagementViewState
   }
 
   Widget _buildError(String error) {
-    return Center(
-      child: Text(error),
-    );
+    return Center(child: Text(error));
   }
 }
 
@@ -485,10 +411,7 @@ class _RoomCard extends StatelessWidget {
   final PhongModel room;
   final VoidCallback? onTap;
 
-  const _RoomCard({
-    required this.room,
-    this.onTap,
-  });
+  const _RoomCard({required this.room, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -500,30 +423,24 @@ class _RoomCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius:
-          BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color:
-              Colors.black.withValues(
-                  alpha: 0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius:
-              BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(18),
               child: SizedBox(
                 height: 190,
                 width: double.infinity,
-                child: _buildImageBox(
-                    statusStyle),
+                child: _buildImageBox(statusStyle),
               ),
             ),
 
@@ -533,37 +450,27 @@ class _RoomCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    _displayRoomName(
-                        room.soPhong),
+                    '${_displayRoomName(room.soPhong)}${room.tenCoSo != null && room.tenCoSo!.isNotEmpty ? " - ${room.tenCoSo}" : ""}',
                     style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight:
-                      FontWeight.w900,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ),
                 Container(
-                  padding:
-                  const EdgeInsets
-                      .symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                    statusStyle.bgColor,
-                    borderRadius:
-                    BorderRadius
-                        .circular(
-                        14),
+                    color: statusStyle.bgColor,
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     room.trangThai,
                     style: TextStyle(
-                      color: statusStyle
-                          .mainColor,
-                      fontWeight:
-                      FontWeight.w900,
+                      color: statusStyle.mainColor,
+                      fontWeight: FontWeight.w900,
                       fontSize: 11,
                     ),
                   ),
@@ -574,55 +481,36 @@ class _RoomCard extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              room.tang != null
-                  ? 'Tầng ${room.tang}'
-                  : 'Chưa có tầng',
+              room.tang != null ? 'Tầng ${room.tang}' : 'Chưa có tầng',
               style: TextStyle(
-                color:
-                Colors.black.withValues(
-                    alpha: 0.55),
+                color: Colors.black.withValues(alpha: 0.55),
                 fontSize: 13,
-                fontWeight:
-                FontWeight.w600,
+                fontWeight: FontWeight.w600,
               ),
             ),
 
             const SizedBox(height: 10),
 
             SingleChildScrollView(
-              scrollDirection:
-              Axis.horizontal,
+              scrollDirection: Axis.horizontal,
               child: Row(
-                children:
-                room.tienIches.map((item) {
+                children: room.tienIches.map((item) {
                   return Container(
-                    margin:
-                    const EdgeInsets.only(
-                        right: 8),
-                    padding:
-                    const EdgeInsets
-                        .symmetric(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(
-                          0xFFF2E9FA),
-                      borderRadius:
-                      BorderRadius
-                          .circular(
-                          14),
+                      color: const Color(0xFFF2E9FA),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
                       item,
-                      style:
-                      const TextStyle(
-                        color: Color(
-                            0xFF7B2CBF),
+                      style: const TextStyle(
+                        color: Color(0xFF7B2CBF),
                         fontSize: 11,
-                        fontWeight:
-                        FontWeight
-                            .w800,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   );
@@ -646,26 +534,18 @@ class _RoomCard extends StatelessWidget {
             Text(
               'VNĐ / tháng',
               style: TextStyle(
-                color:
-                Colors.black.withValues(
-                    alpha: 0.48),
+                color: Colors.black.withValues(alpha: 0.48),
                 fontSize: 11,
-                fontWeight:
-                FontWeight.w600,
+                fontWeight: FontWeight.w600,
               ),
             ),
 
-            if (room.moTa != null &&
-                room.moTa!
-                    .trim()
-                    .isNotEmpty) ...[
+            if (room.moTa != null && room.moTa!.trim().isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(
                 room.moTa!,
                 style: TextStyle(
-                  color: Colors.black
-                      .withValues(
-                      alpha: 0.55),
+                  color: Colors.black.withValues(alpha: 0.55),
                   fontSize: 12,
                   height: 1.4,
                 ),
@@ -677,25 +557,18 @@ class _RoomCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImageBox(
-      _RoomStatusStyle style) {
-    final imagePath =
-    room.hinhAnhPhong?.trim();
+  Widget _buildImageBox(_RoomStatusStyle style) {
+    final formattedPath = ApiConstants.formatImageUrl(room.hinhAnhPhong);
 
-    if (imagePath != null &&
-        imagePath.isNotEmpty) {
-      if (imagePath.startsWith('assets/')) {
-        return Image.asset(
-          imagePath,
-          fit: BoxFit.cover,
-        );
+    if (formattedPath != null && formattedPath.isNotEmpty) {
+      if (formattedPath.startsWith('assets/')) {
+        return Image.asset(formattedPath, fit: BoxFit.cover);
       }
 
       return Image.network(
-        imagePath,
+        formattedPath,
         fit: BoxFit.cover,
-        errorBuilder:
-            (_, __, ___) => Container(
+        errorBuilder: (_, __, ___) => Container(
           color: style.bgColor,
           child: Icon(
             Icons.image_not_supported,
@@ -709,9 +582,7 @@ class _RoomCard extends StatelessWidget {
     return Container(
       color: style.bgColor,
       child: Icon(
-        room.baoTri
-            ? Icons.build_rounded
-            : Icons.home_outlined,
+        room.baoTri ? Icons.build_rounded : Icons.home_outlined,
         color: style.mainColor,
         size: 42,
       ),
@@ -721,9 +592,7 @@ class _RoomCard extends StatelessWidget {
   String _displayRoomName(String soPhong) {
     final value = soPhong.trim();
 
-    if (value
-        .toLowerCase()
-        .startsWith('p.')) {
+    if (value.toLowerCase().startsWith('p.')) {
       return value;
     }
 
@@ -736,9 +605,7 @@ class _RoomCard extends StatelessWidget {
 
     int count = 0;
 
-    for (int i = text.length - 1;
-    i >= 0;
-    i--) {
+    for (int i = text.length - 1; i >= 0; i--) {
       buffer.write(text[i]);
       count++;
 
@@ -747,16 +614,10 @@ class _RoomCard extends StatelessWidget {
       }
     }
 
-    return buffer
-        .toString()
-        .split('')
-        .reversed
-        .join();
+    return buffer.toString().split('').reversed.join();
   }
 
-  _RoomStatusStyle _statusStyle(
-      PhongModel room,
-      ) {
+  _RoomStatusStyle _statusStyle(PhongModel room) {
     if (room.trangThai == 'Đang thuê') {
       return const _RoomStatusStyle(
         mainColor: Color(0xFF19D8B3),
@@ -782,8 +643,5 @@ class _RoomStatusStyle {
   final Color mainColor;
   final Color bgColor;
 
-  const _RoomStatusStyle({
-    required this.mainColor,
-    required this.bgColor,
-  });
+  const _RoomStatusStyle({required this.mainColor, required this.bgColor});
 }

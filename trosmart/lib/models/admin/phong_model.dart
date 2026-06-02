@@ -4,6 +4,7 @@ class PhongModel {
   final num giaThue;
   final String trangThai;
   final int maCoSo;
+  final String? tenCoSo;
 
   final int? tang;
   final num? dienTich;
@@ -20,6 +21,7 @@ class PhongModel {
     required this.giaThue,
     required this.trangThai,
     required this.maCoSo,
+    this.tenCoSo,
     this.tang,
     this.dienTich,
     this.soNguoiToiDa,
@@ -38,6 +40,7 @@ class PhongModel {
       giaThue: get('GiaThue', 'giaThue') ?? 0,
       trangThai: '${get('TrangThai', 'trangThai') ?? ''}',
       maCoSo: get('MaCoSo', 'maCoSo') ?? 0,
+      tenCoSo: get('TenCoSo', 'tenCoSo'),
       tang: get('Tang', 'tang'),
       dienTich: get('DienTich', 'dienTich'),
       soNguoiToiDa: get('SoNguoiToiDa', 'soNguoiToiDa'),

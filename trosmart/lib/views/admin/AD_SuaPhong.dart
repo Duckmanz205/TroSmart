@@ -8,6 +8,7 @@ import 'AD_XoaPhong.dart';
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_model.dart';
 import '../../models/admin/tien_ich_model.dart';
+import '../../shared/api_constants.dart';
 
 class EditPhongView extends StatefulWidget {
   final PhongModel room;
@@ -696,7 +697,8 @@ class _EditPhongViewState extends State<EditPhongView> {
     }
 
     final path = widget.room.hinhAnhPhong?.trim();
-    if (path == null || path.isEmpty) {
+    final formattedPath = ApiConstants.formatImageUrl(path);
+    if (formattedPath == null || formattedPath.isEmpty) {
       return const Center(
         child: Icon(
           Icons.image_outlined,
@@ -706,9 +708,9 @@ class _EditPhongViewState extends State<EditPhongView> {
       );
     }
 
-    if (path.startsWith('assets/')) {
+    if (formattedPath.startsWith('assets/')) {
       return Image.asset(
-        path,
+        formattedPath,
         fit: BoxFit.cover,
         errorBuilder: (_, _, _) {
           return const Center(
@@ -723,7 +725,7 @@ class _EditPhongViewState extends State<EditPhongView> {
     }
 
     return Image.network(
-      path,
+      formattedPath,
       fit: BoxFit.cover,
       errorBuilder: (_, _, _) {
         return const Center(

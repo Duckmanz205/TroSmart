@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../logic/admin/invoice_controller.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../shared/app_colors.dart';
+import '../../models/thong_bao.dart';
+import '../../services/thong_bao_service.dart';
 
 class ApprovePaymentScreen extends StatefulWidget {
   const ApprovePaymentScreen({super.key});
@@ -388,6 +390,22 @@ class _ApprovePaymentScreenState extends State<ApprovePaymentScreen> {
       final ok = await controller.updateStatus(inv.maHoaDon, status);
       if (mounted) {
         if (ok) {
+          // Send notification about approval/rejection
+          try {
+            await ThongBaoService().sendThongBao(ThongBao(
+              maThongBao: 0,
+              maKhach: inv.maKhach ?? 1,
+              tieuDe: isApproved ? 'Thanh toán được phê duyệt' : 'Thanh toán bị từ chối',
+              noiDung: isApproved 
+                ? 'Yêu cầu thanh toán hóa đơn phòng ${inv.tenPhong.isNotEmpty ? inv.tenPhong : inv.maPhong} tháng ${inv.thang}/${inv.nam} đã được phê duyệt thành công.'
+                : 'Yêu cầu thanh toán hóa đơn phòng ${inv.tenPhong.isNotEmpty ? inv.tenPhong : inv.maPhong} tháng ${inv.thang}/${inv.nam} bị từ chối do minh chứng không chính xác. Vui lòng thử lại.',
+              daDoc: false,
+              loaiThongBao: 'Hệ thống',
+            ));
+          } catch (e) {
+            debugPrint("Error sending thong bao: $e");
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Đã $actionText giao dịch thành công!'),
