@@ -466,12 +466,9 @@ GO
 -- Lịch Sử Thanh Toán (Dữ liệu mới) - Để trống ban đầu theo yêu cầu của người dùng
 GO
 
--- Thông Báo (Dữ liệu mới)
-SET IDENTITY_INSERT [dbo].[ThongBao] ON
-INSERT [dbo].[ThongBao] ([MaThongBao], [MaKhach], [TieuDe], [NoiDung]) VALUES (1, 1, N'Đóng tiền nhà tháng 10', N'Vui lòng thanh toán tiền nhà tháng 10 trước ngày 05/10/2024')
-INSERT [dbo].[ThongBao] ([MaThongBao], [MaKhach], [TieuDe], [NoiDung]) VALUES (2, 2, N'Bảo trì thang máy', N'Thang máy sẽ bảo trì vào lúc 9h-11h ngày 10/10/2024')
-SET IDENTITY_INSERT [dbo].[ThongBao] OFF
+-- Thông Báo (Không chèn dữ liệu mẫu cũ để tránh rác)
 GO
+
 
 -- Dữ liệu mẫu ChiSoDienNuoc (Đã chuyển xuống sau khi đã insert Phong)
 SET IDENTITY_INSERT [dbo].[ChiSoDienNuoc] ON

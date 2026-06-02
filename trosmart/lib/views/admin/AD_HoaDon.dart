@@ -16,6 +16,8 @@ class InvoiceScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             SectionTitleAction(),
+            SizedBox(height: 16),
+            MonthYearSelector(),
             SizedBox(height: 24),
             SummaryGrid(),
             SizedBox(height: 24),

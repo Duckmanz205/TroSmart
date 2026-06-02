@@ -9,6 +9,11 @@ class SuCo {
   final DateTime? ngayBao;
   final DateTime? ngayXuLy;
 
+  // Thuộc tính động lấy từ navigation objects của backend C#
+  final String? soPhong;
+  final String? tenCoSo;
+  final String? hoTenKhach;
+
   SuCo({
     required this.maSuCo,
     required this.maPhong,
@@ -19,6 +24,9 @@ class SuCo {
     this.trangThai,
     this.ngayBao,
     this.ngayXuLy,
+    this.soPhong,
+    this.tenCoSo,
+    this.hoTenKhach,
   });
 
   factory SuCo.fromJson(Map<String, dynamic> json) {
@@ -32,6 +40,9 @@ class SuCo {
       trangThai: json['trangThai'],
       ngayBao: json['ngayBao'] != null ? DateTime.parse(json['ngayBao']) : null,
       ngayXuLy: json['ngayXuLy'] != null ? DateTime.parse(json['ngayXuLy']) : null,
+      soPhong: json['maPhongNavigation']?['soPhong'],
+      tenCoSo: json['maPhongNavigation']?['maCoSoNavigation']?['tenCoSo'],
+      hoTenKhach: json['maKhachNavigation']?['hoTen'],
     );
   }
 

@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
+import '../auth/auth_service.dart';
 
 class UtilityService {
   static const String baseUrl = 'http://10.0.2.2:5137/api';
+  final AuthService _authService = AuthService();
   
   final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
@@ -12,10 +14,17 @@ class UtilityService {
   /// Lấy danh sách chỉ số điện nước tất cả phòng theo tháng/năm
   Future<List<Map<String, dynamic>>> getReadings(int month, int year) async {
     try {
-      final response = await _dio.get('/UtilityReading', queryParameters: {
-        'month': month,
-        'year': year,
-      });
+      final token = await _authService.getToken();
+      final response = await _dio.get(
+        '/UtilityReading',
+        queryParameters: {
+          'month': month,
+          'year': year,
+        },
+        options: Options(
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
+      );
 
       if (response.statusCode == 200) {
         final List data = response.data;
@@ -40,15 +49,22 @@ class UtilityService {
     int? chiSoNuocMoi,
   }) async {
     try {
-      await _dio.post('/UtilityReading', data: {
-        'maPhong': maPhong,
-        'thang': thang,
-        'nam': nam,
-        'chiSoDienCu': chiSoDienCu,
-        'chiSoDienMoi': chiSoDienMoi,
-        'chiSoNuocCu': chiSoNuocCu,
-        'chiSoNuocMoi': chiSoNuocMoi,
-      });
+      final token = await _authService.getToken();
+      await _dio.post(
+        '/UtilityReading',
+        data: {
+          'maPhong': maPhong,
+          'thang': thang,
+          'nam': nam,
+          'chiSoDienCu': chiSoDienCu,
+          'chiSoDienMoi': chiSoDienMoi,
+          'chiSoNuocCu': chiSoNuocCu,
+          'chiSoNuocMoi': chiSoNuocMoi,
+        },
+        options: Options(
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     } catch (e) {
@@ -59,7 +75,14 @@ class UtilityService {
   /// Lưu chỉ số điện nước cho nhiều phòng cùng lúc
   Future<void> saveBatchReadings(List<Map<String, dynamic>> readings) async {
     try {
-      await _dio.post('/UtilityReading/batch', data: readings);
+      final token = await _authService.getToken();
+      await _dio.post(
+        '/UtilityReading/batch',
+        data: readings,
+        options: Options(
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     } catch (e) {
@@ -70,10 +93,17 @@ class UtilityService {
   /// Cập nhật đơn giá điện nước cho cơ sở
   Future<void> updateUtilityPrices(int maCoSo, double donGiaDien, double donGiaNuoc) async {
     try {
-      await _dio.patch('/CoSo/$maCoSo/utility-prices', data: {
-        'donGiaDien': donGiaDien,
-        'donGiaNuoc': donGiaNuoc,
-      });
+      final token = await _authService.getToken();
+      await _dio.patch(
+        '/CoSo/$maCoSo/utility-prices',
+        data: {
+          'donGiaDien': donGiaDien,
+          'donGiaNuoc': donGiaNuoc,
+        },
+        options: Options(
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     } catch (e) {

@@ -406,7 +406,9 @@ class InvoiceList extends StatelessWidget {
             Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey.shade400),
             const SizedBox(height: 12),
             Text(
-              "Chưa có hóa đơn nào trong tháng ${controller.selectedMonth}/${controller.selectedYear}.",
+              controller.selectedMonth == 0
+                  ? "Chưa có hóa đơn nào trong hệ thống."
+                  : "Chưa có hóa đơn nào trong tháng ${controller.selectedMonth}/${controller.selectedYear}.",
               style: TextStyle(color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
@@ -625,6 +627,91 @@ class InvoiceCard extends StatelessWidget {
         ],
       ),
     ),
+    );
+  }
+}
+
+class MonthYearSelector extends StatelessWidget {
+  const MonthYearSelector({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<InvoiceController>();
+    final currentMonth = controller.selectedMonth;
+    final currentYear = controller.selectedYear;
+
+    return Container(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          // Nút chọn "Tất cả các tháng"
+          _buildItem(
+            context,
+            controller,
+            label: 'Tất cả các tháng',
+            isSelected: currentMonth == 0 && currentYear == 0,
+            onTap: () => controller.changeMonthYear(0, 0),
+          ),
+          const SizedBox(width: 8),
+          // Danh sách các tháng trong năm hiện tại
+          ...List.generate(12, (index) {
+            final month = index + 1;
+            final isSel = currentMonth == month && currentYear == DateTime.now().year;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: _buildItem(
+                context,
+                controller,
+                label: 'Tháng $month/${DateTime.now().year}',
+                isSelected: isSel,
+                onTap: () => controller.changeMonthYear(month, DateTime.now().year),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItem(
+    BuildContext context,
+    InvoiceController controller, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF6E589E) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6E589E) : Colors.black12,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF6E589E).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected ? Colors.white : const Color(0xFF4B5563),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

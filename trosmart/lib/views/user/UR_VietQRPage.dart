@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/admin/invoice_model.dart';
 import '../../shared/app_theme.dart';
 import '../../logic/user/user_payment_controller.dart';
+import '../../models/thong_bao.dart';
+import '../../services/thong_bao_service.dart';
 
 class UrVietQRPage extends StatefulWidget {
   final InvoiceModel invoice;
@@ -510,6 +512,19 @@ class _UrVietQRPageState extends State<UrVietQRPage> {
                   final ok = await controller.submitPaymentProof(inv.maHoaDon);
                   if (mounted) {
                     if (ok) {
+                      // Send notification to Admin
+                      try {
+                        await ThongBaoService().sendThongBao(ThongBao(
+                          maThongBao: 0,
+                          maKhach: inv.maKhach ?? 1,
+                          tieuDe: 'Thanh toán tiền phòng',
+                          noiDung: '${inv.tenKhachThue.isNotEmpty ? inv.tenKhachThue : "Khách thuê"} đã tải lên minh chứng thanh toán cho phòng ${inv.tenPhong.isNotEmpty ? inv.tenPhong : inv.maPhong} với số tiền ${inv.tongTien.toInt()}đ.',
+                          daDoc: false,
+                          loaiThongBao: 'Hệ thống',
+                        ));
+                      } catch (e) {
+                        debugPrint("Error sending thong bao: $e");
+                      }
                       _showSuccessDialog();
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(

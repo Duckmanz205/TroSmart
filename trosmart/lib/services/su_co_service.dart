@@ -2,13 +2,20 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/su_co.dart';
 import '../shared/api_constants.dart';
+import '../logic/auth/auth_service.dart';
 
 class SuCoService {
+  final AuthService _authService = AuthService();
+
   // Lấy tất cả sự cố (Admin)
   Future<List<SuCo>> getAllSuCo() async {
     final url = Uri.parse('${ApiConstants.baseUrl}/SuCo');
     try {
-      final response = await http.get(url);
+      final token = await _authService.getToken();
+      final response = await http.get(
+        url,
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => SuCo.fromJson(json)).toList();
@@ -55,9 +62,13 @@ class SuCoService {
   Future<bool> updateSuCoStatus(int id, String trangThai) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/SuCo/$id/status');
     try {
+      final token = await _authService.getToken();
       final response = await http.put(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: json.encode(trangThai),
       );
       return response.statusCode == 204 || response.statusCode == 200;

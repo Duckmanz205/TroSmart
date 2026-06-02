@@ -24,11 +24,25 @@ namespace PhongTroAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SuCo>>> GetSuCos()
         {
-            return await _context.SuCos
+            var query = _context.SuCos
                 .Include(s => s.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
                 .Include(s => s.MaKhachNavigation)
-                .OrderByDescending(s => s.NgayBao)
-                .ToListAsync();
+                .AsQueryable();
+
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
+            if (maQuanLy.HasValue)
+            {
+                query = query.Where(s => s.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
+            }
+
+            return await query.OrderByDescending(s => s.NgayBao).ToListAsync();
         }
 
         // GET: api/SuCo/user/5
