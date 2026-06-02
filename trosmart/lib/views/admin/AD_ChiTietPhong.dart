@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_model.dart';
+import '../../shared/api_constants.dart';
 import 'AD_SuaPhong.dart';
 
 class PhongDetailView extends StatefulWidget {
@@ -365,9 +366,10 @@ class _PhongDetailViewState extends State<PhongDetailView> {
   }
 
   Widget _buildImage(String path) {
-    if (path.startsWith('assets/')) {
+    final formattedPath = ApiConstants.formatImageUrl(path) ?? path;
+    if (formattedPath.startsWith('assets/')) {
       return Image.asset(
-        path,
+        formattedPath,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) {
           return const Center(
@@ -382,7 +384,7 @@ class _PhongDetailViewState extends State<PhongDetailView> {
     }
 
     return Image.network(
-      path,
+      formattedPath,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) {
         return const Center(

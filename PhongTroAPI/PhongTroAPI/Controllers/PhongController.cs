@@ -19,10 +19,16 @@ namespace PhongTroAPI.Controllers
         // GET ALL thông tin
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? maQuanLy)
         {
-            var data = await _context.Phongs
-                .AsNoTracking()
+            var query = _context.Phongs.AsNoTracking().AsQueryable();
+
+            if (maQuanLy.HasValue)
+            {
+                query = query.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
+            }
+
+            var data = await query
                 .OrderBy(p => p.SoPhong)
                 .Select(p => new
                 {
@@ -40,6 +46,10 @@ namespace PhongTroAPI.Controllers
                     TenNguoiQuanLy = _context.CoSos.Where(cs => cs.MaCoSo == p.MaCoSo)
                         .Select(cs => _context.NguoiQuanLies.Where(n => n.MaQuanLy == cs.MaQuanLy).Select(n => n.HoTen).FirstOrDefault())
                         .FirstOrDefault() ?? "Admin",
+                    TenCoSo = _context.CoSos
+                        .Where(cs => cs.MaCoSo == p.MaCoSo)
+                        .Select(cs => cs.TenCoSo)
+                        .FirstOrDefault() ?? "",
                     HinhAnhPhong = _context.Set<HinhAnhPhong>()
                         .Where(h => h.MaPhong == p.MaPhong)
                         .Select(h => h.UrlAnh)

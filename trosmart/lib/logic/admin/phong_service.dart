@@ -10,6 +10,24 @@ import '../../models/admin/tien_ich_model.dart';
 class PhongService {
   static const String baseUrl = 'http://10.0.2.2:5137/api';
 
+  Future<List<PhongModel>> getAll({int? maQuanLy}) async {
+    final uri = maQuanLy == null
+        ? Uri.parse('$baseUrl/Phong')
+        : Uri.parse('$baseUrl/Phong?maQuanLy=$maQuanLy');
+
+    final response = await http.get(uri);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Không tải được danh sách tất cả phòng. '
+        'Status: ${response.statusCode}, Body: ${response.body}',
+      );
+    }
+
+    final List data = jsonDecode(response.body);
+    return data.map((item) => PhongModel.fromJson(item)).toList();
+  }
+
   Future<List<PhongModel>> getByCoSo(int maCoSo) async {
     final uri = Uri.parse('$baseUrl/Phong/coso/$maCoSo');
 

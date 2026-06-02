@@ -29,8 +29,18 @@ public class UtilityReadingController : ControllerBase
         if (month < 1 || month > 12 || year < 2000)
             return BadRequest(new { message = "Tháng/năm không hợp lệ." });
 
-        // Lấy tất cả phòng kèm thông tin cơ sở + khách thuê (từ hợp đồng)
-        var rooms = await _context.Phongs
+        var roomsQuery = _context.Phongs.AsQueryable();
+
+        int? maQuanLy = null;
+        var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+        if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
+        {
+            maQuanLy = mqId;
+            roomsQuery = roomsQuery.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
+        }
+
+        // Lấy tất cả phòng kèm thông tin cơ sở + khách thuê (từ hợp đồng) của manager
+        var rooms = await roomsQuery
             .Include(p => p.MaCoSoNavigation)
             .OrderBy(p => p.MaCoSo)
             .ThenBy(p => p.SoPhong)

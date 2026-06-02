@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../logic/admin/co_so_service.dart';
 import '../../models/admin/co_so_detail_model.dart';
+import '../../shared/api_constants.dart';
 import 'AD_ChiTietPhong.dart';
 import 'AD_QLPhong.dart';
 import 'AD_SuaCoSo.dart';
@@ -344,17 +345,15 @@ class _CoSoDetailViewState
 
   Widget _buildImageByPath(
       String? path) {
-    if (path == null ||
-        path.trim().isEmpty) {
+    final formattedPath = ApiConstants.formatImageUrl(path);
+    if (formattedPath == null || formattedPath.isEmpty) {
       return _facilityPlaceholder();
     }
 
-    final cleanPath = path.trim();
-
-    if (cleanPath.startsWith(
+    if (formattedPath.startsWith(
         'assets/')) {
       return Image.asset(
-        cleanPath,
+        formattedPath,
         fit: BoxFit.cover,
 
         errorBuilder:
@@ -364,7 +363,7 @@ class _CoSoDetailViewState
     }
 
     return Image.network(
-      cleanPath,
+      formattedPath,
       fit: BoxFit.cover,
 
       errorBuilder:

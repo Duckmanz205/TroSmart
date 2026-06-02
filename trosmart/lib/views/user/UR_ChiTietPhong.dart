@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/admin/phong_view_model.dart';
+import '../../shared/api_constants.dart';
 import 'UR_Chat.dart';
 
 class RoomDetailView extends StatelessWidget {
@@ -240,6 +241,7 @@ class RoomDetailView extends StatelessWidget {
 
   Widget _imageHero() {
     final imageUrl = room.hinhAnhPhong?.trim();
+    final formattedPath = ApiConstants.formatImageUrl(imageUrl);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -249,9 +251,9 @@ class RoomDetailView extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (imageUrl != null && imageUrl.isNotEmpty)
+            if (formattedPath != null && formattedPath.isNotEmpty)
               Image.network(
-                imageUrl,
+                formattedPath,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => _imagePlaceholder(),
                 loadingBuilder: (context, child, progress) {
@@ -534,6 +536,7 @@ class RoomDetailView extends StatelessWidget {
 
   Widget _facilityCard(BuildContext context) {
     final imageUrl = room.hinhAnhCoSo?.trim();
+    final formattedPath = ApiConstants.formatImageUrl(imageUrl);
 
     return _whiteBox(
       child: Row(
@@ -544,9 +547,9 @@ class RoomDetailView extends StatelessWidget {
             child: SizedBox(
               width: 78,
               height: 78,
-              child: imageUrl != null && imageUrl.isNotEmpty
+              child: formattedPath != null && formattedPath.isNotEmpty
                   ? Image.network(
-                      imageUrl,
+                      formattedPath,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
                           _facilityPlaceholder(),

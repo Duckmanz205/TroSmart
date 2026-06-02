@@ -9,6 +9,7 @@ import '../../logic/admin/co_so_service.dart';
 import '../../models/admin/co_so_detail_model.dart';
 import '../../models/admin/co_so_image_model.dart';
 import '../../models/admin/tien_ich_model.dart';
+import '../../shared/api_constants.dart';
 import 'AD_XoaCoSo.dart';
 
 class EditCoSoView extends StatefulWidget {
@@ -340,13 +341,11 @@ class _EditCoSoViewState extends State<EditCoSoView> {
       );
     }
 
-    if (_existingDisplayImagePath != null &&
-        _existingDisplayImagePath!.trim().isNotEmpty) {
-      final path = _existingDisplayImagePath!.trim();
-
-      if (path.startsWith('assets/')) {
+    final formattedPath = ApiConstants.formatImageUrl(_existingDisplayImagePath);
+    if (formattedPath != null && formattedPath.isNotEmpty) {
+      if (formattedPath.startsWith('assets/')) {
         return Image.asset(
-          path,
+          formattedPath,
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
@@ -355,7 +354,7 @@ class _EditCoSoViewState extends State<EditCoSoView> {
       }
 
       return Image.network(
-        path,
+        formattedPath,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
@@ -1040,9 +1039,10 @@ class _EditCoSoViewState extends State<EditCoSoView> {
   }
 
   Widget _buildCurrentExistingThumb(String path) {
-    if (path.startsWith('assets/')) {
+    final formattedPath = ApiConstants.formatImageUrl(path) ?? path;
+    if (formattedPath.startsWith('assets/')) {
       return Image.asset(
-        path,
+        formattedPath,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return _thumbPlaceholder();
@@ -1051,7 +1051,7 @@ class _EditCoSoViewState extends State<EditCoSoView> {
     }
 
     return Image.network(
-      path,
+      formattedPath,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
         return _thumbPlaceholder();

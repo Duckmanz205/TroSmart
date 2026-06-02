@@ -86,6 +86,8 @@ class InvoiceController extends ChangeNotifier {
   double soDienMoi = 0;
   double soNuocCu = 0;
   double soNuocMoi = 0;
+  bool isDienMoiEntered = false;
+  bool isNuocMoiEntered = false;
   double tienPhong = 0;
   double donGiaDien = 3500;
   double donGiaNuoc = 20000;
@@ -176,6 +178,8 @@ class InvoiceController extends ChangeNotifier {
     soNuocCu = 0.0;
     soDienMoi = 0;
     soNuocMoi = 0;
+    isDienMoiEntered = false;
+    isNuocMoiEntered = false;
     incidentalItems = [IncidentalFeeItem()];
     notifyListeners();
 
@@ -205,9 +209,11 @@ class InvoiceController extends ChangeNotifier {
         if (roomReading['maChiSo'] != null) {
           if (roomReading['chiSoDienMoi'] != null) {
             soDienMoi = (roomReading['chiSoDienMoi'] as num).toDouble();
+            isDienMoiEntered = true;
           }
           if (roomReading['chiSoNuocMoi'] != null) {
             soNuocMoi = (roomReading['chiSoNuocMoi'] as num).toDouble();
+            isNuocMoiEntered = true;
           }
           notifyListeners();
           return; // Đã tìm thấy chỉ số tiêu thụ đầy đủ tháng này, bỏ qua fallback hóa đơn cũ
@@ -242,11 +248,13 @@ class InvoiceController extends ChangeNotifier {
 
   void updateDienMoi(String value) {
     soDienMoi = double.tryParse(value) ?? 0;
+    isDienMoiEntered = value.trim().isNotEmpty;
     notifyListeners();
   }
 
   void updateNuocMoi(String value) {
     soNuocMoi = double.tryParse(value) ?? 0;
+    isNuocMoiEntered = value.trim().isNotEmpty;
     notifyListeners();
   }
 
@@ -359,8 +367,32 @@ class InvoiceController extends ChangeNotifier {
     }
   }
 
+  String? validateRoomForInvoice(int roomId, int month, int year) {
+    final room = availableRooms.firstWhere((r) => r['id'] == roomId, orElse: () => <String, dynamic>{});
+    if (room.isEmpty) return 'Không tìm thấy thông tin phòng.';
+
+    final trangThai = room['trangThai']?.toString().toLowerCase() ?? '';
+    if (trangThai == 'trống' || trangThai.contains('trống')) {
+      return 'Không thể lập hóa đơn cho phòng đang trống.';
+    }
+    if (trangThai == 'bảo trì' || trangThai.contains('bảo trì') || trangThai.contains('sửa chữa')) {
+      return 'Không thể lập hóa đơn cho phòng đang bảo trì/sửa chữa.';
+    }
+    if (trangThai != 'đã thuê' && !trangThai.contains('đã thuê')) {
+      return 'Chỉ có thể lập hóa đơn cho phòng đang ở trạng thái "Đã thuê".';
+    }
+
+    // Kiểm tra xem phòng này đã có hóa đơn trong tháng này chưa
+    final alreadyInvoiced = _invoices.any((inv) => inv.maPhong == roomId && inv.thang == month && inv.nam == year);
+    if (alreadyInvoiced) {
+      return 'Phòng này đã được lập hóa đơn trong tháng $month/$year rồi.';
+    }
+
+    return null;
+  }
+
   // Tạo hóa đơn mới
-  Future<bool> createInvoice({
+  Future<InvoiceModel?> createInvoice({
     required int maPhong,
     required int thang,
     required int nam,
@@ -394,10 +426,10 @@ class InvoiceController extends ChangeNotifier {
         _invoices.add(newInvoice);
       }
       notifyListeners();
-      return true;
+      return newInvoice;
     } catch (e) {
       _setError(e.toString());
-      return false;
+      return null;
     } finally {
       _setLoading(false);
     }

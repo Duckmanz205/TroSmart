@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/admin/co_so_model.dart';
+import '../../shared/api_constants.dart';
 
 class CoSoCard extends StatelessWidget {
   final CoSoDashboardModel coSo;
@@ -303,22 +304,21 @@ class CoSoCard extends StatelessWidget {
     String? path, {
     required Widget placeholder,
   }) {
-    if (path == null || path.trim().isEmpty) {
+    final formattedPath = ApiConstants.formatImageUrl(path);
+    if (formattedPath == null || formattedPath.isEmpty) {
       return placeholder;
     }
 
-    final cleanPath = path.trim();
-
-    if (cleanPath.startsWith('assets/')) {
+    if (formattedPath.startsWith('assets/')) {
       return Image.asset(
-        cleanPath,
+        formattedPath,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => placeholder,
       );
     }
 
     return Image.network(
-      cleanPath,
+      formattedPath,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => placeholder,
     );
