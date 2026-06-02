@@ -6,6 +6,10 @@ import 'package:trosmart/views/admin/AD_AddHopDong.dart';
 import 'package:trosmart/views/admin/AD_DetailHopDong.dart';
 import 'package:trosmart/views/admin/AD_EditHopDong.dart';
 import '../../shared/app_theme.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart'; // Đọc thư mục lưu trữ điện thoại
+import 'package:open_filex/open_filex.dart';       // Tự động mở file PDF sau khi tải xong
+import '../../shared/api_constants.dart';
 
 class AdQLHopDong extends StatefulWidget {
   const AdQLHopDong({super.key});
@@ -126,7 +130,38 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
       _showSnackBar('Lỗi: $e', Colors.red);
     }
   }
+  Future<void> _downloadAndOpenContractPdf(int maHopDong, String tenKhach) async {
+    _showSnackBar('Đang khởi tạo tiến trình xuất file PDF...', AppTheme.deepPurple);
+    
+    try {
+      // Gọi lên API xuất file PDF của nhóm ông dưới Backend C#
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/$maHopDong/export-pdf'),
+      );
 
+      if (response.statusCode == 200) {
+        // 1. Tìm đường dẫn thư mục lưu trữ an toàn trên điện thoại (Thư mục Downloads/Documents)
+        final directory = await getApplicationDocumentsDirectory();
+        // Định danh tên file sạch theo Mã HD và tên người thuê phòng
+        final String slugName = tenKhach.replaceAll(RegExp(r'[^\w\s]+'), '').replaceAll(' ', '_');
+        final filePath = '${directory.path}/HopDong_HD2026_${maHopDong}_$slugName.pdf';
+        
+        // 2. Ghi mớ dữ liệu dạng Bytes nhận từ C# xuống file thực tế trong máy
+        final File file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        _showSnackBar('Đã tải thành công file hợp đồng về máy!', Colors.green);
+
+        // 3. LỆNH ĐẮT GIÁ: Tự động gọi hệ điều hành mở phốc file PDF lên xem ngay lập tức
+        await OpenFilex.open(filePath);
+      } else {
+        _showSnackBar('Backend chưa hỗ trợ xuất mẫu PDF cho hợp đồng này! (Mã lỗi: ${response.statusCode})', Colors.orange);
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải PDF: $e");
+      _showSnackBar('Thiết bị thiếu ứng dụng đọc file PDF hoặc lỗi kết nối!', Colors.red);
+    }
+  }
   String _formatDateRange(String? start, String? end) {
     if (start == null || end == null) return "N/A";
     try {
@@ -356,10 +391,13 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
                       _handleEditContract(maHopDong);
                     }),
                     const SizedBox(width: 12),
-                    _actionButton(Icons.file_download_outlined, () {}),
+                    _actionButton(Icons.file_download_outlined, () {
+                      // Bấm phát kích hoạt luồng tải file chuẩn chỉ theo ID hợp đồng đó
+                      _downloadAndOpenContractPdf(maHopDong, name);
+                    }),
                     const SizedBox(width: 12),
                     _actionButton(Icons.delete_sweep_outlined, () {
-                      // 🌟 KIỂM TRA TRẠNG THÁI TRƯỚC KHI XÓA
+                      
                       if (status == "ĐANG HIỆU LỰC" || status == "ĐÃ KÝ") {
                         _showSnackBar('Hợp đồng đang có hiệu lực pháp lý, tuyệt đối không được xóa!', Colors.orange);
                         return;

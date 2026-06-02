@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'dart:io';                                // Để tạo và ghi file nhị phân
+import 'package:path_provider/path_provider.dart'; // Để tìm thư mục lưu file an toàn trên máy khách
+import 'package:open_filex/open_filex.dart';       // Để tự động mở phốc file PDF lên sau khi tải xong
+import '../../shared/api_constants.dart';
 import '../../shared/app_theme.dart';
 import 'UR_KyHopDongOnline.dart';
 
@@ -129,7 +133,52 @@ class _UrHopDongState extends State<UrHopDong> {
       return amount.toString();
     }
   }
+  Future<void> _downloadAndOpenUserPdf() async {
+    // Hiện SnackBar nền màu tím chủ đạo thông báo bắt đầu tiến trình
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đang khởi tạo tiến trình tải file PDF...'), backgroundColor: AppTheme.deepPurple),
+    );
 
+    try {
+      // Gọi lên đúng cổng API xuất PDF lồng mã hợp đồng động
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}/export-pdf'),
+      );
+
+      if (response.statusCode == 200) {
+        // 1. Tìm đường dẫn thư mục Documents nội bộ an toàn trên điện thoại
+        final directory = await getApplicationDocumentsDirectory();
+        
+        // Bốc an toàn số phòng để đặt tên tệp sạch sẽ không dính ký tự đặc biệt gây sập luồng
+        String phongStr = (_contract!['soPhong'] ?? _contract!['SoPhong'] ?? 'Trong').toString();
+        final filePath = '${directory.path}/HopDong_Phong_$phongStr.pdf';
+
+        // 2. Ghi đè mớ dữ liệu bodyBytes nhị phân kéo từ C# xuống file thực tế trong máy
+        final File file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tải tệp hợp đồng PDF thành công!'), backgroundColor: Colors.green),
+          );
+        }
+
+        // 3. Tự động ra lệnh cho hệ điều hành mở bung file PDF lên màn hình điện thoại
+        await OpenFilex.open(filePath);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể xuất tệp PDF. Mã phản hồi: ${response.statusCode}'), backgroundColor: Colors.orange),
+        );
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải file hợp đồng PDF: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Thiết bị chưa cài ứng dụng đọc PDF hoặc lỗi đường truyền!'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -412,16 +461,19 @@ class _UrHopDongState extends State<UrHopDong> {
         mainAxisSize: MainAxisSize.min,
         children: [
           OutlinedButton.icon(
-            onPressed: () {
-              // Thao tác tải PDF dự phòng mở rộng
-            },
-            icon: const Icon(Icons.download_outlined, color: Color(0xFF1F2937)),
-            label: const Text('Tải hợp đồng (PDF)', style: TextStyle(color: Color(0xFF1F2937), fontWeight: FontWeight.bold)),
-            style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 56), side: const BorderSide(color: Color(0xFFF3F4F6)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+          // Kích hoạt gọi hàm tải và mở file PDF nhị phân động
+          onPressed: _downloadAndOpenUserPdf, 
+          icon: const Icon(Icons.download_outlined, color: Color(0xFF1F2937)),
+          label: const Text('Tải hợp đồng (PDF)', style: TextStyle(color: Color(0xFF1F2937), fontWeight: FontWeight.bold)),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56), 
+            side: const BorderSide(color: Color(0xFFF3F4F6)), 
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
+        ),
           const SizedBox(height: 12),
           
-          // 🌟 NÚT CHUYỂN TRANG THEO FLOW ÔNG YÊU CẦU
+          // 
           ElevatedButton.icon(
             icon: Icon(daKy ? Icons.lock_outline : Icons.border_color_outlined, color: Colors.white),
             label: Text(

@@ -108,5 +108,18 @@ namespace PhongTroAPI.Controllers
             if (result) return Ok(true);
             return BadRequest("Gia hạn thất bại.");
         }
+        [HttpGet("{id}/export-pdf")]
+        public IActionResult ExportContractPdf(int id)
+        {
+            // 1. Lấy dữ liệu hợp đồng từ SQL Server ra
+            var contract = _hopDongService.GetById(id);
+            if (contract == null) return NotFound();
+
+            // 2. Vẽ file hoặc đọc file PDF mẫu đã sinh sẵn từ thư mục wwroot/uploads
+            byte[] pdfBytes = _hopDongService.GeneratePdfBytes(contract); 
+
+            // 3. Bắn trả về mảng byte dữ liệu thô kèm định dạng Content-Type chuẩn PDF
+            return File(pdfBytes, "application/pdf", $"HopDong_{id}.pdf");
+        }
     }
 }
