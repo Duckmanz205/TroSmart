@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../logic/admin/phong_service.dart';
 import '../../models/admin/phong_view_model.dart';
 import 'UR_ChiTietPhong.dart';
-
+import 'UR_DatLichXemPhong.dart';
 class RoomSearchView extends StatefulWidget {
   const RoomSearchView({super.key});
 
@@ -133,12 +134,32 @@ class _RoomSearchViewState extends State<RoomSearchView> {
     );
   }
 
-  void _bookRoom(PhongViewModel room) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đặt xem phòng ${room.soPhong}'),
-      ),
-    );
+  Future<void> _bookRoom(PhongViewModel room) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Bốc mã khách từ phiên đăng nhập, mặc định là 1 (khach1) nếu chạy test máy ảo
+      final int currentMaKhach = prefs.getInt('maKhach') ?? 1;
+
+      if (!mounted) return;
+      
+      // Điều hướng trực tiếp sang trang Đặt lịch của ông với đầy đủ tham số động
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UrDatLichXemPhong(
+            maPhong: room.maPhong,
+            maKhach: currentMaKhach,
+            soPhong: room.soPhong,
+            tenCoSo: room.tenCoSo,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint("Lỗi điều hướng luồng đặt lịch: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể khởi tạo tiến trình đặt lịch!'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
