@@ -10,7 +10,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart'; // Đọc thư mục lưu trữ điện thoại
 import 'package:open_filex/open_filex.dart';       // Tự động mở file PDF sau khi tải xong
 import '../../shared/api_constants.dart';
-import '../../logic/auth/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdQLHopDong extends StatefulWidget {
   const AdQLHopDong({super.key});
@@ -40,7 +40,9 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
       if (!mounted) return;
       setState(() => _isLoading = true);
 
-      final maQuanLy = await AuthService().getMaQuanLy();
+      final prefs = await SharedPreferences.getInstance();
+      final maQuanLy = prefs.getInt('ma_quan_ly') ?? 1;
+
       final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong?maQuanLy=$maQuanLy'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -120,7 +122,7 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
     if (!confirm) return;
 
     try {
-      final response = await http.delete(Uri.parse('http://10.0.2.2:5137/api/HopDong/$maHopDong'));
+      final response = await http.delete(Uri.parse('${ApiConstants.baseUrl}/HopDong/$maHopDong'));
       if (response.statusCode == 200 || response.statusCode == 204) {
         _showSnackBar('Đoạn tuyệt hợp đồng thành công!', Colors.green);
         _fetchContractsAdmin(); 

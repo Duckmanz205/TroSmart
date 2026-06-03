@@ -6,9 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/admin/phong_model.dart';
 import '../../models/admin/phong_view_model.dart';
 import '../../models/admin/tien_ich_model.dart';
+import '../../shared/api_constants.dart';
 
 class PhongService {
-  static const String baseUrl = 'http://10.0.2.2:5137/api';
+  String get baseUrl => ApiConstants.baseUrl;
 
   Future<List<PhongModel>> getAll({int? maQuanLy}) async {
     final uri = maQuanLy == null

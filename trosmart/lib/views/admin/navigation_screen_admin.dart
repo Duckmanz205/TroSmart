@@ -64,7 +64,7 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
     _pages = [
       AdminHomeScreen(onNavigate: _navigateTo), // 0: Dashboard
       const _CoSoManagementWrapper(), // 1: Cơ sở (Dynamic wrapper)
-      const PhongManagementView(maCoSo: 1, tenCoSo: 'Cơ sở 1'), // 2: Phòng
+      const PhongManagementView(), // 2: Phòng
       ChangeNotifierProvider(
         create: (context) => InvoiceController(),
         child: const InvoiceScreen(),

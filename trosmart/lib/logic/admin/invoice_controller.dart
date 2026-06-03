@@ -378,8 +378,8 @@ class InvoiceController extends ChangeNotifier {
     if (trangThai == 'bảo trì' || trangThai.contains('bảo trì') || trangThai.contains('sửa chữa')) {
       return 'Không thể lập hóa đơn cho phòng đang bảo trì/sửa chữa.';
     }
-    if (trangThai != 'đã thuê' && !trangThai.contains('đã thuê')) {
-      return 'Chỉ có thể lập hóa đơn cho phòng đang ở trạng thái "Đã thuê".';
+    if (trangThai != 'đang thuê' && !trangThai.contains('đang thuê')) {
+      return 'Chỉ có thể lập hóa đơn cho phòng đang ở trạng thái "Đang thuê".';
     }
 
     // Kiểm tra xem phòng này đã có hóa đơn trong tháng này chưa

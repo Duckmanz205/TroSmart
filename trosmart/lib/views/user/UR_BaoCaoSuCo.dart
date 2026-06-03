@@ -10,10 +10,12 @@ class IssueReportingScreen extends StatefulWidget {
 
 class _IssueReportingScreenState extends State<IssueReportingScreen> {
   Key _historyKey = UniqueKey();
+  bool _showNewRequestForm = false;
 
   void _refreshHistory() {
     setState(() {
       _historyKey = UniqueKey();
+      _showNewRequestForm = false;
     });
   }
 
@@ -24,8 +26,22 @@ class _IssueReportingScreenState extends State<IssueReportingScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const ActionHeader(),
-            NewRequestForm(onSubmitSuccess: _refreshHistory),
+            ActionHeader(
+              onTapCreate: () {
+                setState(() {
+                  _showNewRequestForm = !_showNewRequestForm;
+                });
+              },
+            ),
+            if (_showNewRequestForm)
+              NewRequestForm(
+                onSubmitSuccess: _refreshHistory,
+                onCancel: () {
+                  setState(() {
+                    _showNewRequestForm = false;
+                  });
+                },
+              ),
             const HistoryDivider(),
             IssueHistoryList(key: _historyKey),
             const SizedBox(height: 40),

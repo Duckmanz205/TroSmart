@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 import '../auth/auth_service.dart';
+import '../../shared/api_constants.dart';
 
 class UtilityService {
-  static const String baseUrl = 'http://10.0.2.2:5137/api';
   final AuthService _authService = AuthService();
   
   final Dio _dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
+    baseUrl: ApiConstants.baseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
   ));

@@ -5,16 +5,19 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../logic/admin/phong_service.dart';
+import '../../logic/auth/auth_service.dart';
+import '../../logic/admin/co_so_service.dart';
+import '../../models/admin/co_so_model.dart';
 import '../../models/admin/tien_ich_model.dart';
 
 class AddPhongView extends StatefulWidget {
-  final int maCoSo;
-  final String tenCoSo;
+  final int? maCoSo;
+  final String? tenCoSo;
 
   const AddPhongView({
     super.key,
-    required this.maCoSo,
-    required this.tenCoSo,
+    this.maCoSo,
+    this.tenCoSo,
   });
 
   @override
@@ -25,6 +28,8 @@ class _AddPhongViewState extends State<AddPhongView> {
   final _formKey = GlobalKey<FormState>();
   final PhongService _service = PhongService();
   final ImagePicker _imagePicker = ImagePicker();
+  final AuthService _authService = AuthService();
+  final CoSoService _coSoService = CoSoService();
 
   final TextEditingController _soPhongController = TextEditingController();
   final TextEditingController _tangController = TextEditingController(text: '1');
@@ -44,10 +49,48 @@ class _AddPhongViewState extends State<AddPhongView> {
   List<TienIchModel> _tienIchList = [];
   final Set<int> _selectedTienIchIds = {};
 
+  List<CoSoDashboardModel> _coSoList = [];
+  int? _selectedMaCoSo;
+  String? _selectedTenCoSo;
+  bool _isLoadingCoSo = true;
+
   @override
   void initState() {
     super.initState();
     _loadTienIch();
+    _loadCoSoList();
+  }
+
+  Future<void> _loadCoSoList() async {
+    try {
+      final mq = await _authService.getMaQuanLy();
+      final list = await _coSoService.getDashboard(maQuanLy: mq);
+      if (!mounted) return;
+
+      setState(() {
+        _coSoList = list;
+        _isLoadingCoSo = false;
+
+        if (widget.maCoSo != null) {
+          final exists = list.any((e) => e.maCoSo == widget.maCoSo);
+          if (exists) {
+            _selectedMaCoSo = widget.maCoSo;
+            _selectedTenCoSo = widget.tenCoSo;
+            return;
+          }
+        }
+
+        if (list.isNotEmpty) {
+          _selectedMaCoSo = list.first.maCoSo;
+          _selectedTenCoSo = list.first.tenCoSo;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingCoSo = false;
+      });
+    }
   }
 
   @override
@@ -271,6 +314,12 @@ class _AddPhongViewState extends State<AddPhongView> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedMaCoSo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn cơ sở')),
+      );
+      return;
+    }
 
     final giaThue = _parseMoney(_giaController.text);
     final tang = _parseIntNullable(_tangController.text);
@@ -284,7 +333,7 @@ class _AddPhongViewState extends State<AddPhongView> {
         soPhong: _soPhongController.text.trim().toUpperCase(),
         giaThue: giaThue,
         trangThai: _trangThai,
-        maCoSo: widget.maCoSo,
+        maCoSo: _selectedMaCoSo!,
         tang: tang,
         dienTich: dienTich,
         soNguoiToiDa: soNguoiToiDa,
@@ -351,6 +400,8 @@ class _AddPhongViewState extends State<AddPhongView> {
                 const SizedBox(height: 16),
                 _buildSectionTitle('THÔNG TIN PHÒNG'),
                 const SizedBox(height: 10),
+                _buildCoSoDropdown(),
+                const SizedBox(height: 12),
                 _buildInput(
                   controller: _soPhongController,
                   label: 'Số phòng *',
@@ -690,7 +741,7 @@ class _AddPhongViewState extends State<AddPhongView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.tenCoSo,
+                      _selectedTenCoSo ?? widget.tenCoSo ?? 'Chưa chọn cơ sở',
                       style: const TextStyle(
                         color: Color(0xFF191622),
                         fontSize: 16,
@@ -699,7 +750,7 @@ class _AddPhongViewState extends State<AddPhongView> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Mã cơ sở: ${widget.maCoSo}',
+                      'Mã cơ sở: ${_selectedMaCoSo ?? widget.maCoSo ?? 'N/A'}',
                       style: TextStyle(
                         color: Colors.black.withValues(alpha: 0.55),
                         fontSize: 12,
@@ -729,6 +780,71 @@ class _AddPhongViewState extends State<AddPhongView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCoSoDropdown() {
+    if (_isLoadingCoSo) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 10),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF7430A3)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_coSoList.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFEAE8),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFFFD1CF)),
+        ),
+        child: const Text(
+          'Không tìm thấy cơ sở nào. Vui lòng thêm cơ sở trước.',
+          style: TextStyle(
+            color: Color(0xFFD32F2F),
+            fontWeight: FontWeight.w700,
+            fontSize: 12.5,
+          ),
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<int>(
+      value: _selectedMaCoSo,
+      decoration: _decoration('Cơ sở *'),
+      style: const TextStyle(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF191622),
+      ),
+      items: _coSoList.map((coso) {
+        return DropdownMenuItem<int>(
+          value: coso.maCoSo,
+          child: Text(coso.tenCoSo),
+        );
+      }).toList(),
+      validator: (value) {
+        if (value == null) return 'Vui lòng chọn cơ sở';
+        return null;
+      },
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _selectedMaCoSo = value;
+          _selectedTenCoSo = _coSoList.firstWhere((e) => e.maCoSo == value).tenCoSo;
+        });
+      },
     );
   }
 

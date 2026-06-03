@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import 'package:trosmart/models/user/app_pages.dart';
 import 'package:trosmart/views/user/UR_BaoCaoSuCo.dart';
 import 'package:trosmart/views/user/UR_DanhSachChat.dart';
@@ -13,6 +14,8 @@ import 'package:trosmart/views/user/UR_ThongKe.dart';
 import 'package:trosmart/widgets/common/user/user_app_bar.dart';
 import 'app_sidebar.dart';
 import 'UR_ThanhToan.dart';
+import 'package:trosmart/logic/user/user_contract_controller.dart';
+import 'package:trosmart/logic/user/user_payment_controller.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -61,42 +64,52 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: UserAppBar(), // Hiển thị tiêu đề động
-      drawer: AppSidebar(
-        activePage: _activePage, 
-        onPageSelected: _navigateTo,
-      ),
-      body: IndexedStack(
-        index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
-        children: [
-          UserHomeScreen(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 0
-          const PaymentDetailsScreen(),                 // 1
-          const UrDanhSachChat(),                           // 2
-          const UrHopDong(),                            // 3
-          const RoomSearchView(),                       // 4
-          const IssueReportingScreen(),                 // 5
-          UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 6
-          const UrOGhep(),                              // 7
-          const HistoryStatsScreen(),                   // 8
-          const UserProfileScreen(),                    // 9
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _getBottomNavIndex(),
-        onTap: (index) {
-          // Ánh xạ từ số bấm ở dưới ra Tên trang tương ứng
-          final bottomPages = [AppPages.home, AppPages.payment, AppPages.chat, AppPages.profileDetail];
-          _navigateTo(bottomPages[index]);
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.purple,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'TRANG CHỦ'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.creditCard), label: 'THANH TOÁN'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.messageCircle), label: 'CHAT'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: 'HỒ SƠ'),
-        ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserContractController()),
+        ChangeNotifierProvider(create: (_) => UserPaymentController()),
+      ],
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            appBar: UserAppBar(), // Hiển thị tiêu đề động
+            drawer: AppSidebar(
+              activePage: _activePage, 
+              onPageSelected: _navigateTo,
+            ),
+            body: IndexedStack(
+              index: _pageOrder.indexOf(_activePage), // Tự động tìm số thứ tự dựa trên tên
+              children: [
+                const UserHomeScreen(),                       // 0
+                const PaymentDetailsScreen(),                 // 1
+                const UrDanhSachChat(),                           // 2
+                const UrHopDong(),                            // 3
+                const RoomSearchView(),                       // 4
+                const IssueReportingScreen(),                 // 5
+                UrThongBao(onNavigateToPayment: () => _navigateTo(AppPages.payment)), // 6
+                const UrOGhep(),                              // 7
+                const HistoryStatsScreen(),                   // 8
+                const UserProfileScreen(),                    // 9
+              ],
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: _getBottomNavIndex(),
+              onTap: (index) {
+                // Ánh xạ từ số bấm ở dưới ra Tên trang tương ứng
+                final bottomPages = [AppPages.home, AppPages.payment, AppPages.chat, AppPages.profileDetail];
+                _navigateTo(bottomPages[index]);
+              },
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: Colors.purple,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'TRANG CHỦ'),
+                BottomNavigationBarItem(icon: Icon(LucideIcons.creditCard), label: 'THANH TOÁN'),
+                BottomNavigationBarItem(icon: Icon(LucideIcons.messageCircle), label: 'CHAT'),
+                BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: 'HỒ SƠ'),
+              ],
+            ),
+          );
+        }
       ),
     );
   }

@@ -30,16 +30,18 @@ namespace PhongTroAPI.Controllers
                 .Include(s => s.MaKhachNavigation)
                 .AsQueryable();
 
-            int? mqIdFinal = maQuanLy;
-            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
-            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
+            if (!maQuanLy.HasValue)
             {
-                mqIdFinal = mqId;
+                var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+                if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
+                {
+                    maQuanLy = mqId;
+                }
             }
 
-            if (mqIdFinal.HasValue)
+            if (maQuanLy.HasValue)
             {
-                query = query.Where(s => s.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == mqIdFinal.Value);
+                query = query.Where(s => s.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
             }
 
             return await query.OrderByDescending(s => s.NgayBao).ToListAsync();

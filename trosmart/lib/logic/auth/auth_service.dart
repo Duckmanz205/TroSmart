@@ -3,10 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trosmart/models/user_model.dart';
 
+import '../../shared/api_constants.dart';
+
 class AuthService {
-  // ─── Đổi thành IP/host của máy chạy backend ───
-  // Android Emulator: 10.0.2.2 | iOS Simulator: localhost | thiết bị thật: IP LAN
-  static const String _baseUrl = 'http://10.0.2.2:5137';
+  String get _baseUrl => ApiConstants.baseUrl.replaceAll('/api', '');
 
   // ── SharedPreferences keys ──
   static const String _keyToken = 'auth_token';
@@ -113,10 +113,5 @@ class AuthService {
   Future<int?> getMaQuanLy() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyMaQuanLy);
-  }
-
-  Future<int?> getMaKhach() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_keyMaKhach);
   }
 }

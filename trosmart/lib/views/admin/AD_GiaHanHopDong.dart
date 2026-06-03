@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
+import '../../shared/api_constants.dart';
 
 class AdGiaHanHopDong extends StatefulWidget {
   final int maHopDong; // Nhận ID hợp đồng từ trang chi tiết sang
@@ -37,7 +38,7 @@ class _AdGiaHanHopDongState extends State<AdGiaHanHopDong> {
   Future<void> _fetchCurrentContractInfo() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}'),
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'),
       );
 
       if (response.statusCode == 200) {
@@ -99,7 +100,7 @@ class _AdGiaHanHopDongState extends State<AdGiaHanHopDong> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}/gia-han'),
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}/gia-han'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(giaHanDto),
       );

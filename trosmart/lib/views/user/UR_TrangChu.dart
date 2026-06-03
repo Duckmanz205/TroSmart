@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../logic/user/user_payment_controller.dart';
 import 'package:intl/intl.dart';
+import 'package:trosmart/services/thong_bao_service.dart';
+import 'package:trosmart/models/thong_bao.dart';
 
 class UserHomeScreen extends StatelessWidget {
-  final VoidCallback? onNavigateToPayment;
-  const UserHomeScreen({super.key, this.onNavigateToPayment});
+  const UserHomeScreen({super.key});
 
   String _formatCurrency(double amount) {
     final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
@@ -14,35 +15,32 @@ class UserHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => UserPaymentController(),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
-        body: Consumer<UserPaymentController>(
-          builder: (context, controller, child) {
-            if (controller.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildWelcomeSection(controller),
-                  const SizedBox(height: 24),
-                  if (controller.activeInvoice != null) ...[
-                    _buildPaymentHeroCard(controller),
-                    const SizedBox(height: 32),
-                    _buildOverviewBento(controller),
-                    const SizedBox(height: 32),
-                  ],
-                  _buildNotificationsSection(),
-                  const SizedBox(height: 40),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Consumer<UserPaymentController>(
+        builder: (context, controller, child) {
+          if (controller.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWelcomeSection(controller),
+                const SizedBox(height: 24),
+                if (controller.activeInvoice != null) ...[
+                  _buildPaymentHeroCard(controller),
+                  const SizedBox(height: 32),
+                  _buildOverviewBento(controller),
+                  const SizedBox(height: 32),
                 ],
-              ),
-            );
-          },
-        ),
+                _buildNotificationsSection(controller.maKhach),
+                const SizedBox(height: 40),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -138,7 +136,7 @@ class UserHomeScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: invoice.trangThai == 'Đã thanh toán' ? null : onNavigateToPayment,
+                  onPressed: invoice.trangThai == 'Đã thanh toán' ? null : () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6750A4),
                     disabledBackgroundColor: const Color(0xFFE6E1E5),
@@ -225,42 +223,60 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationsSection() {
+  Widget _buildNotificationsSection(int? maKhach) {
+    if (maKhach == null) {
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text("Thông báo mới", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1C1B1F))),
         const SizedBox(height: 16),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildFilterChip("Nhắc thanh toán", isActive: true),
-              const SizedBox(width: 8),
-              _buildFilterChip("Cảnh báo"),
-              const SizedBox(width: 8),
-              _buildFilterChip("Tin nhắn"),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildNotificationCard(
-          icon: Icons.payment,
-          iconBg: const Color(0x1A6750A4),
-          iconColor: const Color(0xFF6750A4),
-          title: "Nhắc nhở đóng tiền nhà tháng 10",
-          subtitle: "Vui lòng thanh toán trước ngày 05/10 để tránh phát sinh phí chậm.",
-          time: "2 giờ trước",
-        ),
-        const SizedBox(height: 16),
-        _buildNotificationCard(
-          icon: Icons.power_off,
-          iconBg: const Color(0xFFE6E1E5),
-          iconColor: const Color(0xFF49454F),
-          title: "Lịch bảo trì hệ thống điện",
-          subtitle: "Tòa nhà sẽ tạm ngắt điện từ 08:00 đến 10:00 sáng mai.",
-          time: "1 ngày trước",
-          opacity: 0.7,
+        FutureBuilder<List<ThongBao>>(
+          future: ThongBaoService().getThongBaoForUser(maKhach),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(color: Color(0xFF6750A4)),
+                ),
+              );
+            }
+            if (snapshot.hasError) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text("Lỗi tải thông báo: ${snapshot.error}", style: const TextStyle(color: Colors.red)),
+              );
+            }
+            final list = snapshot.data ?? [];
+            if (list.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Text(
+                  "Không có thông báo mới.",
+                  style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+                ),
+              );
+            }
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: list.length > 5 ? 5 : list.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final tb = list[index];
+                return _buildNotificationCard(
+                  icon: Icons.notifications,
+                  iconBg: const Color(0x1A6750A4),
+                  iconColor: const Color(0xFF6750A4),
+                  title: tb.tieuDe,
+                  subtitle: tb.noiDung ?? '',
+                  time: tb.ngayGui != null ? DateFormat('dd/MM/yyyy HH:mm').format(tb.ngayGui!) : 'Mới đây',
+                );
+              },
+            );
+          },
         ),
       ],
     );

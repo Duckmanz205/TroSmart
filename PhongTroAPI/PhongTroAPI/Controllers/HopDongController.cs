@@ -112,11 +112,11 @@ namespace PhongTroAPI.Controllers
         public IActionResult ExportContractPdf(int id)
         {
             // 1. Lấy dữ liệu hợp đồng từ SQL Server ra
-            var contract = _hopDongService.GetChiTietHopDong(id);
+            var contract = _hopDongService.GetById(id);
             if (contract == null) return NotFound();
 
-            // 2. Trả về file PDF mẫu
-            byte[] pdfBytes = System.Text.Encoding.UTF8.GetBytes("MOCK PDF CONTENT FOR CONTRACT " + id); 
+            // 2. Vẽ file hoặc đọc file PDF mẫu đã sinh sẵn từ thư mục wwroot/uploads
+            byte[] pdfBytes = _hopDongService.GeneratePdfBytes(contract); 
 
             // 3. Bắn trả về mảng byte dữ liệu thô kèm định dạng Content-Type chuẩn PDF
             return File(pdfBytes, "application/pdf", $"HopDong_{id}.pdf");

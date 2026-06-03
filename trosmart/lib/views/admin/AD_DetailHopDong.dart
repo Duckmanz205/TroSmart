@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:trosmart/views/admin/AD_EditHopDong.dart'; // 🌟 Import trang Edit
 import 'package:trosmart/views/admin/AD_GiaHanHopDong.dart'; // 🌟 Import trang Gia hạn
 import '../../shared/app_theme.dart';
+import '../../shared/api_constants.dart';
 
 class AdDetailHopDong extends StatefulWidget {
   final int maHopDong;
@@ -26,7 +27,7 @@ class _AdDetailHopDongState extends State<AdDetailHopDong> {
 
   Future<void> _fetchContractDetail() async {
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}'));
+      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'));
       if (response.statusCode == 200) {
         setState(() {
           _contractData = jsonDecode(response.body);
@@ -142,7 +143,7 @@ class _AdDetailHopDongState extends State<AdDetailHopDong> {
     if (!confirm) return;
 
     try {
-      final response = await http.delete(Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}'));
+      final response = await http.delete(Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'));
       if (response.statusCode == 200 || response.statusCode == 204) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa hợp đồng'), backgroundColor: Colors.green));

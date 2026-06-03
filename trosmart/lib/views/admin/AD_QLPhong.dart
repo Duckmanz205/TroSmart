@@ -36,6 +36,9 @@ class _PhongManagementViewState extends State<PhongManagementView> {
 
   Future<List<PhongModel>> _loadPhongs() async {
     _maQuanLy = await _authService.getMaQuanLy();
+    if (widget.maCoSo != null) {
+      return _service.getByCoSo(widget.maCoSo!);
+    }
     return _service.getAll(maQuanLy: _maQuanLy);
   }
 
@@ -47,7 +50,9 @@ class _PhongManagementViewState extends State<PhongManagementView> {
 
   Future<void> _reload() async {
     setState(() {
-      _futurePhongs = _service.getAll(maQuanLy: _maQuanLy);
+      _futurePhongs = widget.maCoSo != null
+          ? _service.getByCoSo(widget.maCoSo!)
+          : _service.getAll(maQuanLy: _maQuanLy);
     });
   }
 
@@ -83,7 +88,7 @@ class _PhongManagementViewState extends State<PhongManagementView> {
       context,
       MaterialPageRoute(
         builder: (_) =>
-            AddPhongView(maCoSo: widget.maCoSo!, tenCoSo: widget.tenCoSo!),
+            AddPhongView(maCoSo: widget.maCoSo, tenCoSo: widget.tenCoSo),
       ),
     );
 
@@ -99,7 +104,10 @@ class _PhongManagementViewState extends State<PhongManagementView> {
       context,
       MaterialPageRoute(
         builder: (_) =>
-            PhongDetailView(maPhong: room.maPhong, tenCoSo: widget.tenCoSo!),
+            PhongDetailView(
+          maPhong: room.maPhong,
+          tenCoSo: widget.tenCoSo ?? room.tenCoSo ?? '',
+        ),
       ),
     );
 
@@ -225,8 +233,11 @@ class _PhongManagementViewState extends State<PhongManagementView> {
   }
 
   Widget _buildSubHeader(int total) {
+    final title = widget.tenCoSo != null
+        ? '${widget.tenCoSo} — $total phòng'
+        : 'Tất cả cơ sở — $total phòng';
     return Text(
-      'Tất cả cơ sở — $total phòng',
+      title,
       style: TextStyle(
         color: Colors.black.withValues(alpha: 0.65),
         fontSize: 13,

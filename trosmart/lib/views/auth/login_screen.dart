@@ -318,56 +318,26 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.menu, color: Colors.white),
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2DDCB1), Color(0xFF1AAB87)],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.home, color: Colors.white, size: 16),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                "TroSmart",
-                style: TextStyle(
-                  color: Color(0xFF2DDCB1),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-            ],
-          ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: const Color(0x142DDCB1),
-              border: Border.all(color: const Color(0x4D2DDCB1)),
-              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2DDCB1), Color(0xFF1AAB87)],
+              ),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2DDCB1),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  "Chủ trọ",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ],
+            child: const Icon(Icons.home, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            "TroSmart",
+            style: TextStyle(
+              color: Color(0xFF2DDCB1),
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
             ),
           ),
         ],

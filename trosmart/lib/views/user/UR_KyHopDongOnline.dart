@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
 
@@ -30,6 +32,9 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
   bool _agreed = false;
   final List<Offset?> _signaturePoints = [];
   bool _hasSigned = false;
+
+  String? _cccdPublicUrl;
+  bool _isUploadingCccd = false;
 
   // Quản lý trạng thái nạp dữ liệu
   Map<String, dynamic>? _contractData;
@@ -95,8 +100,74 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
     }
   }
 
+  // 💳 XỬ LÝ UPLOAD ẢNH CCCD LÊN STORAGE SUPABASE BUCKET 'CCCD'
+  Future<void> _pickAndUploadCccd() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (pickedFile == null) return;
+
+    setState(() => _isUploadingCccd = true);
+
+    try {
+      final file = File(pickedFile.path);
+      final fileName = 'cccd_${widget.maKhach}_${widget.maHopDong}_${DateTime.now().millisecondsSinceEpoch}.png';
+
+      final supabase = Supabase.instance.client;
+      await supabase.storage
+          .from('CCCD')
+          .upload(fileName, file, fileOptions: const FileOptions(contentType: 'image/png'));
+
+      final publicUrl = supabase.storage
+          .from('CCCD')
+          .getPublicUrl(fileName);
+
+      setState(() {
+        _cccdPublicUrl = publicUrl;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tải ảnh CCCD lên thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Lỗi upload CCCD lên Supabase: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi tải ảnh lên Supabase: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingCccd = false);
+      }
+    }
+  }
+
   // 🔐 3. XỬ LÝ TIẾN TRÌNH KÝ SỐ BẢO MẬT SHA-256 XUỐNG SERVER
- Future<void> _handleSignContract() async {
+  Future<void> _handleSignContract() async {
+    if (_cccdPublicUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng tải lên ảnh chụp CCCD trước khi ký hợp đồng!'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (!_agreed || !_hasSigned) return;
 
     setState(() => _isSubmitting = true);
@@ -214,9 +285,21 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle(Icons.people_alt_outlined, 'THÔNG TIN CÁC BÊN'),
-                  _buildPartyCard('BÊN CHO THUÊ (CHỦ TRỌ)', 'Nguyễn Văn A', '079099123456', '0901 234 567', '123 Đường ABC, Quận Tân Bình, TP.HCM'),
+                  _buildPartyCard(
+                    'BÊN CHO THUÊ (CHỦ TRỌ)',
+                    _contractData!['tenQuanLy'] ?? 'N/A',
+                    'Liên hệ qua Email',
+                    _contractData!['sdtQuanLy'] ?? 'N/A',
+                    _contractData!['emailQuanLy'] ?? 'N/A',
+                  ),
                   const SizedBox(height: 12),
-                  _buildPartyCard('BÊN THUÊ (KHÁCH HÀNG)', _contractData!['tenKhach'] ?? 'Chưa rõ tên', _contractData!['cccd'] ?? 'Chưa cập nhật', _contractData!['sdt'] ?? 'Chưa cập nhật', 'Địa chỉ thường trú hệ thống khách thuê'),
+                  _buildPartyCard(
+                    'BÊN THUÊ (KHÁCH HÀNG)',
+                    _contractData!['tenKhach'] ?? 'Chưa rõ tên',
+                    _contractData!['cccd'] ?? 'Chưa cập nhật',
+                    _contractData!['sdt'] ?? 'Chưa cập nhật',
+                    'Địa chỉ thường trú hệ thống khách thuê',
+                  ),
                   
                   const SizedBox(height: 24),
                   _buildSectionTitle(Icons.home_outlined, 'THÔNG TIN PHÒNG THUÊ'),
@@ -233,6 +316,10 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
                   const SizedBox(height: 24),
                   _buildSectionTitle(Icons.article_outlined, 'ĐIỀU KHOẢN & QUY ĐỊNH'),
                   _buildTermsCard(),
+                  
+                  const SizedBox(height: 24),
+                  _buildSectionTitle(Icons.badge_outlined, 'MINH CHỨNG CĂN CƯỚC CÔNG DÂN (CCCD)'),
+                  _buildCccdUploadSection(),
                   
                   const SizedBox(height: 24),
                   _buildSignatureSection(),
@@ -422,6 +509,123 @@ class _UrKyHopDongOnlineState extends State<UrKyHopDongOnline> {
         '1.1. Thanh toán tiền phòng đúng hạn thỏa thuận ngày 05 mỗi tháng.\n'
         '1.2. Giữ gìn vệ sinh chung, nghiêm chỉnh chấp hành quy định an ninh cơ sở.', 
         style: TextStyle(fontSize: 12, height: 1.5)
+      ),
+    );
+  }
+
+  Widget _buildCccdUploadSection() {
+    return GestureDetector(
+      onTap: _isUploadingCccd ? null : _pickAndUploadCccd,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _cccdPublicUrl != null
+                ? Colors.green.withOpacity(0.5)
+                : Colors.grey.withOpacity(0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: _isUploadingCccd
+            ? const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.deepPurple),
+                ),
+              )
+            : _cccdPublicUrl != null
+                ? Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          _cccdPublicUrl!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Container(
+                              height: 180,
+                              color: Colors.grey[100],
+                              child: const Center(
+                                child: CircularProgressIndicator(color: AppTheme.deepPurple),
+                              ),
+                            );
+                          },
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 180,
+                            color: Colors.grey[100],
+                            child: const Center(
+                              child: Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.check_circle, color: Colors.green, size: 16),
+                          SizedBox(width: 6),
+                          Text(
+                            'Đã đính kèm ảnh CCCD thành công!',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Chạm vào đây để tải lên ảnh khác',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Icon(
+                        Icons.camera_front_outlined,
+                        color: Colors.grey[400],
+                        size: 40,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Tải lên ảnh chụp Căn cước công dân',
+                        style: TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Yêu cầu ảnh chụp rõ nét cả mặt trước và mặt sau để đối chiếu thông tin pháp lý.',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 11,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
       ),
     );
   }

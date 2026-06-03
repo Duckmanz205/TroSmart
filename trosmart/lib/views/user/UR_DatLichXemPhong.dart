@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart'; //
 import '../../views/user/UR_HoanTatDatLich.dart';
-import '../../services/khach_thue_service.dart';
 
 class UrDatLichXemPhong extends StatefulWidget {
   final int? maPhong; // Nhận từ trang Chi tiết phòng xem
@@ -58,81 +57,31 @@ class _UrDatLichXemPhongState extends State<UrDatLichXemPhong> {
   //  1. TỰ ĐỘNG ĐIỀN THÔNG TIN TÀI KHOẢN TỪ DATABASE SQL SERVER
   Future<void> _fetchThongTinKhach() async {
     try {
-      if (widget.maKhach > 0) {
-        try {
-          final profile = await KhachThueService().getCustomerProfile(
-            widget.maKhach,
-          );
-          if (mounted) {
-            setState(() {
-              _nameController.text = profile.hoTen ?? '';
-              _phoneController.text = profile.sdt ?? '';
-            });
-            return;
-          }
-        } catch (_) {
-          // fallback to shared preferences
-        }
-      }
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/KhachThue/${widget.maKhach}'),
+      );
 
-      final prefs = await SharedPreferences.getInstance();
-      String? savedName =
-          prefs.getString('ho_ten') ??
-          prefs.getString('hoTen') ??
-          prefs.getString('fullName');
-      String? savedPhone =
-          prefs.getString('sdt') ?? prefs.getString('phoneNumber');
-
-      if (savedName != null && savedPhone != null) {
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         if (mounted) {
           setState(() {
-            _nameController.text = savedName;
-            _phoneController.text = savedPhone;
+            _nameController.text = data['hoTen'] ?? data['HoTen'] ?? "";
+            _phoneController.text = data['sdt'] ?? data['Sdt'] ?? "";
           });
         }
-        return; // Đã tìm thấy dữ liệu nội bộ, không cần gọi API nữa
-      }
+      } else {
+        final prefs = await SharedPreferences.getInstance();
+        String? savedName = prefs.getString('hoTen') ?? prefs.getString('fullName');
+        String? savedPhone = prefs.getString('sdt') ?? prefs.getString('phoneNumber');
 
-      String? username =
-          prefs.getString('tenDangNhap') ?? prefs.getString('username');
-
-      if (username != null) {
-        // Gọi ké lên API Tài khoản/Auth của nhóm ông (Thay đổi endpoint cho đúng route Auth của nhóm nhé)
-        final response = await http.get(
-          Uri.parse('${ApiConstants.baseUrl}/TaiKhoan/$username'),
-        );
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-
-          // Trích xuất an toàn dữ liệu từ liên kết Navigation Khách Thuê bọc trong Tài khoản
-          var khachNavigation =
-              data['maKhachNavigation'] ?? data['MaKhachNavigation'];
-
-          if (khachNavigation != null) {
-            if (mounted) {
-              setState(() {
-                _nameController.text =
-                    khachNavigation['hoTen'] ?? khachNavigation['HoTen'] ?? "";
-                _phoneController.text =
-                    khachNavigation['sdt'] ?? khachNavigation['Sdt'] ?? "";
-              });
-            }
-            return;
+        if (savedName != null && savedPhone != null) {
+          if (mounted) {
+            setState(() {
+              _nameController.text = savedName;
+              _phoneController.text = savedPhone;
+            });
           }
         }
-      }
-
-      // Tự động phân tích widget.maKhach để gán tên động, đi báo cáo không lo trống Form
-      if (mounted) {
-        setState(() {
-          _nameController.text = widget.maKhach == 1
-              ? "Nguyễn Văn An"
-              : "Khách thuê số ${widget.maKhach}";
-          _phoneController.text = widget.maKhach == 1
-              ? "0901234567"
-              : "090000000${widget.maKhach}";
-        });
       }
     } catch (e) {
       debugPrint("Lỗi xử lý luồng profile linh hoạt: $e");
