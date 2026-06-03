@@ -17,14 +17,65 @@ class UserContractController extends ChangeNotifier {
   int _currentMaKhach = 1;
   int get currentMaKhach => _currentMaKhach;
 
+  List<dynamic> _myContracts = [];
+  List<dynamic> get myContracts => _myContracts;
+
+  int _selectedIndex = 0;
+  int get selectedIndex => _selectedIndex;
+
   UserContractController() {
     loadContractFlow();
+  }
+
+  Future<void> selectContract(int index) async {
+    if (index >= 0 && index < _myContracts.length) {
+      _selectedIndex = index;
+      await _loadSelectedContractDetails();
+
+      final prefs = await SharedPreferences.getInstance();
+      if (_contract != null) {
+        final maPhong = _contract!['maPhong'] ?? _contract!['MaPhong'] ?? 0;
+        await prefs.setInt('selected_ma_phong', maPhong);
+      }
+    }
+  }
+
+  Future<void> _loadSelectedContractDetails() async {
+    if (_myContracts.isEmpty) {
+      _contract = null;
+      _maHopDong = 0;
+      notifyListeners();
+      return;
+    }
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final selected = _myContracts[_selectedIndex];
+      var rawMaHopDong = selected['MaHopDong'] ?? selected['maHopDong'] ?? 0;
+      _maHopDong = int.tryParse(rawMaHopDong.toString()) ?? 0;
+
+      if (_maHopDong > 0) {
+        final detailResponse = await http.get(
+          Uri.parse('${ApiConstants.baseUrl}/HopDong/$_maHopDong'),
+        );
+        if (detailResponse.statusCode == 200) {
+          _contract = jsonDecode(detailResponse.body);
+        }
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải chi tiết hợp đồng: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> loadContractFlow() async {
     _isLoading = true;
     _maHopDong = 0;
     _contract = null;
+    _myContracts = [];
+    _selectedIndex = 0;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -51,19 +102,28 @@ class UserContractController extends ChangeNotifier {
           }
         }
 
-        dynamic userContract;
-        for (var hd in contracts) {
-          if (hd == null || hd is! Map) continue;
+        _myContracts = contracts.where((hd) {
+          if (hd == null || hd is! Map) return false;
           var dynamicMaKhach = hd['MaKhach'] ?? hd['maKhach'] ?? hd['MAKHACH'] ?? hd['ma_khach'];
+          return dynamicMaKhach != null && dynamicMaKhach.toString() == _currentMaKhach.toString();
+        }).toList();
 
-          if (dynamicMaKhach != null && dynamicMaKhach.toString() == _currentMaKhach.toString()) {
-            userContract = hd;
-            break;
-          }
-        }
+        if (_myContracts.isNotEmpty) {
+          // Sắp xếp: Ưu tiên "Chờ khách ký" lên trước, sau đó sắp xếp theo ID hợp đồng mới nhất
+          _myContracts.sort((a, b) {
+            final aStatus = (a['trangThai'] ?? '').toString().trim();
+            final bStatus = (b['trangThai'] ?? '').toString().trim();
+            if (aStatus == 'Chờ khách ký' && bStatus != 'Chờ khách ký') return -1;
+            if (aStatus != 'Chờ khách ký' && bStatus == 'Chờ khách ký') return 1;
+            
+            final aId = int.tryParse((a['maHopDong'] ?? a['MaHopDong'] ?? 0).toString()) ?? 0;
+            final bId = int.tryParse((b['maHopDong'] ?? b['MaHopDong'] ?? 0).toString()) ?? 0;
+            return bId.compareTo(aId);
+          });
 
-        if (userContract != null) {
-          var rawMaHopDong = userContract['MaHopDong'] ?? userContract['maHopDong'] ?? 0;
+          _selectedIndex = 0;
+          final selected = _myContracts[_selectedIndex];
+          var rawMaHopDong = selected['MaHopDong'] ?? selected['maHopDong'] ?? 0;
           _maHopDong = int.tryParse(rawMaHopDong.toString()) ?? 0;
 
           if (_maHopDong > 0) {
@@ -72,6 +132,10 @@ class UserContractController extends ChangeNotifier {
             );
             if (detailResponse.statusCode == 200) {
               _contract = jsonDecode(detailResponse.body);
+              if (_contract != null) {
+                final maPhong = _contract!['maPhong'] ?? _contract!['MaPhong'] ?? 0;
+                await prefs.setInt('selected_ma_phong', maPhong);
+              }
             }
           }
         }

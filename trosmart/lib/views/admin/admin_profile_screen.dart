@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../shared/app_colors.dart';
 import '../../models/nguoi_quan_ly.dart';
 import '../../services/nguoi_quan_ly_service.dart';
-import '../../logic/auth/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
@@ -38,22 +38,20 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
   Future<void> _loadProfile() async {
     try {
-      final maQuanLy = await AuthService().getMaQuanLy();
-      if (maQuanLy != null) {
-        final profile = await _service.getAdminProfile(maQuanLy);
-        setState(() {
-          _currentProfile = profile;
-          _nameController.text = profile.hoTen;
-          _phoneController.text = profile.sdt ?? '';
-          _emailController.text = profile.email ?? '';
-          _bankNameController.text = profile.tenNganHang ?? '';
-          _bankAccountController.text = profile.soTaiKhoan ?? '';
-          _accountHolderController.text = profile.chuTaiKhoan ?? '';
-          _isLoading = false;
-        });
-      } else {
-        setState(() => _isLoading = false);
-      }
+      final prefs = await SharedPreferences.getInstance();
+      final maQuanLy = prefs.getInt('ma_quan_ly') ?? 1;
+      
+      final profile = await _service.getAdminProfile(maQuanLy);
+      setState(() {
+        _currentProfile = profile;
+        _nameController.text = profile.hoTen;
+        _phoneController.text = profile.sdt ?? '';
+        _emailController.text = profile.email ?? '';
+        _bankNameController.text = profile.tenNganHang ?? '';
+        _bankAccountController.text = profile.soTaiKhoan ?? '';
+        _accountHolderController.text = profile.chuTaiKhoan ?? '';
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {

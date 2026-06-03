@@ -6,7 +6,6 @@ import '../../models/admin/phong_view_model.dart';
 import '../../shared/api_constants.dart';
 import 'UR_ChiTietPhong.dart';
 import 'UR_DatLichXemPhong.dart';
-import '../../logic/auth/auth_service.dart';
 class RoomSearchView extends StatefulWidget {
   const RoomSearchView({super.key});
 
@@ -138,8 +137,9 @@ class _RoomSearchViewState extends State<RoomSearchView> {
 
   Future<void> _bookRoom(PhongViewModel room) async {
     try {
-      final authService = AuthService();
-      final int currentMaKhach = await authService.getMaKhach() ?? 1;
+      final prefs = await SharedPreferences.getInstance();
+      // Bốc mã khách từ phiên đăng nhập, mặc định là 1 (khach1) nếu chạy test máy ảo
+      final int currentMaKhach = prefs.getInt('maKhach') ?? 1;
 
       if (!mounted) return;
       

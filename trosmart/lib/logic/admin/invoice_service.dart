@@ -6,15 +6,11 @@ import '../../shared/api_constants.dart';
 class InvoiceService {
   final AuthService _authService = AuthService();
   
-  late final Dio _dio;
-
-  InvoiceService() {
-    _dio = Dio(BaseOptions(
-      baseUrl: ApiConstants.baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-    ));
-  }
+  final Dio _dio = Dio(BaseOptions(
+    baseUrl: ApiConstants.baseUrl,
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+  ));
 
   /// Lấy danh sách hóa đơn theo tháng/năm.
   /// Nếu month = 0 hoặc year = 0 thì lấy tất cả hóa đơn.
@@ -24,11 +20,6 @@ class InvoiceService {
       if (month > 0 && year > 0) {
         queryParams['month'] = month;
         queryParams['year'] = year;
-      }
-
-      final maQuanLy = await _authService.getMaQuanLy();
-      if (maQuanLy != null) {
-        queryParams['maQuanLy'] = maQuanLy;
       }
 
       final token = await _authService.getToken();

@@ -3,8 +3,10 @@ import 'package:http/http.dart' as http;
 import '../../models/thong_ke_model.dart';
 import '../auth/auth_service.dart';
 
+import '../../shared/api_constants.dart';
+
 class ThongKeService {
-  static const String _baseUrl = 'http://10.0.2.2:5137';
+  String get _baseUrl => ApiConstants.baseUrl.replaceAll('/api', '');
   final AuthService _authService = AuthService();
 
   // -------------------------------------------------------------

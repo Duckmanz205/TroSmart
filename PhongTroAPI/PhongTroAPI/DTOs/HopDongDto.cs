@@ -29,6 +29,9 @@ namespace PhongTroAPI.DTOs
         public string? ChuKyBase64 { get; set; }
 
         public string? UrlChuKySupabase { get; set; }
+        public string? TenQuanLy { get; set; }
+        public string? SdtQuanLy { get; set; }
+        public string? EmailQuanLy { get; set; }
     }
 
     public class GiaHanHopDongDto

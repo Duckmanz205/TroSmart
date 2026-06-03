@@ -9,8 +9,10 @@ class SuCoService {
 
   // Lấy tất cả sự cố (Admin)
   Future<List<SuCo>> getAllSuCo({int? maQuanLy}) async {
-    final queryParams = maQuanLy != null ? '?maQuanLy=$maQuanLy' : '';
-    final url = Uri.parse('${ApiConstants.baseUrl}/SuCo$queryParams');
+    final uriStr = maQuanLy != null
+        ? '${ApiConstants.baseUrl}/SuCo?maQuanLy=$maQuanLy'
+        : '${ApiConstants.baseUrl}/SuCo';
+    final url = Uri.parse(uriStr);
     try {
       final token = await _authService.getToken();
       final response = await http.get(
@@ -32,7 +34,11 @@ class SuCoService {
   Future<List<SuCo>> getSuCoForUser(int maKhach) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/SuCo/user/$maKhach');
     try {
-      final response = await http.get(url);
+      final token = await _authService.getToken();
+      final response = await http.get(
+        url,
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => SuCo.fromJson(json)).toList();
@@ -48,9 +54,13 @@ class SuCoService {
   Future<bool> sendSuCo(SuCo suCo) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/SuCo');
     try {
+      final token = await _authService.getToken();
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: json.encode(suCo.toJson()),
       );
       return response.statusCode == 201 || response.statusCode == 200;

@@ -22,7 +22,7 @@ public class InvoiceController : ControllerBase
     /// Lấy danh sách hóa đơn. Nếu không truyền month/year sẽ trả về tất cả.
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<InvoiceDto>>> GetInvoices([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int? maQuanLy)
+    public async Task<ActionResult<List<InvoiceDto>>> GetInvoices([FromQuery] int? month, [FromQuery] int? year)
     {
         try
         {
@@ -35,14 +35,14 @@ public class InvoiceController : ControllerBase
                 return BadRequest(new { message = "Năm không hợp lệ." });
             }
 
-            int? mqIdFinal = maQuanLy;
+            int? maQuanLy = null;
             var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
             if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
             {
-                mqIdFinal = mqId;
+                maQuanLy = mqId;
             }
 
-            var invoices = await _invoiceService.GetInvoicesAsync(month, year, mqIdFinal);
+            var invoices = await _invoiceService.GetInvoicesAsync(month, year, maQuanLy);
             return Ok(invoices);
         }
         catch (Exception ex)

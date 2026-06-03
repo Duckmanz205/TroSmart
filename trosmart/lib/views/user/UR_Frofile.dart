@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trosmart/shared/app_theme.dart';
+import 'package:trosmart/shared/api_constants.dart';
 import 'package:trosmart/views/auth/login_screen.dart';
-import '../../services/khach_thue_service.dart';
-import '../../models/khach_thue.dart';
-import '../../logic/auth/auth_service.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
@@ -13,6 +14,16 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
+  bool _isLoading = true;
+  bool _isEditingProfile = false;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _cccdController = TextEditingController();
+
+  int _maKhach = 0;
+
   // Trạng thái cho các Toggles (Switch)
   bool pushNotification = true;
   bool paymentReminder = true;
@@ -21,85 +32,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool contractReminder = true;
   bool biometricAuth = false;
 
-  KhachThue? _profile;
-  bool _isLoadingProfile = true;
-  final KhachThueService _profileService = KhachThueService();
-  final AuthService _authService = AuthService();
-
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _cccdController = TextEditingController();
-
-  int? _maKhach;
-
   @override
   void initState() {
     super.initState();
-    _loadProfileData();
-  }
-
-  Future<void> _loadProfileData() async {
-    try {
-      _maKhach = await _authService.getMaKhach();
-      if (_maKhach != null) {
-        final profile = await _profileService.getCustomerProfile(_maKhach!);
-        setState(() {
-          _profile = profile;
-          _nameController.text = profile.hoTen ?? '';
-          _phoneController.text = profile.sdt ?? '';
-          _emailController.text = profile.email ?? '';
-          _cccdController.text = profile.cccd ?? '';
-          _isLoadingProfile = false;
-        });
-      } else {
-        setState(() {
-          _isLoadingProfile = false;
-        });
-      }
-    } catch (e) {
-      debugPrint("Lỗi tải thông tin cá nhân: $e");
-      setState(() {
-        _isLoadingProfile = false;
-      });
-    }
-  }
-
-  Future<void> _updateProfile() async {
-    if (_profile == null) return;
-    final updated = KhachThue(
-      maKhach: _profile!.maKhach,
-      hoTen: _nameController.text.trim(),
-      sdt: _phoneController.text.trim(),
-      email: _emailController.text.trim(),
-      cccd: _cccdController.text.trim(),
-      gioiTinh: _profile!.gioiTinh,
-      diaChiThuongTru: _profile!.diaChiThuongTru,
-      ngaySinh: _profile!.ngaySinh,
-      ngayCapCccd: _profile!.ngayCapCccd,
-      noiCapCccd: _profile!.noiCapCccd,
-      trangThai: _profile!.trangThai,
-    );
-
-    try {
-      final success = await _profileService.updateCustomerProfile(updated);
-      if (success) {
-        setState(() {
-          _profile = updated;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cập nhật thông tin thành công!", style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cập nhật thất bại. Vui lòng kiểm tra lại."), backgroundColor: Colors.red),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red),
-      );
-    }
+    _loadProfile();
   }
 
   @override
@@ -111,14 +47,84 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _loadProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _maKhach = prefs.getInt('ma_khach') ?? 1; // Fallback to 1
+
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/KhachThue/$_maKhach'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _nameController.text = data['hoTen'] ?? '';
+          _phoneController.text = data['sdt'] ?? '';
+          _emailController.text = data['email'] ?? '';
+          _cccdController.text = data['cccd'] ?? '';
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConstants.baseUrl}/KhachThue/$_maKhach'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'maKhach': _maKhach,
+          'hoTen': _nameController.text.trim(),
+          'sdt': _phoneController.text.trim(),
+          'email': _emailController.text.trim(),
+          'cccd': _cccdController.text.trim(),
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        setState(() {
+          _isEditingProfile = false;
+          _isLoading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã cập nhật thông tin cá nhân!'), backgroundColor: Colors.green),
+          );
+        }
+      } else {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cập nhật thất bại'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_isLoadingProfile) {
+    if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF14B8A6)),
-        ),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFFB794F4))),
       );
     }
 
@@ -165,9 +171,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
               alignment: Alignment.center,
               child: Text(
-                _profile?.hoTen != null && _profile!.hoTen!.isNotEmpty 
-                    ? _profile!.hoTen![0].toUpperCase() 
-                    : "U", 
+                _nameController.text.isNotEmpty ? _nameController.text[0].toUpperCase() : "K",
                 style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
@@ -178,7 +182,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14B8A6), // Active green
+                  color: const Color(0xFF14B8A6),
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
@@ -187,9 +191,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        Text(_profile?.hoTen ?? "Khách thuê", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
+        Text(
+          _nameController.text.isNotEmpty ? _nameController.text : "Khách thuê",
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF111827)),
+        ),
         const SizedBox(height: 4),
-        Text(_profile?.sdt ?? "Chưa bổ sung số điện thoại", style: const TextStyle(fontSize: 14, color: Color(0xFF718096))),
+        Text(
+          _phoneController.text.isNotEmpty ? _phoneController.text : "Chưa cập nhật SĐT",
+          style: const TextStyle(fontSize: 14, color: Color(0xFF718096)),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -211,37 +221,45 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text("Thông tin cá nhân", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-            const SizedBox(),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isEditingProfile = !_isEditingProfile;
+                });
+              },
+              child: Text(_isEditingProfile ? "Hủy" : "Chỉnh sửa", style: const TextStyle(fontSize: 12, color: Color(0xFF0D9488))),
+            ),
           ],
         ),
         const SizedBox(height: 16),
-        _buildEditTextField("HỌ VÀ TÊN", _nameController),
+        _buildTextField("HỌ VÀ TÊN", _nameController, enabled: _isEditingProfile),
         const SizedBox(height: 20),
-        _buildEditTextField("SỐ ĐIỆN THOẠI", _phoneController),
+        _buildTextField("SỐ ĐIỆN THOẠI", _phoneController, enabled: _isEditingProfile),
         const SizedBox(height: 20),
-        _buildEditTextField("EMAIL", _emailController),
+        _buildTextField("EMAIL", _emailController, enabled: _isEditingProfile),
         const SizedBox(height: 20),
-        _buildEditTextField("SỐ CCCD / CMND", _cccdController, isVerified: true),
+        _buildTextField("SỐ CCCD / CMND", _cccdController, enabled: _isEditingProfile, isVerified: true),
         const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _updateProfile,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFB794F4), // Màu tím sáng
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 4,
-              shadowColor: const Color(0xFFB794F4).withOpacity(0.4),
+        if (_isEditingProfile)
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _saveProfile,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB794F4), // Màu tím sáng
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+                shadowColor: const Color(0xFFB794F4).withOpacity(0.4),
+              ),
+              child: const Text("Lưu Thay Đổi", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
-            child: const Text("Lưu Thay Đổi", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
-        ),
       ],
     );
   }
 
-  Widget _buildEditTextField(String label, TextEditingController controller, {bool isVerified = false}) {
+  Widget _buildTextField(String label, TextEditingController controller, {bool enabled = false, bool isVerified = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -251,23 +269,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           height: 50,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
+            color: enabled ? Colors.white : const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: enabled ? const Color(0xFFB794F4) : const Color(0xFFE5E7EB)),
           ),
           child: Row(
             children: [
               Expanded(
-                child: TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                  ),
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
-                ),
+                child: enabled
+                    ? TextField(
+                        controller: controller,
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      )
+                    : Text(
+                        controller.text.isNotEmpty ? controller.text : "Chưa cập nhật",
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+                      ),
               ),
-              if (isVerified)
+              if (isVerified && !enabled)
                 const Text("Đã xác thực", style: TextStyle(fontSize: 10, color: Color(0xFF0D9488), fontWeight: FontWeight.w500)),
             ],
           ),
@@ -370,24 +394,31 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF9FAFB),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               side: const BorderSide(color: Color(0xFFE5E7EB)),
               elevation: 0,
             ),
-            child: ListTile(
-              title: const Center(child: Text('Đăng xuất', style: TextStyle(color: AppTheme.textDark))),
-              onTap: () {
-                // Luôn nhớ dùng pushAndRemoveUntil cho đăng xuất
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  (route) => false,
-                );
-              },
-            )
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(
+                color: AppTheme.textDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 20), // Tránh đè với BottomNav

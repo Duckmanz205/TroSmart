@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
-import '../../logic/auth/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdAddHopDong extends StatefulWidget {
   const AdAddHopDong({super.key});
@@ -41,42 +41,20 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
   // 🌐 1. TẢI DỮ LIỆU ĐỘNG (KHÁCH THUÊ & PHÒNG TRỐNG) TỪ BACKEND
   Future<void> _fetchInitialData() async {
     try {
-      final maQuanLy = await AuthService().getMaQuanLy();
-      
-      // Gọi API lấy danh sách khách thuê
+      final prefs = await SharedPreferences.getInstance();
+      final maQuanLy = prefs.getInt('ma_quan_ly') ?? 1;
+
       final customerRes = await http.get(Uri.parse('${ApiConstants.baseUrl}/KhachThue'));
-      
-      // Gọi API lấy danh sách phòng trọ thuộc về admin quản lý này
-      final roomRes = await http.get(Uri.parse('${ApiConstants.baseUrl}/Phong?maQuanLy=$maQuanLy'));
+      final roomRes = await http.get(Uri.parse('${ApiConstants.baseUrl}/Phong/trong?maQuanLy=$maQuanLy'));
 
       List<dynamic> parsedCustomers = [];
+      List<dynamic> parsedRooms = [];
+
       if (customerRes.statusCode == 200) {
         parsedCustomers = jsonDecode(customerRes.body);
       }
-      
-      List<dynamic> parsedRooms = [];
       if (roomRes.statusCode == 200) {
-        final List<dynamic> allRooms = jsonDecode(roomRes.body);
-        parsedRooms = allRooms.where((r) {
-          final status = (r['trangThai'] ?? r['TrangThai'] ?? '').toString().toLowerCase();
-          return status.contains('trống') || status.contains('trong');
-        }).toList();
-      }
-
-      // Fallbacks chỉ khi API trả về rỗng để giữ an toàn tuyệt đối cho nghiệm thu
-      if (parsedCustomers.isEmpty) {
-        parsedCustomers = [
-          {"maKhach": 1, "hoTen": "Nguyễn Văn An"},
-          {"maKhach": 2, "hoTen": "Trần Thị Bích"},
-          {"maKhach": 3, "hoTen": "Lê Minh Tuấn"}
-        ];
-      }
-      if (parsedRooms.isEmpty) {
-        parsedRooms = [
-          {"maPhong": 1, "soPhong": "A101", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2000000},
-          {"maPhong": 3, "soPhong": "A103", "tenCoSo": "KTX Sinh Viên A", "giaThue": 2500000},
-          {"maPhong": 11, "soPhong": "B101", "tenCoSo": "Nhà trọ Trung Tâm B", "giaThue": 1800000}
-        ];
+        parsedRooms = jsonDecode(roomRes.body);
       }
 
       setState(() {
@@ -172,8 +150,8 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
                   children: [
                     _buildLabel('BÊN THUÊ & VỊ TRÍ PHÒNG'),
                     
-                    // Dropdown Chọn Khách Thuê Động
-                    _buildCustomerDropdown(),
+                    // Tìm kiếm Chọn Khách Thuê Động
+                    _buildCustomerSearch(),
                     const SizedBox(height: 12),
                     
                     // Dropdown Chọn Phòng Trống Động
@@ -198,10 +176,6 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
                         Expanded(child: _buildInputField(_soNuocController, 'Số nước cũ (m3)', isNumber: true)),
                       ],
                     ),
-                    
-                    const SizedBox(height: 24),
-                    _buildLabel('HÌNH ẢNH MINH CHỨNG HỢP ĐỒNG & CCCD'),
-                    _buildUploadBox(),
                     
                     const SizedBox(height: 24),
                     _buildLabel('GHI CHÚ / ĐIỀU KHOẢN RÀNG BUỘC RIÊNG'),
@@ -311,8 +285,56 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
     );
   }
 
-  // Dropdown chọn Khách thuê lấy từ DB
-  Widget _buildCustomerDropdown() {
+  // Tìm kiếm khách thuê từ danh sách DB
+  Widget _buildCustomerSearch() {
+    if (_selectedMaKhach != null) {
+      final selectedCust = _customers.firstWhere(
+        (c) => c['maKhach'] == _selectedMaKhach,
+        orElse: () => null,
+      );
+      if (selectedCust != null) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F0F8),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.deepPurple.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.person, color: AppTheme.deepPurple, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      selectedCust['hoTen'] ?? 'N/A',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.deepPurple),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "SĐT: ${selectedCust['sdt'] ?? 'N/A'} | CCCD: ${selectedCust['cccd'] ?? 'N/A'}",
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.cancel, color: Colors.grey),
+                onPressed: () {
+                  setState(() {
+                    _selectedMaKhach = null;
+                  });
+                },
+              )
+            ],
+          ),
+        );
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       decoration: BoxDecoration(
@@ -320,19 +342,76 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: _selectedMaKhach,
-          hint: const Text('Chọn khách hàng thuê trọ *', style: TextStyle(fontSize: 14, color: Colors.grey)),
-          isExpanded: true,
-          items: _customers.map((cust) {
-            return DropdownMenuItem<int>(
-              value: cust['maKhach'],
-              child: Text("${cust['hoTen']} (Mã khách: #${cust['maKhach']})", style: const TextStyle(fontSize: 14)),
-            );
-          }).toList(),
-          onChanged: (val) => setState(() => _selectedMaKhach = val),
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Autocomplete<Map<String, dynamic>>(
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text.isEmpty) {
+                return const Iterable<Map<String, dynamic>>.empty();
+              }
+              return _customers.whereType<Map<String, dynamic>>().where((cust) {
+                final name = (cust['hoTen'] ?? '').toString().toLowerCase();
+                final phone = (cust['sdt'] ?? '').toString().toLowerCase();
+                final query = textEditingValue.text.toLowerCase();
+                return name.contains(query) || phone.contains(query);
+              });
+            },
+            displayStringForOption: (Map<String, dynamic> option) => option['hoTen'] ?? '',
+            onSelected: (Map<String, dynamic> selection) {
+              setState(() {
+                _selectedMaKhach = selection['maKhach'];
+              });
+            },
+            fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+              return TextField(
+                controller: textEditingController,
+                focusNode: focusNode,
+                style: const TextStyle(fontSize: 14),
+                decoration: const InputDecoration(
+                  hintText: 'Nhập tên hoặc số điện thoại để tìm khách...',
+                  hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                  prefixIcon: Icon(Icons.search, color: AppTheme.deepPurple),
+                  border: InputBorder.none,
+                ),
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 4.0,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: constraints.maxWidth,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: options.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final option = options.elementAt(index);
+                        return ListTile(
+                          title: Text(
+                            option['hoTen'] ?? 'N/A',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            "SĐT: ${option['sdt'] ?? 'N/A'} - CCCD: ${option['cccd'] ?? 'N/A'}",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          onTap: () => onSelected(option),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -402,25 +481,6 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
     );
   }
 
-  Widget _buildUploadBox() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F0F8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.deepPurple.withOpacity(0.1)),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.camera_alt_outlined, color: AppTheme.deepPurple),
-          const SizedBox(height: 8),
-          const Text('Chụp ảnh / Tải lên', style: TextStyle(color: AppTheme.deepPurple, fontWeight: FontWeight.bold, fontSize: 13)),
-          Text('(Mặt trước, mặt sau CCCD và hợp đồng)', style: TextStyle(color: Colors.grey.withOpacity(0.8), fontSize: 10)),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTextArea() {
     return Container(

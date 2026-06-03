@@ -26,6 +26,7 @@ namespace PhongTroAPI.Services
                 .Include(hd => hd.MaKhachNavigation)
                 .Include(hd => hd.MaPhongNavigation)
                     .ThenInclude(p => p.MaCoSoNavigation)
+                        .ThenInclude(cs => cs.MaQuanLyNavigation)
                 .AsQueryable();
 
             if (maQuanLy.HasValue)
@@ -50,7 +51,10 @@ namespace PhongTroAPI.Services
                     NgayBatDau = hd.NgayBatDau,
                     NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
                     TrangThai = hd.TrangThai,
-                    UrlChuKySupabase = hd.ChuKy 
+                    UrlChuKySupabase = hd.ChuKy,
+                    TenQuanLy = hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null ? hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.HoTen : "N/A",
+                    SdtQuanLy = hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null ? hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.Sdt : "N/A",
+                    EmailQuanLy = hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null ? hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.Email : "N/A"
                 })
                 .ToList() 
                 .Select(dto => {
@@ -150,6 +154,7 @@ namespace PhongTroAPI.Services
                 .Include(hd => hd.MaKhachNavigation)
                 .Include(hd => hd.MaPhongNavigation)
                     .ThenInclude(p => p.MaCoSoNavigation)
+                        .ThenInclude(cs => cs.MaQuanLyNavigation)
                 .FirstOrDefault(hd => hd.MaHopDong == maHopDong);
 
             if (hd == null) return null;
@@ -169,7 +174,10 @@ namespace PhongTroAPI.Services
                 NgayBatDau = hd.NgayBatDau,
                 NgayKetThuc = hd.NgayKetThuc ?? DateOnly.MinValue,
                 TrangThai = hd.TrangThai,
-                UrlChuKySupabase = ExtractSupabaseUrl(hd.ChuKy) 
+                UrlChuKySupabase = ExtractSupabaseUrl(hd.ChuKy),
+                TenQuanLy = hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null ? hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.HoTen : "N/A",
+                SdtQuanLy = hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null ? hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.Sdt : "N/A",
+                EmailQuanLy = hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation != null ? hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLyNavigation.Email : "N/A"
             };
         }
 
@@ -230,6 +238,7 @@ namespace PhongTroAPI.Services
         }
 
         // 🛠️ HÀM PHỤ TRỢ: BÓC TÁCH JSON
+        // 🛠️ HÀM PHỤ TRỢ: BÓC TÁCH JSON
         private static string? ExtractSupabaseUrl(string? rawDbValue)
         {
             if (string.IsNullOrEmpty(rawDbValue)) return null;
@@ -247,6 +256,72 @@ namespace PhongTroAPI.Services
             }
             catch { }
             return rawDbValue;
+        }
+
+        // 8. LẤY HỢP ĐỒNG BẰNG ID (DÀNH CHO XUẤT PDF)
+        public HopDongThue? GetById(int id)
+        {
+            return _context.HopDongThues
+                .Include(hd => hd.MaKhachNavigation)
+                .Include(hd => hd.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
+                        .ThenInclude(cs => cs.MaQuanLyNavigation)
+                .FirstOrDefault(hd => hd.MaHopDong == id);
+        }
+
+        // 9. SINH PDF CHO HỢP ĐỒNG
+        public byte[] GeneratePdfBytes(HopDongThue contract)
+        {
+            string content = $@"%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /MediaBox [0 0 595 842] /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 500 >>
+stream
+BT
+/F1 24 Tf
+50 750 Td
+(HOP DONG THUE PHONG TRO) Tj
+/F1 12 Tf
+0 -40 Td
+(Ma Hop Dong: HD-2026-00{contract.MaHopDong}) Tj
+0 -20 Td
+(Khach Thue: {contract.MaKhachNavigation?.HoTen ?? "N/A"}) Tj
+0 -20 Td
+(Phong: {contract.MaPhongNavigation?.SoPhong ?? "N/A"}) Tj
+0 -20 Td
+(Gia Thue: {contract.MaPhongNavigation?.GiaThue ?? 0} VND) Tj
+0 -20 Td
+(Tien Coc: {contract.TienCoc ?? 0} VND) Tj
+0 -20 Td
+(Ngay Bat Dau: {contract.NgayBatDau:yyyy-MM-dd}) Tj
+0 -20 Td
+(Ngay Ket Thuc: {contract.NgayKetThuc:yyyy-MM-dd}) Tj
+0 -20 Td
+(Trang Thai: {contract.TrangThai}) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000282 00000 n 
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+820
+%%EOF";
+            return Encoding.UTF8.GetBytes(content);
         }
     }
 }

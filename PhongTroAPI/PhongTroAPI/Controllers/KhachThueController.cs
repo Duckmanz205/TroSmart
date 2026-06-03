@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.Entities;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace PhongTroAPI.Controllers
@@ -28,7 +27,8 @@ namespace PhongTroAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<KhachThue>> GetKhachThue(int id)
         {
-            var khachThue = await _context.KhachThues.FindAsync(id);
+            var khachThue = await _context.KhachThues
+                .FirstOrDefaultAsync(k => k.MaKhach == id);
 
             if (khachThue == null)
             {
@@ -44,44 +44,25 @@ namespace PhongTroAPI.Controllers
         {
             if (id != khachThue.MaKhach)
             {
-                return BadRequest();
+                return BadRequest("ID không khớp");
             }
 
             var existingKhach = await _context.KhachThues.FindAsync(id);
             if (existingKhach == null)
             {
-                return NotFound();
+                return NotFound("Không tìm thấy khách thuê");
             }
 
             existingKhach.HoTen = khachThue.HoTen;
             existingKhach.Sdt = khachThue.Sdt;
-            existingKhach.Cccd = khachThue.Cccd;
             existingKhach.Email = khachThue.Email;
+            existingKhach.Cccd = khachThue.Cccd;
             existingKhach.GioiTinh = khachThue.GioiTinh;
             existingKhach.DiaChiThuongTru = khachThue.DiaChiThuongTru;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!KhachThueExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool KhachThueExists(int id)
-        {
-            return _context.KhachThues.Any(e => e.MaKhach == id);
         }
     }
 }

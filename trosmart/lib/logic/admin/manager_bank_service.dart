@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../shared/api_constants.dart';
 
 class BankModel {
   final int maNganHang;
@@ -59,13 +60,13 @@ class ManagerBankInfo {
 }
 
 class ManagerBankService {
-  static const String baseUrl = 'http://10.0.2.2:5137/api';
-
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConstants.baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
 
   Future<List<BankModel>> getBanks() async {
     try {

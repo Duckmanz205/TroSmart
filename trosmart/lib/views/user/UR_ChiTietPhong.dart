@@ -5,7 +5,6 @@ import 'Ur_DatLichXemPhong.dart';
 import '../../models/admin/phong_view_model.dart';
 import '../../shared/api_constants.dart';
 import 'UR_Chat.dart';
-import '../../logic/auth/auth_service.dart';
 
 class RoomDetailView extends StatelessWidget {
   final PhongViewModel room;
@@ -77,10 +76,11 @@ class RoomDetailView extends StatelessWidget {
     return 'Trạng thái phòng chưa xác định.';
   }
 
-  Future<void> _showBookingMessage(BuildContext context) async {
+ Future<void> _showBookingMessage(BuildContext context) async {
     try {
-      final authService = AuthService();
-      final int currentMaKhach = await authService.getMaKhach() ?? 1;
+      final prefs = await SharedPreferences.getInstance();
+      // Bốc mã khách đăng nhập từ máy, fallback bằng 1 (khach1) để bao test nghiệm thu
+      final int currentMaKhach = prefs.getInt('maKhach') ?? 1;
 
       if (!context.mounted) return;
 

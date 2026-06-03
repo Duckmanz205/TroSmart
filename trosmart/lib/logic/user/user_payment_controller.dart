@@ -70,18 +70,24 @@ class UserPaymentController extends ChangeNotifier {
         return;
       }
 
-      _allInvoices = list;
+      // Lọc hóa đơn theo phòng đang được chọn trong hợp đồng
+      final selectedMaPhong = prefs.getInt('selected_ma_phong');
+      if (selectedMaPhong != null && selectedMaPhong > 0) {
+        _allInvoices = list.where((inv) => inv.maPhong == selectedMaPhong).toList();
+      } else {
+        _allInvoices = list;
+      }
       
-      if (list.isNotEmpty) {
+      if (_allInvoices.isNotEmpty) {
         // Tìm hóa đơn chưa thanh toán mới nhất, nếu không có thì lấy hóa đơn mới nhất
-        final pending = list.where((inv) => inv.trangThai != 'Đã thanh toán').toList();
+        final pending = _allInvoices.where((inv) => inv.trangThai != 'Đã thanh toán').toList();
         if (pending.isNotEmpty) {
           // Lấy hóa đơn có mã lớn nhất
           pending.sort((a, b) => b.maHoaDon.compareTo(a.maHoaDon));
           _activeInvoice = pending.first;
         } else {
-          list.sort((a, b) => b.maHoaDon.compareTo(a.maHoaDon));
-          _activeInvoice = list.first;
+          _allInvoices.sort((a, b) => b.maHoaDon.compareTo(a.maHoaDon));
+          _activeInvoice = _allInvoices.first;
         }
       } else {
         _activeInvoice = null;

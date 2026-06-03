@@ -196,6 +196,50 @@ class _AD_SuCoState extends State<AD_SuCo> {
                     ),
                   ),
                 ),
+                if (suCo.hinhAnh != null && suCo.hinhAnh!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Hình ảnh minh chứng:',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      suCo.hinhAnh!,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
+                          height: 180,
+                          color: Colors.grey[100],
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 180,
+                          color: Colors.grey[100],
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                              SizedBox(height: 8),
+                              Text('Không thể tải hình ảnh', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -420,7 +464,7 @@ class _AD_SuCoState extends State<AD_SuCo> {
                         date: suCo.ngayBao != null
                             ? '${suCo.ngayBao!.day}/${suCo.ngayBao!.month}/${suCo.ngayBao!.year}'
                             : '',
-                        imagesCount: suCo.hinhAnh != null ? 1 : 0,
+                        imagesCount: (suCo.hinhAnh != null && suCo.hinhAnh!.isNotEmpty) ? 1 : 0,
                         isUrgent: suCo.trangThai == 'Đang xử lý',
                         bgColor: AppColors.incidentBg1,
                         onAccept: () =>

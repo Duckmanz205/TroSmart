@@ -8,10 +8,11 @@ import '../../models/admin/manager_model.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/admin/co_so_image_model.dart';
 import '../../models/admin/tien_ich_model.dart';
+import '../../shared/api_constants.dart';
 
 
 class CoSoService {
-  static const String baseUrl = 'http://10.0.2.2:5137/api';
+  String get baseUrl => ApiConstants.baseUrl;
 
   Future<List<ManagerModel>> getManagers() async {
     final uri = Uri.parse('$baseUrl/CoSo/managers');

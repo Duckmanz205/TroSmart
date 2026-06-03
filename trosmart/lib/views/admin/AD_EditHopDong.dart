@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
+import '../../shared/api_constants.dart';
 
 class AdEditHopDong extends StatefulWidget {
   final int maHopDong;
@@ -36,7 +37,7 @@ class _AdEditHopDongState extends State<AdEditHopDong> {
   // 1. GỌI API LẤY THÔNG TIN HỢP ĐỒNG HIỆN TẠI ĐỂ ĐỔ VÀO FORM
   Future<void> _fetchContractDetails() async {
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}'));
+      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'));
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -83,7 +84,7 @@ class _AdEditHopDongState extends State<AdEditHopDong> {
 
     try {
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:5137/api/HopDong/${widget.maHopDong}'),
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "maPhong": 0, // Backend ông không check mã phòng/khách khi update nên truyền ảo 0 là an toàn
