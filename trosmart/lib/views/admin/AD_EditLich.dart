@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
+import '../../models/thong_bao.dart';
+import '../../services/thong_bao_service.dart';
 
 class AdEditLich extends StatefulWidget {
   // Nhận dữ liệu của lịch hẹn cần chỉnh sửa từ màn hình danh sách truyền sang
@@ -33,6 +35,7 @@ class _AdEditLichState extends State<AdEditLich> {
   // Thông tin định danh dưới SQL Server
   late int _maLichHen;
   late int _maPhong;
+  int? _maKhach;
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _AdEditLichState extends State<AdEditLich> {
     _currentLichHen = widget.lichHenData;
     _maLichHen = _currentLichHen['MaLichHen'] ?? _currentLichHen['maLichHen'] ?? 0;
     _maPhong = _currentLichHen['MaPhong'] ?? _currentLichHen['maPhong'] ?? 1; // Mặc định phòng 1 nếu lỗi
+    _maKhach = _currentLichHen['MaKhach'] ?? _currentLichHen['maKhach'];
     
     // Đổ dữ liệu cũ lên form gõ chữ (Hỗ trợ cả trường hợp key hoa hoặc thường từ API)
     _titleController = TextEditingController(text: _currentLichHen['Tiêu đề'] ?? 'Lịch hẹn xem phòng');
@@ -153,6 +157,26 @@ class _AdEditLichState extends State<AdEditLich> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
+        if (_sendNotify && _maKhach != null && _maKhach != 0) {
+          try {
+            final formattedNewTime = DateFormat('HH:mm dd/MM/yyyy').format(finalUpdatedDateTime);
+            final soPhongStr = _currentLichHen['SoPhong'] ?? _currentLichHen['soPhong'] ?? '$_maPhong';
+            final tenCoSoStr = _currentLichHen['TenCoSo'] ?? _currentLichHen['tenCoSo'] ?? '';
+            final diaDiemStr = tenCoSoStr.isNotEmpty ? '$soPhongStr ($tenCoSoStr)' : '$soPhongStr';
+
+            await ThongBaoService().sendThongBao(ThongBao(
+              maThongBao: 0,
+              maKhach: _maKhach!,
+              tieuDe: 'Thay đổi lịch hẹn xem phòng',
+              noiDung: 'Lịch hẹn xem phòng tại phòng $diaDiemStr đã được thay đổi sang lúc $formattedNewTime.',
+              daDoc: false,
+              loaiThongBao: 'Hệ thống',
+            ));
+          } catch (e) {
+            debugPrint("Lỗi gửi thông báo: $e");
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('🎉 Cập nhật lịch hẹn thành công!'), backgroundColor: Colors.green),
         );
@@ -409,7 +433,12 @@ class _AdEditLichState extends State<AdEditLich> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Gửi thông báo thay đổi cho khách', style: TextStyle(fontSize: 13)),
+          const Expanded(
+            child: Text(
+              'Gửi thông báo thay đổi cho khách',
+              style: TextStyle(fontSize: 13),
+            ),
+          ),
           Switch(
             value: _sendNotify,
             onChanged: (v) => setState(() => _sendNotify = v),
