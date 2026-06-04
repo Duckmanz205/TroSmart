@@ -56,31 +56,6 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
     AdminPages.taiKhoan, // 12
   ];
 
-  late final List<Widget> _pages;
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      AdminHomeScreen(onNavigate: _navigateTo), // 0: Dashboard
-      const _CoSoManagementWrapper(), // 1: Cơ sở (Dynamic wrapper)
-      const PhongManagementView(), // 2: Phòng
-      ChangeNotifierProvider(
-        create: (context) => InvoiceController(),
-        child: const InvoiceScreen(),
-      ), // 3: Thu & Thuê (Hóa đơn)
-      const AdQLHopDong(), // 4: Hợp đồng (chờ hoàn thiện)
-      const UtilityManagementView(), // 5: Điện nước
-      const AD_SuCo(), // 6: Sự cố
-      const AD_ThongBao(), // 7: Thông báo
-      const AdLichCongViec(), // 8: Lịch & Công việc
-      const StatisticsScreen(), // 9: Báo cáo (Thống kê)
-      const AdChat(), // 10: Chat
-      const AdminSettingsScreen(), // 11: Cài đặt (chờ hoàn thiện)
-      const AdminProfileScreen(), // 12: Tài khoản
-    ];
-  }
-
   // 3. Hàm điều hướng dùng chung để đóng drawer và chuyển trang
   void _navigateTo(String pageName) {
     setState(() {
@@ -117,7 +92,24 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
       drawer: AdminDrawer(activePage: _activePage, onPageSelected: _navigateTo),
       body: IndexedStack(
         index: _pageOrder.indexOf(_activePage),
-        children: _pages,
+        children: [
+          AdminHomeScreen(onNavigate: _navigateTo), // 0: Dashboard
+          const _CoSoManagementWrapper(), // 1: Cơ sở (Dynamic wrapper)
+          const PhongManagementView(), // 2: Phòng
+          ChangeNotifierProvider(
+            create: (context) => InvoiceController(),
+            child: const InvoiceScreen(),
+          ), // 3: Thu & Thuê (Hóa đơn)
+          const AdQLHopDong(), // 4: Hợp đồng (chờ hoàn thiện)
+          UtilityManagementView(isActive: _activePage == AdminPages.dienNuoc), // 5: Điện nước
+          const AD_SuCo(), // 6: Sự cố
+          const AD_ThongBao(), // 7: Thông báo
+          const AdLichCongViec(), // 8: Lịch & Công việc
+          const StatisticsScreen(), // 9: Báo cáo (Thống kê)
+          const AdChat(), // 10: Chat
+          const AdminSettingsScreen(), // 11: Cài đặt (chờ hoàn thiện)
+          const AdminProfileScreen(), // 12: Tài khoản
+        ],
       ),
       bottomNavigationBar: CustomBottomNav(
         currentIndex: _getBottomNavIndex(),
