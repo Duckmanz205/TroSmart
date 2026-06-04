@@ -729,5 +729,43 @@ namespace PhongTroAPI.Controllers
             return Ok(data);
         }
 
+        // POST: thêm ảnh cho 1 phòng qua URL (Supabase)
+        [HttpPost("{id}/image/url")]
+        public async Task<IActionResult> UploadImageUrl(int id, [FromBody] PhongImageUrlDto dto)
+        {
+            var phong = await _context.Phongs.FindAsync(id);
+            if (phong == null)
+                return NotFound("Không tìm thấy phòng");
+
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Url))
+                return BadRequest("URL ảnh không hợp lệ");
+
+            // Xóa hết ảnh cũ của phòng
+            var oldImages = await _context.Set<HinhAnhPhong>()
+                .Where(x => x.MaPhong == id)
+                .ToListAsync();
+            _context.Set<HinhAnhPhong>().RemoveRange(oldImages);
+
+            var image = new HinhAnhPhong
+            {
+                MaPhong = id,
+                UrlAnh = dto.Url.Trim()
+            };
+
+            _context.Set<HinhAnhPhong>().Add(image);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                image.MaAnh,
+                image.MaPhong,
+                image.UrlAnh
+            });
+        }
+    }
+
+    public class PhongImageUrlDto
+    {
+        public string Url { get; set; } = string.Empty;
     }
 }

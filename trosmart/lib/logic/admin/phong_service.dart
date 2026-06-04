@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/admin/phong_model.dart';
 import '../../models/admin/phong_view_model.dart';
@@ -171,6 +172,26 @@ class PhongService {
 }
 
   Future<void> deletePhong(int maPhong) async {
+    // 1. Fetch details to delete image from Supabase first
+    try {
+      final detail = await getDetail(maPhong);
+      final urlAnh = detail.hinhAnhPhong;
+      if (urlAnh != null && urlAnh.isNotEmpty && urlAnh.contains('supabase.co')) {
+        final uri = Uri.parse(urlAnh);
+        final segments = uri.pathSegments;
+        if (segments.length >= 2) {
+          final bucketName = segments[segments.length - 2];
+          final fileName = segments.last;
+          final supabase = Supabase.instance.client;
+          await supabase.storage.from(bucketName).remove([fileName]);
+          print("Deleted image from Supabase Storage ($bucketName): $fileName");
+        }
+      }
+    } catch (e) {
+      print("Error deleting Supabase image of Phong: $e");
+    }
+
+    // 2. Call backend to delete Phong
     final uri = Uri.parse('$baseUrl/Phong/$maPhong');
 
     final response = await http.delete(uri);
@@ -187,25 +208,71 @@ class PhongService {
     required int maPhong,
     required XFile file,
   }) async {
-    final uri = Uri.parse('$baseUrl/Phong/$maPhong/image');
+    final supabase = Supabase.instance.client;
 
-    final request = http.MultipartRequest('POST', uri);
+    // Fetch detail first to get room number and facility ID
+    final detail = await getDetail(maPhong);
 
-    final bytes = await file.readAsBytes();
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        bytes,
-        filename: file.name,
-      ),
+    // 1. Delete old image if it exists in Supabase
+    try {
+      final urlAnh = detail.hinhAnhPhong;
+      if (urlAnh != null && urlAnh.isNotEmpty && urlAnh.contains('supabase.co')) {
+        final uri = Uri.parse(urlAnh);
+        final segments = uri.pathSegments;
+        if (segments.length >= 2) {
+          final bucketName = segments[segments.length - 2];
+          final oldFileName = segments.last;
+          await supabase.storage.from(bucketName).remove([oldFileName]);
+          print("Deleted old image from Supabase Storage ($bucketName): $oldFileName");
+        }
+      }
+    } catch (e) {
+      print("Error deleting old image of Phong: $e");
+    }
+
+    // 2. Upload the new image directly to Supabase Storage in 'phong' bucket
+    final cleanSoPhong = detail.soPhong.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '');
+    final coSoPart = 'coso${detail.maCoSo}';
+
+    final now = DateTime.now();
+    final year = now.year.toString();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    final ms = now.millisecond.toString().padLeft(3, '0');
+    final dateTimeStr = '$year$month$day$hour$minute$second$ms';
+
+    final extension = file.name.split('.').last;
+    final fileName = '${cleanSoPhong}_${coSoPart}_$dateTimeStr.$extension';
+    final fileBytes = await file.readAsBytes();
+
+    await supabase.storage
+        .from('phong')
+        .uploadBinary(fileName, fileBytes, fileOptions: const FileOptions(upsert: true));
+
+    // 3. Get the public url
+    final publicUrl = supabase.storage
+        .from('phong')
+        .getPublicUrl(fileName);
+
+    // 4. Save this url in the Backend DB using our new URL endpoint
+    final uri = Uri.parse('$baseUrl/Phong/$maPhong/image/url');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'url': publicUrl,
+      }),
     );
-
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
-        'Không upload được ảnh phòng. '
+        'Không lưu được ảnh vào backend. '
         'Status: ${response.statusCode}, Body: ${response.body}',
       );
     }

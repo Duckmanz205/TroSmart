@@ -17,13 +17,6 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
   int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Widget> _screens = [
-    const StatisticsScreen(), // 0 - Trang chủ
-    const InvoiceScreen(), // 1 - Hóa đơn
-    const UtilityManagementView(), // 2 - Phòng / Điện nước
-    const AdminProfileScreen(), // 3 - Tài khoản
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +26,15 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
         child: CustomAppBar(),
       ),
       drawer: const AdminSidebar(),
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          const StatisticsScreen(), // 0 - Trang chủ
+          const InvoiceScreen(), // 1 - Hóa đơn
+          UtilityManagementView(isActive: _currentIndex == 2), // 2 - Phòng / Điện nước
+          const AdminProfileScreen(), // 3 - Tài khoản
+        ],
+      ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }

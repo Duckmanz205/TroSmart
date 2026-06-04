@@ -5,13 +5,41 @@ import '../../widgets/common/admin/custom_app_bar.dart';
 import '../../widgets/admin/utility_management_widgets.dart';
 import '../../logic/admin/utility_controller.dart';
 
-class UtilityManagementView extends StatelessWidget {
-  const UtilityManagementView({super.key});
+class UtilityManagementView extends StatefulWidget {
+  final bool isActive;
+  const UtilityManagementView({super.key, this.isActive = false});
+
+  @override
+  State<UtilityManagementView> createState() => _UtilityManagementViewState();
+}
+
+class _UtilityManagementViewState extends State<UtilityManagementView> {
+  late UtilityController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = UtilityController();
+  }
+
+  @override
+  void didUpdateWidget(covariant UtilityManagementView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _controller.fetchReadings();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => UtilityController(),
+    return ChangeNotifierProvider.value(
+      value: _controller,
       child: Scaffold(
         backgroundColor: AppColors.backgroundGray,
         body: Consumer<UtilityController>(
