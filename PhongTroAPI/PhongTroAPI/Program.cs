@@ -80,7 +80,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFlutterWeb");
 app.UseStaticFiles();
 
-app.UseAuthentication(); // ✅ PHẢI trước UseAuthorization
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();

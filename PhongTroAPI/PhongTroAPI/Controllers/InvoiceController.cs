@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Services;
 
@@ -9,6 +10,7 @@ namespace PhongTroAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class InvoiceController : ControllerBase
 {
     private readonly IInvoiceService _invoiceService;
@@ -35,11 +37,10 @@ public class InvoiceController : ControllerBase
                 return BadRequest(new { message = "Năm không hợp lệ." });
             }
 
-            int? maQuanLy = null;
             var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
-            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
+            if (string.IsNullOrEmpty(maQuanLyClaim) || !int.TryParse(maQuanLyClaim, out int maQuanLy))
             {
-                maQuanLy = mqId;
+                return Ok(new List<InvoiceDto>());
             }
 
             var invoices = await _invoiceService.GetInvoicesAsync(month, year, maQuanLy);
@@ -59,6 +60,23 @@ public class InvoiceController : ControllerBase
     {
         try
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _invoiceService.VerifyCustomerOwnershipAsync(maKhach, maQuanLy);
+                if (!belongsToAdmin) return Forbid();
+            }
+            else if (!string.IsNullOrEmpty(maKhachClaim) && int.TryParse(maKhachClaim, out int userMaKhach))
+            {
+                if (userMaKhach != maKhach) return Forbid();
+            }
+            else
+            {
+                return Forbid();
+            }
+
             var invoices = await _invoiceService.GetInvoicesByCustomerAsync(maKhach);
             return Ok(invoices);
         }
@@ -73,6 +91,13 @@ public class InvoiceController : ControllerBase
     {
         try
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _invoiceService.VerifyInvoiceOwnershipAsync(id, maQuanLy);
+                if (!belongsToAdmin) return Forbid();
+            }
+
             var invoice = await _invoiceService.GetInvoiceByIdAsync(id);
             if (invoice == null)
             {
@@ -96,6 +121,13 @@ public class InvoiceController : ControllerBase
                 return BadRequest(ModelState);
             }
 
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _invoiceService.VerifyRoomOwnershipAsync(createDto.MaPhong, maQuanLy);
+                if (!belongsToAdmin) return Forbid("Phòng không thuộc quyền quản lý của bạn.");
+            }
+
             if (createDto.SoDienMoi < createDto.SoDienCu || createDto.SoNuocMoi < createDto.SoNuocCu)
             {
                 return BadRequest(new { message = "Chỉ số mới không được nhỏ hơn chỉ số cũ." });
@@ -115,6 +147,13 @@ public class InvoiceController : ControllerBase
     {
         try
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _invoiceService.VerifyInvoiceOwnershipAsync(id, maQuanLy);
+                if (!belongsToAdmin) return Forbid();
+            }
+
             var success = await _invoiceService.UpdateInvoiceStatusAsync(id, updateDto);
             if (!success)
             {
@@ -139,6 +178,13 @@ public class InvoiceController : ControllerBase
                 return BadRequest(ModelState);
             }
 
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _invoiceService.VerifyInvoiceOwnershipAsync(id, maQuanLy);
+                if (!belongsToAdmin) return Forbid();
+            }
+
             var success = await _invoiceService.UpdateInvoiceAsync(id, updateDto);
             if (!success)
             {
@@ -158,6 +204,13 @@ public class InvoiceController : ControllerBase
     {
         try
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _invoiceService.VerifyInvoiceOwnershipAsync(id, maQuanLy);
+                if (!belongsToAdmin) return Forbid();
+            }
+
             var success = await _invoiceService.DeleteInvoiceAsync(id);
             if (!success)
             {

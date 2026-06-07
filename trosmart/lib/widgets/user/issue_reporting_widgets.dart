@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 
 /// --- TIÊU ĐỀ TRANG VÀ NÚT TẠO YÊU CẦU ---
 class ActionHeader extends StatelessWidget {
@@ -181,7 +182,11 @@ class _NewRequestFormState extends State<NewRequestForm> {
 
       int? maPhong;
       try {
-        final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong'));
+        final token = await AuthService().getToken();
+        final response = await http.get(
+          Uri.parse('${ApiConstants.baseUrl}/HopDong'),
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        );
         if (response.statusCode == 200) {
           final dynamic decoded = jsonDecode(response.body);
           List<dynamic> contracts = [];

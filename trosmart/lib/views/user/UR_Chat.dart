@@ -170,6 +170,13 @@ class _ContactInfoBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
+            onPressed: () => Navigator.pop(context),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 12),
           Stack(
             children: [
               Container(

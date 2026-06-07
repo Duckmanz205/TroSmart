@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/api_constants.dart'; // 
+import '../../logic/auth/auth_service.dart';
 import 'AD_AddLich.dart';
 import 'AD_DetailLich.dart';
 
@@ -39,7 +41,17 @@ class _AdLichCongViecState extends State<AdLichCongViec> {
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/LichHen'));
+      final prefs = await SharedPreferences.getInstance();
+      final maQuanLy = prefs.getInt('ma_quan_ly') ?? 1;
+
+      final token = await AuthService().getToken();
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/LichHen?maQuanLy=$maQuanLy'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         if (mounted) {

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 import 'AD_EditLich.dart'; 
 import 'AD_DeleteLich.dart'; 
 
@@ -31,9 +32,13 @@ class _AdDetailLichState extends State<AdDetailLich> {
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/${widget.maLichHen}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
         print("DỮ LIỆU THỰC TẾ TỪ C# TRẢ VỀ: ${response.body}");
       if (response.statusCode == 200) {
@@ -54,9 +59,13 @@ class _AdDetailLichState extends State<AdDetailLich> {
   // --- HÀM XỬ LÝ HOÀN THÀNH LỊCH (PUT STATUS) ---
   Future<void> _completeStatus() async {
     try {
+      final token = await AuthService().getToken();
       final response = await http.put(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/${widget.maLichHen}/status'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'TrangThaiMoi': 'Đã hoàn thành'}),
       );
 

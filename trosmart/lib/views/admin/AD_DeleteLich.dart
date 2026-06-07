@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdDeleteLich extends StatefulWidget {
   final Map<String, dynamic> lichHenData;
@@ -62,9 +63,13 @@ class _AdDeleteLichState extends State<AdDeleteLich> {
 
     try {
       // 🌟 ĐỒNG BỘ: Chuyển hoàn toàn sang http.delete và truyền ID trực tiếp lên URL
+      final token = await AuthService().getToken();
       final response = await http.delete(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/$_maLichHen'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
       );
 
       if (!mounted) return;
@@ -103,7 +108,6 @@ class _AdDeleteLichState extends State<AdDeleteLich> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bgSlate,
-      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -138,45 +142,11 @@ class _AdDeleteLichState extends State<AdDeleteLich> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFFA161D2), Color(0xFF64417F)]),
-        ),
-      ),
-      leading: const Icon(Icons.menu, color: Colors.white),
-      title: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
-          SizedBox(width: 8),
-          Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
-        ],
-      ),
-      centerTitle: true,
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 12),
-          alignment: Alignment.center,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0x4C2DDCB1)),
-            ),
-            child: const Text('Chủ trọ', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-          ),
-        )
-      ],
-    );
-  }
-
   Widget _buildHeader(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24),
+      padding: EdgeInsets.only(top: statusBarHeight + 24, bottom: 24),
       color: Colors.white,
       child: Column(
         children: [

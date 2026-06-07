@@ -6,6 +6,7 @@ import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
 import '../../models/thong_bao.dart';
 import '../../services/thong_bao_service.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdEditLich extends StatefulWidget {
   // Nhận dữ liệu của lịch hẹn cần chỉnh sửa từ màn hình danh sách truyền sang
@@ -148,9 +149,13 @@ class _AdEditLichState extends State<AdEditLich> {
       };
 
       // Gọi API PUT thường cập nhật thông tin lịch hẹn lên SQL Server
+      final token = await AuthService().getToken();
       final response = await http.put(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/$_maLichHen'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: jsonEncode(updateBody),
       );
 
@@ -203,7 +208,6 @@ class _AdEditLichState extends State<AdEditLich> {
 
     return Scaffold(
       backgroundColor: AppTheme.bgSlate,
-      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -275,50 +279,14 @@ class _AdEditLichState extends State<AdEditLich> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFFA161D2), Color(0xFF64417F)]),
-        ),
-      ),
-      leading: const Icon(Icons.menu, color: Colors.white),
-      title: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
-          SizedBox(width: 8),
-          Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
-        ],
-      ),
-      centerTitle: true,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0x4C2DDCB1)),
-              ),
-              child: const Text('Chủ trọ', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        )
-      ],
     );
   }
 
   Widget _buildSubHeader(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      padding: EdgeInsets.only(top: statusBarHeight + 24, bottom: 24, left: 20, right: 20),
       color: AppTheme.deepPurple,
       child: Row(
         children: [

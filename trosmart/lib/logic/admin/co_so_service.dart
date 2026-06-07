@@ -9,15 +9,27 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/admin/co_so_image_model.dart';
 import '../../models/admin/tien_ich_model.dart';
 import '../../shared/api_constants.dart';
-
+import '../auth/auth_service.dart';
 
 class CoSoService {
   String get baseUrl => ApiConstants.baseUrl;
 
+  Future<Map<String, String>> _getHeaders({bool isJson = false}) async {
+    final token = await AuthService().getToken();
+    final headers = <String, String>{};
+    if (isJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
+
   Future<List<ManagerModel>> getManagers() async {
     final uri = Uri.parse('$baseUrl/CoSo/managers');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -35,7 +47,7 @@ class CoSoService {
         ? Uri.parse('$baseUrl/CoSo/dashboard')
         : Uri.parse('$baseUrl/CoSo/dashboard?maQuanLy=$maQuanLy');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -54,7 +66,7 @@ class CoSoService {
   Future<CoSoDetailModel> getDetail(int id) async {
     final uri = Uri.parse('$baseUrl/CoSo/$id');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -81,9 +93,7 @@ class CoSoService {
 
   final response = await http.post(
     uri,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: await _getHeaders(isJson: true),
     body: jsonEncode({
       'tenCoSo': tenCoSo,
       'diaChi': diaChi,
@@ -121,7 +131,7 @@ class CoSoService {
 
   final response = await http.put(
     uri,
-    headers: {'Content-Type': 'application/json'},
+    headers: await _getHeaders(isJson: true),
     body: jsonEncode({
       'maCoSo': maCoSo,
       'tenCoSo': tenCoSo,
@@ -162,7 +172,7 @@ class CoSoService {
     // 2. Call backend to delete CoSo
     final uri = Uri.parse('$baseUrl/CoSo/$maCoSo');
 
-    final response = await http.delete(uri);
+    final response = await http.delete(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -171,10 +181,11 @@ class CoSoService {
       );
     }
   }
+
   Future<List<CoSoImageModel>> getCoSoImages(int maCoSo) async {
   final uri = Uri.parse('$baseUrl/CoSo/$maCoSo/images');
 
-  final response = await http.get(uri);
+  final response = await http.get(uri, headers: await _getHeaders());
 
   if (response.statusCode != 200) {
     throw Exception(
@@ -211,9 +222,7 @@ Future<CoSoImageModel> uploadCoSoImage({
 
   final response = await http.post(
     uri,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: await _getHeaders(isJson: true),
     body: jsonEncode({
       'url': publicUrl,
     }),
@@ -232,7 +241,7 @@ Future<CoSoImageModel> uploadCoSoImage({
 Future<void> setMainCoSoImage(int maAnh) async {
   final uri = Uri.parse('$baseUrl/CoSo/images/$maAnh/set-main');
 
-  final response = await http.put(uri);
+  final response = await http.put(uri, headers: await _getHeaders());
 
   if (response.statusCode != 200) {
     throw Exception(
@@ -259,7 +268,7 @@ Future<void> deleteCoSoImage(int maAnh, String urlAnh) async {
   // 2. Call backend to delete the record in SQL Server DB
   final uri = Uri.parse('$baseUrl/CoSo/images/$maAnh');
 
-  final response = await http.delete(uri);
+  final response = await http.delete(uri, headers: await _getHeaders());
 
   if (response.statusCode != 200) {
     throw Exception(
@@ -272,7 +281,7 @@ Future<void> deleteCoSoImage(int maAnh, String urlAnh) async {
 Future<List<TienIchModel>> getTienIchList() async {
   final uri = Uri.parse('$baseUrl/CoSo/tien-ich');
 
-  final response = await http.get(uri);
+  final response = await http.get(uri, headers: await _getHeaders());
 
   if (response.statusCode != 200) {
     throw Exception(
@@ -291,7 +300,7 @@ Future<TienIchModel> createTienIch({
 
   final response = await http.post(
     uri,
-    headers: {'Content-Type': 'application/json'},
+    headers: await _getHeaders(isJson: true),
     body: jsonEncode({
       'tenTienIch': tenTienIch,
     }),
@@ -307,4 +316,3 @@ Future<TienIchModel> createTienIch({
   return TienIchModel.fromJson(data);
 }
 }
-

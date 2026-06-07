@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../shared/app_colors.dart';
 import '../../widgets/common/admin/custom_app_bar.dart';
+import 'AD_LichCongViec.dart';
 
 import '../../models/thong_bao.dart';
 import '../../services/thong_bao_service.dart';
 import '../../services/co_so_service.dart';
 import '../../models/co_so.dart';
+import '../../models/admin/admin_pages.dart';
 
 class AD_ThongBao extends StatefulWidget {
-  const AD_ThongBao({super.key});
+  final Function(String)? onNavigate;
+  const AD_ThongBao({super.key, this.onNavigate});
 
   @override
   State<AD_ThongBao> createState() => _AD_ThongBaoState();
@@ -351,6 +354,38 @@ class _AD_ThongBaoState extends State<AD_ThongBao> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                if (tb.tieuDe.toLowerCase().contains('lịch hẹn') || 
+                    tb.tieuDe.toLowerCase().contains('đặt lịch') ||
+                    (tb.noiDung ?? '').toLowerCase().contains('xem phòng')) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Đóng dialog chi tiết
+                        if (widget.onNavigate != null) {
+                          widget.onNavigate!(AdminPages.lichCongViec);
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdLichCongViec(),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6D28D9),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'Xem lịch công việc',
+                        style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -581,6 +616,9 @@ class _AD_ThongBaoState extends State<AD_ThongBao> {
                                        tb.tieuDe.toLowerCase().contains('lịch hẹn') ||
                                        tb.tieuDe.toLowerCase().contains('đặt lịch');
                       final typeColor = isSystem ? Colors.green : Colors.blue;
+                      final isAppointment = tb.tieuDe.toLowerCase().contains('lịch hẹn') || 
+                                            tb.tieuDe.toLowerCase().contains('đặt lịch') ||
+                                            (tb.noiDung ?? '').toLowerCase().contains('xem phòng');
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),
@@ -595,6 +633,21 @@ class _AD_ThongBaoState extends State<AD_ThongBao> {
                             type: isSystem ? 'Hệ thống/Admin' : 'Gửi khách thuê',
                             typeColor: typeColor,
                             status: tb.daDoc ? 'Đã xem' : 'Chưa xem',
+                            actionLabel: isAppointment ? 'XEM LỊCH CÔNG VIỆC' : null,
+                            onActionTap: isAppointment
+                                ? () {
+                                    if (widget.onNavigate != null) {
+                                      widget.onNavigate!(AdminPages.lichCongViec);
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const AdLichCongViec(),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                : null,
                           ),
                         ),
                       );
@@ -616,6 +669,8 @@ class _AD_ThongBaoState extends State<AD_ThongBao> {
     required String type,
     required Color typeColor,
     required String status,
+    VoidCallback? onActionTap,
+    String? actionLabel,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -682,6 +737,27 @@ class _AD_ThongBaoState extends State<AD_ThongBao> {
               height: 1.5,
             ),
           ),
+          if (actionLabel != null && onActionTap != null) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: onActionTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6D28D9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  actionLabel,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [

@@ -12,6 +12,15 @@ class InvoiceService {
     receiveTimeout: const Duration(seconds: 10),
   ));
 
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await _authService.getToken();
+    final headers = <String, String>{};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
+
   /// Lấy danh sách hóa đơn theo tháng/năm.
   /// Nếu month = 0 hoặc year = 0 thì lấy tất cả hóa đơn.
   Future<List<InvoiceModel>> getInvoices(int month, int year) async {
@@ -22,12 +31,11 @@ class InvoiceService {
         queryParams['year'] = year;
       }
 
-      final token = await _authService.getToken();
       final response = await _dio.get(
         '/Invoice',
         queryParameters: queryParams,
         options: Options(
-          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+          headers: await _getHeaders(),
         ),
       );
 
@@ -46,7 +54,12 @@ class InvoiceService {
   /// Lấy danh sách hóa đơn theo mã khách thuê (maKhach).
   Future<List<InvoiceModel>> getInvoicesByCustomer(int maKhach) async {
     try {
-      final response = await _dio.get('/Invoice/by-customer/$maKhach');
+      final response = await _dio.get(
+        '/Invoice/by-customer/$maKhach',
+        options: Options(
+          headers: await _getHeaders(),
+        ),
+      );
 
       if (response.statusCode == 200) {
         final List data = response.data;
@@ -62,7 +75,12 @@ class InvoiceService {
 
   Future<InvoiceModel> getInvoiceById(int id) async {
     try {
-      final response = await _dio.get('/Invoice/$id');
+      final response = await _dio.get(
+        '/Invoice/$id',
+        options: Options(
+          headers: await _getHeaders(),
+        ),
+      );
       if (response.statusCode == 200) {
         return InvoiceModel.fromJson(response.data);
       }
@@ -109,6 +127,9 @@ class InvoiceService {
           'phuPhi': phuPhi,
           'moTaPhuPhi': moTaPhuPhi,
         },
+        options: Options(
+          headers: await _getHeaders(),
+        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -129,6 +150,9 @@ class InvoiceService {
         data: {
           'trangThai': trangThai,
         },
+        options: Options(
+          headers: await _getHeaders(),
+        ),
       );
 
       if (response.statusCode != 204 && response.statusCode != 200) {
@@ -157,6 +181,9 @@ class InvoiceService {
           'phuPhi': phuPhi,
           'moTaPhuPhi': moTaPhuPhi,
         },
+        options: Options(
+          headers: await _getHeaders(),
+        ),
       );
 
       if (response.statusCode != 200) {
@@ -171,7 +198,12 @@ class InvoiceService {
 
   Future<void> deleteInvoice(int id) async {
     try {
-      final response = await _dio.delete('/Invoice/$id');
+      final response = await _dio.delete(
+        '/Invoice/$id',
+        options: Options(
+          headers: await _getHeaders(),
+        ),
+      );
 
       if (response.statusCode != 204 && response.statusCode != 200) {
         throw Exception('Không xóa được hóa đơn.');
@@ -186,7 +218,12 @@ class InvoiceService {
   Future<List<Map<String, dynamic>>> getAvailableRooms() async {
     try {
       // Gọi API lấy danh sách phòng đang thuê để lập hóa đơn
-      final response = await _dio.get('/Phong');
+      final response = await _dio.get(
+        '/Phong',
+        options: Options(
+          headers: await _getHeaders(),
+        ),
+      );
       if (response.statusCode == 200) {
         final List data = response.data;
         return data.map((room) => <String, dynamic>{

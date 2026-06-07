@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Services;
 using System;
@@ -7,6 +8,7 @@ namespace PhongTroAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HopDongController : ControllerBase
     {
         private readonly HopDongService _hopDongService;
@@ -20,14 +22,47 @@ namespace PhongTroAPI.Controllers
         [HttpGet]
         public IActionResult GetAll([FromQuery] int? maQuanLy)
         {
-            var data = _hopDongService.GetAllHopDong(maQuanLy);
-            return Ok(data);
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+
+            if (int.TryParse(maQuanLyClaim, out int maQuanLyToken))
+            {
+                var data = _hopDongService.GetAllHopDong(maQuanLyToken);
+                return Ok(data);
+            }
+            else if (int.TryParse(maKhachClaim, out int maKhachToken))
+            {
+                var data = _hopDongService.GetAllHopDong(null)
+                    .Where(hd => hd.MaKhach == maKhachToken)
+                    .ToList();
+                return Ok(data);
+            }
+
+            return Ok(new List<object>());
         }
 
         // GET: api/HopDong/5
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (!_hopDongService.VerifyOwnership(id, maQuanLy))
+                {
+                    return Forbid();
+                }
+            }
+
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+            if (int.TryParse(maKhachClaim, out int maKhach))
+            {
+                if (!_hopDongService.VerifyCustomerOwnership(id, maKhach))
+                {
+                    return Forbid();
+                }
+            }
+
             var data = _hopDongService.GetChiTietHopDong(id);
             if (data == null) return NotFound("Không tìm thấy hợp đồng!");
             return Ok(data);
@@ -39,7 +74,14 @@ namespace PhongTroAPI.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             
-            var result = _hopDongService.CreateHopDong(dto);
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
+            var result = _hopDongService.CreateHopDong(dto, maQuanLy);
             if (result) return Ok(true);
             return BadRequest("Không thể tạo hợp đồng nháp. Vui lòng kiểm tra lại mã phòng/mã khách.");
         }
@@ -50,9 +92,16 @@ namespace PhongTroAPI.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
             try
             {
-                var result = _hopDongService.UpdateHopDong(id, dto);
+                var result = _hopDongService.UpdateHopDong(id, dto, maQuanLy);
                 if (result) return Ok(true);
                 return BadRequest("Không tìm thấy hợp đồng để cập nhật.");
             }
@@ -70,9 +119,16 @@ namespace PhongTroAPI.Controllers
        [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
             try
             {
-                var result = _hopDongService.DeleteHopDong(id);
+                var result = _hopDongService.DeleteHopDong(id, maQuanLy);
                 if (result) return Ok(true);
                 return BadRequest("Không thể xóa do dính khóa ngoại hoặc không tìm thấy!");
             }
@@ -93,6 +149,15 @@ namespace PhongTroAPI.Controllers
         {
             if (id != dto.MaHopDong) return BadRequest("ID không khớp!");
             
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+            if (int.TryParse(maKhachClaim, out int maKhach))
+            {
+                if (!_hopDongService.VerifyCustomerOwnership(id, maKhach))
+                {
+                    return Forbid();
+                }
+            }
+
             var result = _hopDongService.KyHopDongNangCao(dto);
             if (result) return Ok(true);
             return BadRequest("Không thể ký hợp đồng. Có thể hợp đồng đã được ký trước đó!");
@@ -104,13 +169,71 @@ namespace PhongTroAPI.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = _hopDongService.GiaHanHopDong(id, dto);
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
+            var result = _hopDongService.GiaHanHopDong(id, dto, maQuanLy);
             if (result) return Ok(true);
             return BadRequest("Gia hạn thất bại.");
         }
+
+        // POST: api/HopDong/5/yeu-cau-gia-han
+        [HttpPost("{id}/yeu-cau-gia-han")]
+        public IActionResult YeuCauGiaHan(int id)
+        {
+            int? maKhach = null;
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+            if (int.TryParse(maKhachClaim, out int mkId))
+            {
+                maKhach = mkId;
+            }
+
+            var result = _hopDongService.YeuCauGiaHan(id, maKhach);
+            if (result) return Ok(true);
+            return BadRequest("Gửi yêu cầu gia hạn thất bại.");
+        }
+
+        // POST: api/HopDong/5/tu-choi-gia-han
+        [HttpPost("{id}/tu-choi-gia-han")]
+        public IActionResult TuChoiGiaHan(int id)
+        {
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
+            var result = _hopDongService.TuChoiGiaHan(id, maQuanLy);
+            if (result) return Ok(true);
+            return BadRequest("Từ chối gia hạn thất bại.");
+        }
+
         [HttpGet("{id}/export-pdf")]
         public IActionResult ExportContractPdf(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (!_hopDongService.VerifyOwnership(id, maQuanLy))
+                {
+                    return Forbid();
+                }
+            }
+
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+            if (int.TryParse(maKhachClaim, out int maKhach))
+            {
+                if (!_hopDongService.VerifyCustomerOwnership(id, maKhach))
+                {
+                    return Forbid();
+                }
+            }
+
             // 1. Lấy dữ liệu hợp đồng từ SQL Server ra
             var contract = _hopDongService.GetById(id);
             if (contract == null) return NotFound();

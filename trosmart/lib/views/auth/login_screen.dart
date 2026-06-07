@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // Điều hướng theo VaiTro
-      if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy') {
+      if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy' || authResponse.vaiTro == 'NguoiQuanLy') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(

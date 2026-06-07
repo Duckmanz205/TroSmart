@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdAddHopDong extends StatefulWidget {
   const AdAddHopDong({super.key});
@@ -44,8 +45,17 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
       final prefs = await SharedPreferences.getInstance();
       final maQuanLy = prefs.getInt('ma_quan_ly') ?? 1;
 
-      final customerRes = await http.get(Uri.parse('${ApiConstants.baseUrl}/KhachThue'));
-      final roomRes = await http.get(Uri.parse('${ApiConstants.baseUrl}/Phong/trong?maQuanLy=$maQuanLy'));
+      final token = await AuthService().getToken();
+      final headers = token != null ? {'Authorization': 'Bearer $token'} : null;
+
+      final customerRes = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/KhachThue'),
+        headers: headers,
+      );
+      final roomRes = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/Phong/trong?maQuanLy=$maQuanLy'),
+        headers: headers,
+      );
 
       List<dynamic> parsedCustomers = [];
       List<dynamic> parsedRooms = [];
@@ -71,7 +81,7 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
   // 💾 2. LOGIC BẮN REQUEST TẠO HỢP ĐỒNG NHÁP LÊN BACKEND C#
   Future<void> _handleCreateContract() async {
     if (_selectedMaKhach == null) {
-      _showSnackBar('Thái ơi, ông chưa chọn khách hàng đứng tên thuê kìa!', Colors.orange);
+      _showSnackBar('Bạn chưa chọn khách hàng đứng tên thuê!', Colors.orange);
       return;
     }
     if (_selectedMaPhong == null) {
@@ -89,28 +99,38 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
     Map<String, dynamic> createDto = {
       "maPhong": _selectedMaPhong,
       "maKhach": _selectedMaKhach,
-      "ngayBatDau": ngayBatDau.toIso8601String().substring(0, 10), // Trả về yyyy-MM-dd
+      "ngayBatDau": ngayBatDau.toIso8601String().substring(0, 10),
       "ngayKetThuc": ngayKetThuc.toIso8601String().substring(0, 10),
-      "tienCoc": double.tryParse(_tienCocController.text) ?? 3500000.0,
+      "giaThue": double.tryParse(_giaThueController.text) ?? 3000000.0,
+      "tienCoc": double.tryParse(_tienCocController.text) ?? 3000000.0,
+      "soDienMoDau": double.tryParse(_soDienController.text) ?? 0.0,
+      "soNuocMoDau": double.tryParse(_soNuocController.text) ?? 0.0,
+      "ghiChu": _ghiChuController.text.trim(),
     };
 
     try {
+      final token = await AuthService().getToken();
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/HopDong'),
-        headers: {"Content-Type": "application/json"},
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/create-nhap'),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
         body: jsonEncode(createDto),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200) {
         if (mounted) {
-          _showSnackBar('Lập hợp đồng nháp thành công! Hệ thống đang chờ khách ký.', Colors.green);
-          Navigator.pop(context, true); // Trở về và load lại danh sách Admin
+          _showSnackBar('Lập hợp đồng nháp thành công! Chờ khách thuê ký số.', Colors.green);
+          Navigator.pop(context, true); 
         }
       } else {
-        throw Exception("Mã phản hồi lỗi hệ thống công cổng: ${response.statusCode}");
+        throw Exception("Server trả lỗi: ${response.statusCode}");
       }
     } catch (e) {
-      _showSnackBar('Không thể lập hợp đồng: $e', Colors.red);
+      if (mounted) {
+        _showSnackBar('Lập hợp đồng thất bại: $e', Colors.red);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -132,7 +152,6 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
 
     return Scaffold(
       backgroundColor: AppTheme.bgSlate,
-      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -171,9 +190,27 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
                     _buildLabel('CHỈ SỐ ĐIỆN / NƯỚC ĐẦU KỲ BÀN GIAO'),
                     Row(
                       children: [
-                        Expanded(child: _buildInputField(_soDienController, 'Số điện cũ (kWh)', isNumber: true)),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildInputField(_soNuocController, 'Số nước cũ (m3)', isNumber: true)),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Chỉ số ĐIỆN cũ', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 6),
+                              _buildInputField(_soDienController, 'Nhập số điện (kWh)', isNumber: true),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Chỉ số NƯỚC cũ', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 6),
+                              _buildInputField(_soNuocController, 'Nhập số nước (m3)', isNumber: true),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     
@@ -190,51 +227,14 @@ class _AdAddHopDongState extends State<AdAddHopDong> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  // --- AppBar Gradient TroSmart ---
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFFA161D2), Color(0xFF64417F)]),
-        ),
-      ),
-      leading: const Icon(Icons.menu, color: Colors.white),
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.home_work_rounded, color: Color(0xFF2DDCB1), size: 24),
-          SizedBox(width: 8),
-          Text('TroSmart', style: TextStyle(color: Color(0xFF2DDCB1), fontWeight: FontWeight.bold, fontSize: 18)),
-        ],
-      ),
-      centerTitle: true,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0x4C2DDCB1)),
-              ),
-              child: const Text('Chủ trọ', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        )
-      ],
     );
   }
 
   Widget _buildSubHeader(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      padding: EdgeInsets.only(top: statusBarHeight + 24, bottom: 24, left: 20, right: 20),
       color: AppTheme.deepPurple,
       child: Row(
         children: [

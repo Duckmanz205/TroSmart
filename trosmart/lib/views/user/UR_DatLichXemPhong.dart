@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart'; //
 import '../../views/user/UR_HoanTatDatLich.dart';
+import '../../logic/auth/auth_service.dart';
 
 class UrDatLichXemPhong extends StatefulWidget {
   final int? maPhong; // Nhận từ trang Chi tiết phòng xem
@@ -57,8 +58,13 @@ class _UrDatLichXemPhongState extends State<UrDatLichXemPhong> {
   //  1. TỰ ĐỘNG ĐIỀN THÔNG TIN TÀI KHOẢN TỪ DATABASE SQL SERVER
   Future<void> _fetchThongTinKhach() async {
     try {
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/KhachThue/${widget.maKhach}'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -92,8 +98,13 @@ class _UrDatLichXemPhongState extends State<UrDatLichXemPhong> {
   Future<void> _fetchLichSuHen() async {
     try {
       setState(() => _isLoadingHistory = true);
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/lich-su/${widget.maKhach}'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -145,9 +156,13 @@ class _UrDatLichXemPhongState extends State<UrDatLichXemPhong> {
 
     try {
       // Gọi lên Endpoint /dat-lich đã cấu hình chuẩn dưới API C#
+      final token = await AuthService().getToken();
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/dat-lich'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: jsonEncode(requestBody),
       );
 
@@ -324,7 +339,7 @@ class _UrDatLichXemPhongState extends State<UrDatLichXemPhong> {
                               padding: EdgeInsets.symmetric(vertical: 20),
                               child: Center(
                                 child: Text(
-                                  'Ông chưa có lịch hẹn nào dưới DB cả.',
+                                  'Bạn chưa có lịch hẹn nào dưới DB cả.',
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontStyle: FontStyle.italic,

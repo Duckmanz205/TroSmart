@@ -23,10 +23,29 @@ namespace PhongTroAPI.Controllers
         [HttpGet("{maAdmin}/{maKhach}")]
         public async Task<ActionResult<IEnumerable<TinNhan>>> GetChatHistory(int maAdmin, int maKhach)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (maAdmin != maQuanLy)
+                {
+                    return Forbid("Bạn không có quyền xem tin nhắn này.");
+                }
+            }
+
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+            if (int.TryParse(maKhachClaim, out int maKhachToken))
+            {
+                if (maKhach != maKhachToken)
+                {
+                    return Forbid("Bạn không có quyền xem tin nhắn này.");
+                }
+            }
+
             var history = await _context.TinNhans
                 .Where(t => 
-                    (t.MaNguoiGui == maAdmin && t.VaiTroNguoiGui == "Admin" && t.MaNguoiNhan == maKhach && t.VaiTroNguoiNhan == "User") ||
-                    (t.MaNguoiGui == maKhach && t.VaiTroNguoiGui == "User" && t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin")
+                    (t.MaQuanLy == maAdmin) &&
+                    ((t.MaNguoiGui == maAdmin && t.VaiTroNguoiGui == "Admin" && t.MaNguoiNhan == maKhach && t.VaiTroNguoiNhan == "User") ||
+                     (t.MaNguoiGui == maKhach && t.VaiTroNguoiGui == "User" && t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin"))
                 )
                 .OrderBy(t => t.NgayGui)
                 .ToListAsync();
@@ -38,6 +57,44 @@ namespace PhongTroAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<TinNhan>> SendMessage(TinNhan tinNhan)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (tinNhan.VaiTroNguoiGui == "Admin")
+                {
+                    tinNhan.MaNguoiGui = maQuanLy;
+                }
+                else if (tinNhan.VaiTroNguoiNhan == "Admin")
+                {
+                    tinNhan.MaNguoiNhan = maQuanLy;
+                }
+                tinNhan.MaQuanLy = maQuanLy;
+            }
+            else
+            {
+                if (tinNhan.VaiTroNguoiNhan == "Admin")
+                {
+                    tinNhan.MaQuanLy = tinNhan.MaNguoiNhan;
+                }
+                else if (tinNhan.VaiTroNguoiGui == "Admin")
+                {
+                    tinNhan.MaQuanLy = tinNhan.MaNguoiGui;
+                }
+
+                var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+                if (int.TryParse(maKhachClaim, out int maKhach))
+                {
+                    if (tinNhan.VaiTroNguoiGui == "User")
+                    {
+                        tinNhan.MaNguoiGui = maKhach;
+                    }
+                    else if (tinNhan.VaiTroNguoiNhan == "User")
+                    {
+                        tinNhan.MaNguoiNhan = maKhach;
+                    }
+                }
+            }
+
             tinNhan.NgayGui = System.DateTime.Now;
             tinNhan.DaDoc = false;
             
@@ -51,15 +108,24 @@ namespace PhongTroAPI.Controllers
         [HttpGet("Admin/{maAdmin}/Recent")]
         public async Task<ActionResult<IEnumerable<object>>> GetRecentChatsForAdmin(int maAdmin)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (maAdmin != maQuanLy)
+                {
+                    return Forbid();
+                }
+            }
+
             var activeTenants = await _context.HopDongThues
                 .Include(h => h.MaKhachNavigation)
                 .Include(h => h.MaPhongNavigation)
-                .Where(h => h.TrangThai == "Đang hiệu lực")
+                .ThenInclude(p => p.MaCoSoNavigation)
+                .Where(h => h.TrangThai == "Đang hiệu lực" && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maAdmin)
                 .ToListAsync();
 
             var messages = await _context.TinNhans
-                .Where(t => (t.MaNguoiGui == maAdmin && t.VaiTroNguoiGui == "Admin") ||
-                            (t.MaNguoiNhan == maAdmin && t.VaiTroNguoiNhan == "Admin"))
+                .Where(t => t.MaQuanLy == maAdmin)
                 .ToListAsync();
 
             var userIdsWithMessages = messages
@@ -95,7 +161,8 @@ namespace PhongTroAPI.Controllers
                     tenKhach = khachThue?.HoTen;
                     var anyContract = await _context.HopDongThues
                         .Include(h => h.MaPhongNavigation)
-                        .Where(h => h.MaKhach == userId)
+                        .ThenInclude(p => p.MaCoSoNavigation)
+                        .Where(h => h.MaKhach == userId && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maAdmin)
                         .OrderByDescending(h => h.NgayBatDau)
                         .FirstOrDefaultAsync();
                         
@@ -133,6 +200,15 @@ namespace PhongTroAPI.Controllers
         [HttpGet("User/{maKhach}/Recent")]
         public async Task<ActionResult<IEnumerable<object>>> GetRecentChatsForUser(int maKhach)
         {
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+            if (int.TryParse(maKhachClaim, out int maKhachToken))
+            {
+                if (maKhach != maKhachToken)
+                {
+                    return Forbid();
+                }
+            }
+
             var messages = await _context.TinNhans
                 .Where(t => (t.MaNguoiGui == maKhach && t.VaiTroNguoiGui == "User") ||
                             (t.MaNguoiNhan == maKhach && t.VaiTroNguoiNhan == "User"))
@@ -145,9 +221,24 @@ namespace PhongTroAPI.Controllers
                 .Distinct()
                 .ToList();
 
+            // Tự động thêm admin từ hợp đồng thuê đang hoạt động của khách thuê
+            var activeContracts = await _context.HopDongThues
+                .Include(h => h.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
+                .Where(h => h.MaKhach == maKhach && (h.TrangThai == "Đang hiệu lực" || h.TrangThai == "Còn hạn" || h.TrangThai == "Đã ký"))
+                .ToListAsync();
+
+            var contractAdminIds = activeContracts
+                .Select(h => h.MaPhongNavigation?.MaCoSoNavigation?.MaQuanLy)
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .Distinct()
+                .ToList();
+
+            var allAdminIds = adminIdsWithMessages.Union(contractAdminIds).Distinct().ToList();
             var recentChats = new List<object>();
 
-            foreach (var adminId in adminIdsWithMessages)
+            foreach (var adminId in allAdminIds)
             {
                 var adminMessages = messages
                     .Where(t => (t.MaNguoiGui == adminId && t.VaiTroNguoiGui == "Admin") ||

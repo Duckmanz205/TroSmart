@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/app_theme.dart';
 import '../../widgets/common/app_header.dart';
 import '../../widgets/chat_widgets.dart';
@@ -26,11 +27,19 @@ class AdChiTietChat extends StatefulWidget {
 class _AdChiTietChatState extends State<AdChiTietChat> {
   final ChatController _chatController = ChatController();
   final TextEditingController _msgController = TextEditingController();
-  final int _maAdmin = 1;
+  int _maAdmin = 1;
 
   @override
   void initState() {
     super.initState();
+    _loadAdminAndFetchHistory();
+  }
+
+  Future<void> _loadAdminAndFetchHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _maAdmin = prefs.getInt('ma_quan_ly') ?? 1;
+    });
     _chatController.fetchChatHistory(_maAdmin, widget.maKhach);
   }
 

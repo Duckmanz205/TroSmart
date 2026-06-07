@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // 🌟 THÊM: Để bốc phòng động của khách đang đăng nhập
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 import 'package:intl/intl.dart';
 
 class UrOGhep extends StatefulWidget {
@@ -36,7 +37,11 @@ class _UrOGhepState extends State<UrOGhep> { // Sửa tên State cho chuẩn c�
         final prefs = await SharedPreferences.getInstance();
         final currentMaKhach = prefs.getInt('ma_khach') ?? 1;
 
-        final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong'));
+        final token = await AuthService().getToken();
+        final response = await http.get(
+          Uri.parse('${ApiConstants.baseUrl}/HopDong'),
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        );
         if (response.statusCode == 200) {
           final List<dynamic> contracts = jsonDecode(response.body);
           for (var hd in contracts) {
@@ -63,9 +68,13 @@ class _UrOGhepState extends State<UrOGhep> { // Sửa tên State cho chuẩn c�
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/OGhep/chi-tiet/$_idPhongHienTai'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {

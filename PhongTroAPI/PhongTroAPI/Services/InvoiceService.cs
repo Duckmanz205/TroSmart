@@ -362,4 +362,27 @@ public class InvoiceService : IInvoiceService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> VerifyCustomerOwnershipAsync(int maKhach, int maQuanLy)
+    {
+        return await _context.HopDongThues
+            .Include(hd => hd.MaPhongNavigation)
+                .ThenInclude(p => p.MaCoSoNavigation)
+            .AnyAsync(hd => hd.MaKhach == maKhach && hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy);
+    }
+
+    public async Task<bool> VerifyInvoiceOwnershipAsync(int maHoaDon, int maQuanLy)
+    {
+        return await _context.HoaDons
+            .Include(h => h.MaPhongNavigation)
+                .ThenInclude(p => p.MaCoSoNavigation)
+            .AnyAsync(h => h.MaHoaDon == maHoaDon && h.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy);
+    }
+
+    public async Task<bool> VerifyRoomOwnershipAsync(int maPhong, int maQuanLy)
+    {
+        return await _context.Phongs
+            .Include(p => p.MaCoSoNavigation)
+            .AnyAsync(p => p.MaPhong == maPhong && p.MaCoSoNavigation.MaQuanLy == maQuanLy);
+    }
 }

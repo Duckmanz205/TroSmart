@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/app_theme.dart';
 import '../../widgets/common/app_search_field.dart';
 import '../../widgets/chat_widgets.dart';
@@ -20,7 +21,13 @@ class _AdChatState extends State<AdChat> {
   @override
   void initState() {
     super.initState();
-    _chatController.fetchRecentChats(1);
+    _loadAndFetchChats();
+  }
+
+  Future<void> _loadAndFetchChats() async {
+    final prefs = await SharedPreferences.getInstance();
+    final maQuanLy = prefs.getInt('ma_quan_ly') ?? 1;
+    _chatController.fetchRecentChats(maQuanLy);
   }
 
   String _formatTime(String? dateStr) {

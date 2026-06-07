@@ -50,6 +50,7 @@ class AuthService {
     String matKhau,
     String hoTen,
     String? sDT,
+    String vaiTro,
   ) async {
     final url = Uri.parse('$_baseUrl/api/auth/register');
     final response = await http.post(
@@ -60,6 +61,7 @@ class AuthService {
         'matKhau': matKhau,
         'hoTen': hoTen.trim(),
         'sDT': sDT?.trim(),
+        'vaiTro': vaiTro,
       }),
     );
 
@@ -70,6 +72,10 @@ class AuthService {
       return await login(tenDangNhap, matKhau);
     } else {
       final message = body['message'] as String? ?? 'Đăng ký thất bại';
+      final detail = body['detail'] as String?;
+      if (detail != null && detail.isNotEmpty) {
+        throw Exception('$message\nChi tiết: $detail');
+      }
       throw Exception(message);
     }
   }
@@ -113,5 +119,31 @@ class AuthService {
   Future<int?> getMaQuanLy() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyMaQuanLy);
+  }
+
+  Future<int?> getMaKhach() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keyMaKhach);
+  }
+
+  // ────────────────────────────────────────
+  // FORGOT PASSWORD / RESET PASSWORD
+  // ────────────────────────────────────────
+  Future<void> forgotPassword(String tenDangNhap, String newPassword) async {
+    final url = Uri.parse('$_baseUrl/api/auth/forgot-password');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'tenDangNhap': tenDangNhap.trim(),
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      final body = jsonDecode(response.body);
+      final message = body['message'] as String? ?? 'Đặt lại mật khẩu thất bại';
+      throw Exception(message);
+    }
   }
 }

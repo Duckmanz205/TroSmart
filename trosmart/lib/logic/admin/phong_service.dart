@@ -8,16 +8,29 @@ import '../../models/admin/phong_model.dart';
 import '../../models/admin/phong_view_model.dart';
 import '../../models/admin/tien_ich_model.dart';
 import '../../shared/api_constants.dart';
+import '../auth/auth_service.dart';
 
 class PhongService {
   String get baseUrl => ApiConstants.baseUrl;
+
+  Future<Map<String, String>> _getHeaders({bool isJson = false}) async {
+    final token = await AuthService().getToken();
+    final headers = <String, String>{};
+    if (isJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
 
   Future<List<PhongModel>> getAll({int? maQuanLy}) async {
     final uri = maQuanLy == null
         ? Uri.parse('$baseUrl/Phong')
         : Uri.parse('$baseUrl/Phong?maQuanLy=$maQuanLy');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -33,7 +46,7 @@ class PhongService {
   Future<List<PhongModel>> getByCoSo(int maCoSo) async {
     final uri = Uri.parse('$baseUrl/Phong/coso/$maCoSo');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -49,7 +62,7 @@ class PhongService {
   Future<List<PhongModel>> getPhongTrong() async {
     final uri = Uri.parse('$baseUrl/Phong/trong');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -65,7 +78,7 @@ class PhongService {
   Future<List<PhongViewModel>> getPhongView() async {
     final uri = Uri.parse('$baseUrl/Phong/view');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -81,7 +94,7 @@ class PhongService {
   Future<PhongModel> getDetail(int maPhong) async {
     final uri = Uri.parse('$baseUrl/Phong/$maPhong');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -109,7 +122,7 @@ class PhongService {
 
   final response = await http.post(
     uri,
-    headers: {'Content-Type': 'application/json'},
+    headers: await _getHeaders(isJson: true),
     body: jsonEncode({
       'soPhong': soPhong,
       'giaThue': giaThue,
@@ -149,7 +162,7 @@ class PhongService {
 
   final response = await http.put(
     uri,
-    headers: {'Content-Type': 'application/json'},
+    headers: await _getHeaders(isJson: true),
     body: jsonEncode({
       'maPhong': maPhong,
       'maCoSo': maCoSo,
@@ -194,7 +207,7 @@ class PhongService {
     // 2. Call backend to delete Phong
     final uri = Uri.parse('$baseUrl/Phong/$maPhong');
 
-    final response = await http.delete(uri);
+    final response = await http.delete(uri, headers: await _getHeaders());
 
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception(
@@ -262,9 +275,7 @@ class PhongService {
 
     final response = await http.post(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: await _getHeaders(isJson: true),
       body: jsonEncode({
         'url': publicUrl,
       }),
@@ -281,7 +292,7 @@ class PhongService {
   Future<List<TienIchModel>> getTienIchList() async {
   final uri = Uri.parse('$baseUrl/Phong/tien-ich');
 
-  final response = await http.get(uri);
+  final response = await http.get(uri, headers: await _getHeaders());
 
   if (response.statusCode != 200) {
     throw Exception(
@@ -300,7 +311,7 @@ Future<TienIchModel> createTienIch({
 
   final response = await http.post(
     uri,
-    headers: {'Content-Type': 'application/json'},
+    headers: await _getHeaders(isJson: true),
     body: jsonEncode({
       'tenTienIch': tenTienIch,
     }),

@@ -13,4 +13,7 @@ public interface IInvoiceService
     Task<bool> UpdateInvoiceStatusAsync(int id, InvoiceUpdateStatusDto updateDto);
     Task<bool> UpdateInvoiceAsync(int id, InvoiceUpdateDto updateDto);
     Task<bool> DeleteInvoiceAsync(int id);
+    Task<bool> VerifyCustomerOwnershipAsync(int maKhach, int maQuanLy);
+    Task<bool> VerifyInvoiceOwnershipAsync(int maHoaDon, int maQuanLy);
+    Task<bool> VerifyRoomOwnershipAsync(int maPhong, int maQuanLy);
 }

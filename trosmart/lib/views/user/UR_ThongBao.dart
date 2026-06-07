@@ -3,6 +3,8 @@ import '../../shared/app_theme.dart';
 import '../../widgets/user/notification_widgets.dart';
 import '../../services/thong_bao_service.dart';
 import '../../models/thong_bao.dart';
+import '../../logic/auth/auth_service.dart';
+import 'UR_LichSuXemPhong.dart';
 
 /// User Notification (Thông báo) screen.
 class UrThongBao extends StatefulWidget {
@@ -15,12 +17,23 @@ class UrThongBao extends StatefulWidget {
 
 class _UrThongBaoState extends State<UrThongBao> {
   late Future<List<ThongBao>> _futureThongBao;
+  int _maKhach = 1;
 
   @override
   void initState() {
     super.initState();
-    // Giả lập maKhach = 1 (sau này sẽ lấy từ Auth)
-    _futureThongBao = ThongBaoService().getThongBaoForUser(1);
+    _futureThongBao = Future.value([]);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final maKhachOpt = await AuthService().getMaKhach();
+    if (maKhachOpt != null) {
+      _maKhach = maKhachOpt;
+    }
+    setState(() {
+      _futureThongBao = ThongBaoService().getThongBaoForUser(_maKhach);
+    });
   }
 
   String _formatTimeAgo(DateTime? date) {
@@ -95,6 +108,10 @@ class _UrThongBaoState extends State<UrThongBao> {
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
                             final thongBao = snapshot.data![index];
+                            final isAppointment = thongBao.tieuDe.toLowerCase().contains('lịch hẹn') || 
+                                                  thongBao.tieuDe.toLowerCase().contains('đặt lịch') ||
+                                                  thongBao.noiDung?.toLowerCase().contains('xem phòng') == true;
+
                             final isUrgent = thongBao.tieuDe.toLowerCase().contains('khẩn') || 
                                              thongBao.tieuDe.toLowerCase().contains('quá hạn');
                             
@@ -107,6 +124,9 @@ class _UrThongBaoState extends State<UrThongBao> {
                             } else if (thongBao.tieuDe.toLowerCase().contains('sự cố')) {
                               icon = Icons.build_circle_outlined;
                               themeColor = AppTheme.statusYellow;
+                            } else if (isAppointment) {
+                              icon = Icons.calendar_month_outlined;
+                              themeColor = AppTheme.deepPurple;
                             }
 
                             return Padding(
@@ -117,9 +137,22 @@ class _UrThongBaoState extends State<UrThongBao> {
                                 timeAgo: _formatTimeAgo(thongBao.ngayGui),
                                 themeColor: themeColor,
                                 icon: icon,
-                                isUrgent: isUrgent,
-                                actionLabel: isUrgent ? 'XEM CHI TIẾT' : null,
-                                onActionTap: isUrgent ? widget.onNavigateToPayment : null,
+                                isUrgent: isUrgent || isAppointment,
+                                actionLabel: isUrgent 
+                                    ? 'XEM CHI TIẾT' 
+                                    : (isAppointment ? 'XEM LỊCH SỬ ĐẶT LỊCH' : null),
+                                onActionTap: isUrgent 
+                                    ? widget.onNavigateToPayment 
+                                    : (isAppointment 
+                                        ? () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => UrLichSuXemPhong(maKhach: thongBao.maKhach),
+                                              ),
+                                            );
+                                          } 
+                                        : null),
                               ),
                             );
                           },

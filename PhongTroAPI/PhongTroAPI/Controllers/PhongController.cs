@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhongTroAPI.DTOs;
@@ -7,6 +8,7 @@ namespace PhongTroAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PhongController : ControllerBase
     {
         private readonly QuanLyPhongTroContext _context;
@@ -19,11 +21,17 @@ namespace PhongTroAPI.Controllers
         // GET ALL thông tin
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll([FromQuery] int? maQuanLy)
         {
             var query = _context.Phongs.AsNoTracking().AsQueryable();
 
-            if (maQuanLy.HasValue)
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLyToken))
+            {
+                query = query.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLyToken);
+            }
+            else if (maQuanLy.HasValue)
             {
                 query = query.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
             }
@@ -74,8 +82,19 @@ namespace PhongTroAPI.Controllers
         //  GET DETAIL
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetDetail(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _context.Phongs.AnyAsync(p => p.MaPhong == id && p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy);
+                if (!belongsToAdmin)
+                {
+                    return Forbid();
+                }
+            }
+
             var data = await _context.Phongs
                 .AsNoTracking()
                 .Where(p => p.MaPhong == id)
@@ -119,11 +138,22 @@ namespace PhongTroAPI.Controllers
         //  GET ROOM LIST BY COSO + SEARCH 
 
         [HttpGet("coso/{maCoSo}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetByCoSo(
             int maCoSo,
             [FromQuery] string? keyword,
             [FromQuery] string? status)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _context.CoSos.AnyAsync(cs => cs.MaCoSo == maCoSo && cs.MaQuanLy == maQuanLy);
+                if (!belongsToAdmin)
+                {
+                    return Forbid();
+                }
+            }
+
             var query = _context.Phongs
                 .AsNoTracking()
                 .Where(p => p.MaCoSo == maCoSo);
@@ -191,11 +221,17 @@ namespace PhongTroAPI.Controllers
         // GET PHONG TRONG 
 
         [HttpGet("trong")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetPhongTrong([FromQuery] int? maQuanLy)
         {
             var query = _context.Phongs.AsNoTracking().AsQueryable();
 
-            if (maQuanLy.HasValue)
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLyToken))
+            {
+                query = query.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLyToken);
+            }
+            else if (maQuanLy.HasValue)
             {
                 query = query.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
             }
@@ -247,8 +283,19 @@ namespace PhongTroAPI.Controllers
         //  GET DETAIL FULL 
 
         [HttpGet("detail/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetDetailFull(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _context.Phongs.AnyAsync(p => p.MaPhong == id && p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy);
+                if (!belongsToAdmin)
+                {
+                    return Forbid();
+                }
+            }
+
             var data = await _context.Phongs
                 .AsNoTracking()
                 .Where(p => p.MaPhong == id)
@@ -311,11 +358,20 @@ namespace PhongTroAPI.Controllers
             if (model.GiaThue <= 0)
                 return BadRequest("Giá thuê phải > 0");
 
-            var coSoExists = await _context.CoSos
-                .AnyAsync(x => x.MaCoSo == model.MaCoSo);
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (string.IsNullOrEmpty(maQuanLyClaim) || !int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                return Unauthorized("Không tìm thấy mã người quản lý hợp lệ trong token.");
+            }
 
-            if (!coSoExists)
+            var coSo = await _context.CoSos.FindAsync(model.MaCoSo);
+            if (coSo == null)
                 return BadRequest("Mã cơ sở không tồn tại");
+
+            if (coSo.MaQuanLy != maQuanLy)
+            {
+                return Forbid("Cơ sở không thuộc quyền quản lý của bạn.");
+            }
 
             var soPhongTrim = model.SoPhong.Trim();
 
@@ -378,12 +434,35 @@ namespace PhongTroAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (string.IsNullOrEmpty(maQuanLyClaim) || !int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                return Unauthorized("Không tìm thấy mã người quản lý hợp lệ trong token.");
+            }
+
             var phong = await _context.Phongs
                 .Include(p => p.MaTienIches)
+                .Include(p => p.MaCoSoNavigation)
                 .FirstOrDefaultAsync(p => p.MaPhong == id);
 
             if (phong == null)
                 return NotFound("Không tìm thấy phòng");
+
+            if (phong.MaCoSoNavigation == null || phong.MaCoSoNavigation.MaQuanLy != maQuanLy)
+            {
+                return Forbid();
+            }
+
+            var targetCoSo = await _context.CoSos.FindAsync(model.MaCoSo);
+            if (targetCoSo == null)
+            {
+                return BadRequest("Cơ sở đích không tồn tại");
+            }
+
+            if (targetCoSo.MaQuanLy != maQuanLy)
+            {
+                return Forbid("Cơ sở đích không thuộc quyền quản lý của bạn.");
+            }
 
             if (model.GiaThue <= 0)
                 return BadRequest("Giá thuê không hợp lệ");
@@ -447,9 +526,20 @@ namespace PhongTroAPI.Controllers
         [HttpPost("{id}/image")]
         public async Task<IActionResult> UploadOrReplaceImage(int id, IFormFile file)
         {
-            var phong = await _context.Phongs.FindAsync(id);
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (string.IsNullOrEmpty(maQuanLyClaim) || !int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                return Unauthorized();
+            }
+
+            var phong = await _context.Phongs.Include(p => p.MaCoSoNavigation).FirstOrDefaultAsync(p => p.MaPhong == id);
             if (phong == null)
                 return NotFound("Không tìm thấy phòng");
+
+            if (phong.MaCoSoNavigation == null || phong.MaCoSoNavigation.MaQuanLy != maQuanLy)
+            {
+                return Forbid();
+            }
 
             if (file == null || file.Length == 0)
                 return BadRequest("File ảnh không hợp lệ");
@@ -534,12 +624,24 @@ namespace PhongTroAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (string.IsNullOrEmpty(maQuanLyClaim) || !int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                return Unauthorized();
+            }
+
             var data = await _context.Phongs
                 .Include(p => p.MaTienIches)
+                .Include(p => p.MaCoSoNavigation)
                 .FirstOrDefaultAsync(p => p.MaPhong == id);
 
             if (data == null)
                 return NotFound("Không tìm thấy phòng");
+
+            if (data.MaCoSoNavigation == null || data.MaCoSoNavigation.MaQuanLy != maQuanLy)
+            {
+                return Forbid();
+            }
 
             var images = await _context.HinhAnhPhongs
                 .Where(x => x.MaPhong == id)
@@ -558,9 +660,16 @@ namespace PhongTroAPI.Controllers
         // lọc
 
         [HttpGet("filter")]
+        [AllowAnonymous]
         public async Task<IActionResult> Filter(decimal? min, decimal? max, string? status)
         {
             var query = _context.Phongs.AsNoTracking().AsQueryable();
+
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                query = query.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy);
+            }
 
             if (min.HasValue)
                 query = query.Where(x => x.GiaThue >= min.Value);
@@ -611,8 +720,8 @@ namespace PhongTroAPI.Controllers
         }
 
         //  TIEN ICH 
-
         [HttpGet("tien-ich")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetTienIch()
         {
             var data = await _context.TienIches
@@ -664,6 +773,7 @@ namespace PhongTroAPI.Controllers
         }
         //view cho trang tra cuu
         [HttpGet("view")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetView()
         {
             var data = await _context.Phongs
@@ -733,9 +843,20 @@ namespace PhongTroAPI.Controllers
         [HttpPost("{id}/image/url")]
         public async Task<IActionResult> UploadImageUrl(int id, [FromBody] PhongImageUrlDto dto)
         {
-            var phong = await _context.Phongs.FindAsync(id);
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (string.IsNullOrEmpty(maQuanLyClaim) || !int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                return Unauthorized();
+            }
+
+            var phong = await _context.Phongs.Include(p => p.MaCoSoNavigation).FirstOrDefaultAsync(p => p.MaPhong == id);
             if (phong == null)
                 return NotFound("Không tìm thấy phòng");
+
+            if (phong.MaCoSoNavigation == null || phong.MaCoSoNavigation.MaQuanLy != maQuanLy)
+            {
+                return Forbid();
+            }
 
             if (dto == null || string.IsNullOrWhiteSpace(dto.Url))
                 return BadRequest("URL ảnh không hợp lệ");

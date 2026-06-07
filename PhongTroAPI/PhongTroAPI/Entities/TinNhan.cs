@@ -20,4 +20,8 @@ public partial class TinNhan
     public DateTime? NgayGui { get; set; }
 
     public bool? DaDoc { get; set; }
+
+    public int? MaQuanLy { get; set; }
+
+    public virtual NguoiQuanLy? MaQuanLyNavigation { get; set; }
 }
