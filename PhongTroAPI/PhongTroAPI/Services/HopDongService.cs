@@ -65,10 +65,11 @@ namespace PhongTroAPI.Services
         }
 
         // 2. TẠO HỢP ĐỒNG NHÁP
-        public bool CreateHopDong(CreateHopDongDto dto)
+        public bool CreateHopDong(CreateHopDongDto dto, int? maQuanLy = null)
         {
-            var phong = _context.Phongs.Find(dto.MaPhong);
+            var phong = _context.Phongs.Include(p => p.MaCoSoNavigation).FirstOrDefault(p => p.MaPhong == dto.MaPhong);
             if (phong == null) return false;
+            if (maQuanLy.HasValue && phong.MaCoSoNavigation.MaQuanLy != maQuanLy.Value) return false;
 
             var hopDong = new HopDongThue
             {
@@ -77,6 +78,8 @@ namespace PhongTroAPI.Services
                 NgayBatDau = dto.NgayBatDau,
                 NgayKetThuc = dto.NgayKetThuc,
                 TienCoc = dto.TienCoc,
+                ChiSoDienCu = dto.ChiSoDienCu,
+                ChiSoNuocCu = dto.ChiSoNuocCu,
                 TrangThai = "Chờ khách ký", 
                 NgayTao = DateTime.Now
             };
@@ -86,10 +89,12 @@ namespace PhongTroAPI.Services
         }
 
         // 3. CẬP NHẬT ĐIỀU KHOẢN HỢP ĐỒNG NHÁP
-        public bool UpdateHopDong(int maHopDong, CreateHopDongDto dto)
+        public bool UpdateHopDong(int maHopDong, CreateHopDongDto dto, int? maQuanLy = null)
         {
-            var hopDong = _context.HopDongThues.Find(maHopDong);
+            var hopDong = _context.HopDongThues.Include(hd => hd.MaPhongNavigation).ThenInclude(p => p.MaCoSoNavigation).FirstOrDefault(hd => hd.MaHopDong == maHopDong);
             if (hopDong == null) return false;
+
+            if (maQuanLy.HasValue && hopDong.MaPhongNavigation.MaCoSoNavigation.MaQuanLy != maQuanLy.Value) return false;
 
             if (hopDong.TrangThai == "Đang hiệu lực" || hopDong.TrangThai == "Đã ký")
             {
@@ -139,6 +144,35 @@ namespace PhongTroAPI.Services
                     phong.TrangThai = "Đang thuê"; 
                 }
 
+                // Cập nhật chỉ số điện nước cũ từ hợp đồng vào bảng ChiSoDienNuoc
+                var startMonth = hopDong.NgayBatDau.Month;
+                var startYear = hopDong.NgayBatDau.Year;
+                var existingReading = _context.ChiSoDienNuocs
+                    .FirstOrDefault(c => c.MaPhong == hopDong.MaPhong && c.Thang == startMonth && c.Nam == startYear);
+
+                if (existingReading != null)
+                {
+                    existingReading.ChiSoDienCu = hopDong.ChiSoDienCu ?? 0;
+                    existingReading.ChiSoNuocCu = hopDong.ChiSoNuocCu ?? 0;
+                    existingReading.NgayCapNhat = DateTime.Now;
+                }
+                else
+                {
+                    var newReading = new ChiSoDienNuoc
+                    {
+                        MaPhong = hopDong.MaPhong,
+                        Thang = startMonth,
+                        Nam = startYear,
+                        ChiSoDienCu = hopDong.ChiSoDienCu ?? 0,
+                        ChiSoDienMoi = null,
+                        ChiSoNuocCu = hopDong.ChiSoNuocCu ?? 0,
+                        ChiSoNuocMoi = null,
+                        DaLapHoaDon = false,
+                        NgayCapNhat = DateTime.Now
+                    };
+                    _context.ChiSoDienNuocs.Add(newReading);
+                }
+
                 return _context.SaveChanges() > 0;
             }
             catch (Exception)
@@ -182,10 +216,12 @@ namespace PhongTroAPI.Services
         }
 
         // 6. GIA HẠN HỢP ĐỒNG (LƯU VẾT LỊCH SỬ)
-        public bool GiaHanHopDong(int maHopDong, GiaHanHopDongDto dto)
+        public bool GiaHanHopDong(int maHopDong, GiaHanHopDongDto dto, int? maQuanLy = null)
         {
-            var hopDong = _context.HopDongThues.Find(maHopDong);
+            var hopDong = _context.HopDongThues.Include(hd => hd.MaPhongNavigation).ThenInclude(p => p.MaCoSoNavigation).FirstOrDefault(hd => hd.MaHopDong == maHopDong);
             if (hopDong == null) return false;
+
+            if (maQuanLy.HasValue && hopDong.MaPhongNavigation.MaCoSoNavigation.MaQuanLy != maQuanLy.Value) return false;
 
             var lichSu = new LichSuGiaHan
             {
@@ -199,14 +235,49 @@ namespace PhongTroAPI.Services
             _context.LichSuGiaHans.Add(lichSu);
 
             hopDong.NgayKetThuc = dto.NgayKetThucMoi;
+            hopDong.TrangThai = "Đang hiệu lực"; // Chuyển về đang hiệu lực sau khi gia hạn
+            
+            // Cập nhật lại giá thuê phòng
+            var phong = _context.Phongs.Find(hopDong.MaPhong);
+            if (phong != null)
+            {
+                phong.GiaThue = dto.GiaThueMoi;
+            }
+
+            return _context.SaveChanges() > 0;
+        }
+
+        // 6.1 YÊU CẦU GIA HẠN HỢP ĐỒNG (KHÁCH THUÊ GỬI YÊU CẦU)
+        public bool YeuCauGiaHan(int maHopDong, int? maKhach = null)
+        {
+            var hopDong = _context.HopDongThues.Find(maHopDong);
+            if (hopDong == null) return false;
+
+            if (maKhach.HasValue && hopDong.MaKhach != maKhach.Value) return false;
+
+            hopDong.TrangThai = "Chờ gia hạn";
+            return _context.SaveChanges() > 0;
+        }
+
+        // 6.2 TỪ CHỐI GIA HẠN HỢP ĐỒNG (QUẢN TRỊ VIÊN TỪ CHỐI)
+        public bool TuChoiGiaHan(int maHopDong, int? maQuanLy = null)
+        {
+            var hopDong = _context.HopDongThues.Include(hd => hd.MaPhongNavigation).ThenInclude(p => p.MaCoSoNavigation).FirstOrDefault(hd => hd.MaHopDong == maHopDong);
+            if (hopDong == null) return false;
+
+            if (maQuanLy.HasValue && hopDong.MaPhongNavigation.MaCoSoNavigation.MaQuanLy != maQuanLy.Value) return false;
+
+            hopDong.TrangThai = "Quá hạn";
             return _context.SaveChanges() > 0;
         }
 
         //  7. XÓA HỢP ĐỒNG (DỌN RÁC KHÓA NGOẠI TRƯỚC KHI XÓA)
-        public bool DeleteHopDong(int maHopDong)
+        public bool DeleteHopDong(int maHopDong, int? maQuanLy = null)
         {
-            var hopDong = _context.HopDongThues.Find(maHopDong);
+            var hopDong = _context.HopDongThues.Include(hd => hd.MaPhongNavigation).ThenInclude(p => p.MaCoSoNavigation).FirstOrDefault(hd => hd.MaHopDong == maHopDong);
             if (hopDong == null) return false;
+
+            if (maQuanLy.HasValue && hopDong.MaPhongNavigation.MaCoSoNavigation.MaQuanLy != maQuanLy.Value) return false;
 
             if (hopDong.TrangThai == "Đang hiệu lực" || hopDong.TrangThai == "Đã ký")
             {
@@ -235,6 +306,16 @@ namespace PhongTroAPI.Services
                 Console.WriteLine("Lỗi xóa DB: " + ex.InnerException?.Message);
                 return false;
             }
+        }
+
+        public bool VerifyOwnership(int maHopDong, int maQuanLy)
+        {
+            return _context.HopDongThues.Any(hd => hd.MaHopDong == maHopDong && hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy);
+        }
+
+        public bool VerifyCustomerOwnership(int maHopDong, int maKhach)
+        {
+            return _context.HopDongThues.Any(hd => hd.MaHopDong == maHopDong && hd.MaKhach == maKhach);
         }
 
         // 🛠️ HÀM PHỤ TRỢ: BÓC TÁCH JSON

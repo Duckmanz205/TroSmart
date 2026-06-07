@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart'; // 🌟 Gọi đúng file constants chung của Thái
+import '../../logic/auth/auth_service.dart';
 
 class UrLichSuXemPhong extends StatefulWidget {
   final int maKhach; // 🌟 THÊM BIẾN NÀY ĐỂ HỨNG MAKHACH TỪ TRANG HOÀN TẤT SANG
@@ -31,8 +32,13 @@ class _UrLichSuXemPhongState extends State<UrLichSuXemPhong> {
     setState(() => _isLoading = true);
 
     try {
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/lich-su/${widget.maKhach}'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -62,7 +68,7 @@ class _UrLichSuXemPhongState extends State<UrLichSuXemPhong> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             content: const Text(
-              'Ông có chắc chắn muốn hủy lịch hẹn xem phòng này không?',
+              'Bạn có chắc chắn muốn hủy lịch hẹn xem phòng này không?',
             ),
             actions: [
               TextButton(
@@ -90,9 +96,13 @@ class _UrLichSuXemPhongState extends State<UrLichSuXemPhong> {
     if (!confirm) return;
 
     try {
+      final token = await AuthService().getToken();
       final response = await http.put(
         Uri.parse('${ApiConstants.baseUrl}/LichHen/$maLichHen/status'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({"trangThaiMoi": "Đã hủy"}),
       );
 
@@ -132,13 +142,12 @@ class _UrLichSuXemPhongState extends State<UrLichSuXemPhong> {
       }).toList();
     } else if (_activeTab == 1) {
       return _allAppointments
-          .where(
-            (item) =>
-                (item['trangThai'] ?? item['TrangThai'] ?? "")
-                    .toString()
-                    .trim() ==
-                "Đã xem",
-          )
+          .where((item) {
+            final status = (item['trangThai'] ?? item['TrangThai'] ?? "")
+                .toString()
+                .trim();
+            return status == "Đã xem" || status == "Đã hoàn thành";
+          })
           .toList();
     } else {
       return _allAppointments
@@ -160,6 +169,7 @@ class _UrLichSuXemPhongState extends State<UrLichSuXemPhong> {
       case "Đã xác nhận":
         return const Color(0xFF2E7D32);
       case "Đã xem":
+      case "Đã hoàn thành":
         return const Color(0xFF059669);
       case "Đã hủy":
         return const Color(0xFFD32F2F);
@@ -175,6 +185,7 @@ class _UrLichSuXemPhongState extends State<UrLichSuXemPhong> {
       case "Đã xác nhận":
         return const Color(0xFFE8F5E9);
       case "Đã xem":
+      case "Đã hoàn thành":
         return const Color(0xFFD1FAE5);
       case "Đã hủy":
         return const Color(0xFFFFEBEE);

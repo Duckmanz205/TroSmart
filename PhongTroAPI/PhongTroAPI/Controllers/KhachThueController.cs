@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using PhongTroAPI.Entities;
 using System.Threading.Tasks;
 
@@ -7,6 +8,7 @@ namespace PhongTroAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class KhachThueController : ControllerBase
     {
         private readonly QuanLyPhongTroContext _context;
@@ -20,6 +22,7 @@ namespace PhongTroAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<KhachThue>>> GetKhachThues()
         {
+            // Trả về toàn bộ danh sách khách thuê để Chủ trọ/Quản lý có thể tìm kiếm và lập hợp đồng mới
             return await _context.KhachThues.ToListAsync();
         }
 
@@ -27,6 +30,20 @@ namespace PhongTroAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<KhachThue>> GetKhachThue(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _context.HopDongThues
+                    .Include(hd => hd.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
+                    .AnyAsync(hd => hd.MaKhach == id && hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy);
+
+                if (!belongsToAdmin)
+                {
+                    return Forbid();
+                }
+            }
+
             var khachThue = await _context.KhachThues
                 .FirstOrDefaultAsync(k => k.MaKhach == id);
 
@@ -45,6 +62,20 @@ namespace PhongTroAPI.Controllers
             if (id != khachThue.MaKhach)
             {
                 return BadRequest("ID không khớp");
+            }
+
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                var belongsToAdmin = await _context.HopDongThues
+                    .Include(hd => hd.MaPhongNavigation)
+                    .ThenInclude(p => p.MaCoSoNavigation)
+                    .AnyAsync(hd => hd.MaKhach == id && hd.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy);
+
+                if (!belongsToAdmin)
+                {
+                    return Forbid();
+                }
             }
 
             var existingKhach = await _context.KhachThues.FindAsync(id);

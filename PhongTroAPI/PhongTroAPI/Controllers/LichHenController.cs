@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PhongTroAPI.DTOs;
 using PhongTroAPI.Services;
 using System;
@@ -7,6 +8,7 @@ namespace PhongTroAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class LichHenController : ControllerBase
     {
         private readonly LichHenService _lichHenService;
@@ -38,11 +40,23 @@ namespace PhongTroAPI.Controllers
             return Ok(data);
         }
 
-        // 3. GET: /api/LichHen -> Dành cho màn hình danh sách tổng cục bên Admin (Giữ nguyên)
+        // 3. GET: /api/LichHen – Dành cho màn hình danh sách tổng cục bên Admin (Giữ nguyên)
         [HttpGet]
-        public IActionResult GetDanhSach()
+        public IActionResult GetDanhSach([FromQuery] int? maQuanLy)
         {
-            var data = _lichHenService.GetDanhSachLichHen();
+            if (maQuanLy == null)
+            {
+                var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+                if (int.TryParse(maQuanLyClaim, out int mqId))
+                {
+                    maQuanLy = mqId;
+                }
+            }
+            if (maQuanLy == null)
+            {
+                return Ok(new List<object>());
+            }
+            var data = _lichHenService.GetDanhSachLichHen(maQuanLy);
             return Ok(data);
         }
 
@@ -53,6 +67,15 @@ namespace PhongTroAPI.Controllers
             if (dto == null || string.IsNullOrEmpty(dto.TrangThaiMoi))
             {
                 return BadRequest(new { message = "Dữ liệu trạng thái mới không hợp lệ." });
+            }
+
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (!_lichHenService.VerifyOwnership(id, maQuanLy))
+                {
+                    return Forbid();
+                }
             }
 
             var isSuccess = _lichHenService.UpdateTrangThaiLich(id, dto.TrangThaiMoi);
@@ -68,6 +91,15 @@ namespace PhongTroAPI.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (!_lichHenService.VerifyOwnership(id, maQuanLy))
+                {
+                    return Forbid();
+                }
+            }
+
             var isSuccess = _lichHenService.UpdateLichHen(id, dto);
             if (isSuccess) 
                 return Ok(new { message = "Cập nhật thông tin lịch hẹn thành công!" });
@@ -79,6 +111,15 @@ namespace PhongTroAPI.Controllers
         [HttpDelete("{id}")]
         public IActionResult XoaLichHen(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (!_lichHenService.VerifyOwnership(id, maQuanLy))
+                {
+                    return Forbid();
+                }
+            }
+
             var isSuccess = _lichHenService.DeleteLichHen(id);
             if (isSuccess) 
                 return Ok(new { message = "Đã xóa vĩnh viễn lịch hẹn ra khỏi cơ sở dữ liệu hệ thống!" });
@@ -90,6 +131,15 @@ namespace PhongTroAPI.Controllers
         [HttpGet("{id}")]
         public IActionResult GetChiTietLichHen(int id)
         {
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int maQuanLy))
+            {
+                if (!_lichHenService.VerifyOwnership(id, maQuanLy))
+                {
+                    return Forbid();
+                }
+            }
+
             var data = _lichHenService.GetLichHenById(id);
             
             if (data == null) 

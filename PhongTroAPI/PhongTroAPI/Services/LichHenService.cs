@@ -32,15 +32,63 @@ namespace PhongTroAPI.Services
             };
 
             _context.LichHenXemPhongs.Add(lichHen);
+
+            // Tìm thông tin phòng và cơ sở để lấy thông tin admin (MaQuanLy) và hiển thị thông báo chi tiết
+            var room = _context.Phongs
+                .Include(p => p.MaCoSoNavigation)
+                .FirstOrDefault(p => p.MaPhong == dto.MaPhong);
+
+            if (room != null && dto.MaKhach.HasValue && dto.MaKhach.Value > 0)
+            {
+                int? maQuanLy = room.MaCoSoNavigation?.MaQuanLy;
+
+                // 1. Tạo thông báo cho Admin
+                if (maQuanLy.HasValue)
+                {
+                    var thongBaoAdmin = new ThongBao
+                    {
+                        MaKhach = dto.MaKhach.Value,
+                        MaQuanLy = maQuanLy.Value,
+                        TieuDe = "Đặt lịch xem phòng mới",
+                        NoiDung = $"Khách hàng {dto.HoTenKhach} đã đặt lịch xem phòng {room.SoPhong} ({room.MaCoSoNavigation?.TenCoSo ?? ""}) vào lúc {dto.ThoiGianHen:dd/MM/yyyy HH:mm}.",
+                        DaDoc = false,
+                        NgayGui = DateTime.Now
+                    };
+                    _context.ThongBaos.Add(thongBaoAdmin);
+                }
+
+                // 2. Tạo thông báo cho User
+                var thongBaoUser = new ThongBao
+                {
+                    MaKhach = dto.MaKhach.Value,
+                    MaQuanLy = maQuanLy,
+                    TieuDe = "Đặt lịch xem phòng thành công",
+                    NoiDung = $"Bạn đã đặt lịch xem phòng {room.SoPhong} ({room.MaCoSoNavigation?.TenCoSo ?? ""}) vào lúc {dto.ThoiGianHen:dd/MM/yyyy HH:mm}. Vui lòng chờ admin xác nhận.",
+                    DaDoc = false,
+                    NgayGui = DateTime.Now
+                };
+                _context.ThongBaos.Add(thongBaoUser);
+            }
+
             return _context.SaveChanges() > 0;
         }
 
         // 2. Logic lấy danh sách tổng cho Admin (Giữ nguyên cấu trúc tối ưu của ông)
-        public List<LichHenRenderDto> GetDanhSachLichHen()
+        public List<LichHenRenderDto> GetDanhSachLichHen(int? maQuanLy = null)
         {
-            return _context.LichHenXemPhongs
+            var query = _context.LichHenXemPhongs
                 .Include(lh => lh.MaPhongNavigation)               
                     .ThenInclude(p => p.MaCoSoNavigation)          
+                .AsQueryable();
+
+            if (maQuanLy.HasValue)
+            {
+                query = query.Where(lh => lh.MaPhongNavigation != null &&
+                                          lh.MaPhongNavigation.MaCoSoNavigation != null &&
+                                          lh.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
+            }
+
+            return query
                 .OrderByDescending(lh => lh.ThoiGianHen)
                 .Select(lh => new LichHenRenderDto
                 {
@@ -58,6 +106,14 @@ namespace PhongTroAPI.Services
                     NgayTao = lh.NgayTao
                 })
                 .ToList();
+        }
+
+        public bool VerifyOwnership(int maLichHen, int maQuanLy)
+        {
+            return _context.LichHenXemPhongs.Any(lh => lh.MaLichHen == maLichHen && 
+                                                       lh.MaPhongNavigation != null && 
+                                                       lh.MaPhongNavigation.MaCoSoNavigation != null && 
+                                                       lh.MaPhongNavigation.MaCoSoNavigation.MaQuanLy == maQuanLy);
         }
 
         // 3. Cập nhật TRẠNG THÁI lịch hẹn nhanh (Admin Duyệt)

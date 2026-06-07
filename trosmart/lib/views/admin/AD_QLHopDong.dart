@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart'; // Đọc thư mục lưu tr�
 import 'package:open_filex/open_filex.dart';       // Tự động mở file PDF sau khi tải xong
 import '../../shared/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdQLHopDong extends StatefulWidget {
   const AdQLHopDong({super.key});
@@ -43,7 +44,11 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
       final prefs = await SharedPreferences.getInstance();
       final maQuanLy = prefs.getInt('ma_quan_ly') ?? 1;
 
-      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong?maQuanLy=$maQuanLy'));
+      final token = await AuthService().getToken();
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/HopDong?maQuanLy=$maQuanLy'),
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         if (mounted) {
@@ -122,7 +127,11 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
     if (!confirm) return;
 
     try {
-      final response = await http.delete(Uri.parse('${ApiConstants.baseUrl}/HopDong/$maHopDong'));
+      final token = await AuthService().getToken();
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/$maHopDong'),
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      );
       if (response.statusCode == 200 || response.statusCode == 204) {
         _showSnackBar('Đoạn tuyệt hợp đồng thành công!', Colors.green);
         _fetchContractsAdmin(); 
@@ -139,8 +148,10 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
     
     try {
       // Gọi lên API xuất file PDF của nhóm ông dưới Backend C#
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/HopDong/$maHopDong/export-pdf'),
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
       );
 
       if (response.statusCode == 200) {
@@ -184,6 +195,7 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
       case "Đang hiệu lực": case "Đã ký": return const Color(0xFF2DDCB1); 
       case "Sắp hết hạn": return const Color(0xFFFBBF24); 
       case "Chờ khách ký": case "Chờ ký": return const Color(0xFF60A5FA); 
+      case "Chờ gia hạn": return const Color(0xFFF97316);
       default: return const Color(0xFFF87171); 
     }
   }
@@ -327,7 +339,7 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedStatusFilter, isExpanded: true, icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-              items: <String>['Tất cả trạng thái', 'Đang hiệu lực', 'Chờ ký', 'Sắp hết hạn', 'Đã hết hạn'].map((String value) => DropdownMenuItem<String>(value: value, child: Text(value))).toList(),
+              items: <String>['Tất cả trạng thái', 'Đang hiệu lực', 'Chờ ký', 'Sắp hết hạn', 'Đã hết hạn', 'Chờ gia hạn'].map((String value) => DropdownMenuItem<String>(value: value, child: Text(value))).toList(),
               onChanged: (String? newValue) { if (newValue != null) { setState(() { _selectedStatusFilter = newValue; _applySearchAndFilter(); }); } },
             ),
           ),

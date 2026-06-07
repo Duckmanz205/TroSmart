@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdGiaHanHopDong extends StatefulWidget {
   final int maHopDong; // Nhận ID hợp đồng từ trang chi tiết sang
@@ -37,8 +38,10 @@ class _AdGiaHanHopDongState extends State<AdGiaHanHopDong> {
   // 🌐 1. TẢI THÔNG TIN HỢP ĐỒNG HIỆN TẠI ĐỂ HIỂN THỊ LÊN KHUNG KHÓA
   Future<void> _fetchCurrentContractInfo() async {
     try {
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'),
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
       );
 
       if (response.statusCode == 200) {
@@ -99,9 +102,13 @@ class _AdGiaHanHopDongState extends State<AdGiaHanHopDong> {
     };
 
     try {
+      final token = await AuthService().getToken();
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}/gia-han'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
         body: jsonEncode(giaHanDto),
       );
 
@@ -320,9 +327,10 @@ class _AdGiaHanHopDongState extends State<AdGiaHanHopDong> {
   }
 
   Widget _buildSubHeader(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      padding: EdgeInsets.only(top: statusBarHeight + 24, bottom: 24, left: 20, right: 20),
       color: AppTheme.deepPurple,
       child: Row(
         children: [
@@ -368,7 +376,6 @@ class _AdGiaHanHopDongState extends State<AdGiaHanHopDong> {
 
     return Scaffold(
       backgroundColor: AppTheme.bgSlate,
-      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -449,7 +456,6 @@ class _AdGiaHanHopDongState extends State<AdGiaHanHopDong> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 }

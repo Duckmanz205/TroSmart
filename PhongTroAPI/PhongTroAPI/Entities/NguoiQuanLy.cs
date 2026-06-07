@@ -30,4 +30,8 @@ public partial class NguoiQuanLy
     public virtual NganHang? MaNganHangNavigation { get; set; }
 
     public virtual ICollection<TaiKhoan> TaiKhoans { get; set; } = new List<TaiKhoan>();
+
+    public virtual ICollection<ThongBao> ThongBaos { get; set; } = new List<ThongBao>();
+
+    public virtual ICollection<TinNhan> TinNhans { get; set; } = new List<TinNhan>();
 }

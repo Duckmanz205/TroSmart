@@ -43,35 +43,60 @@ namespace PhongTroAPI.Controllers
                     return BadRequest(new { message = "Tên đăng nhập đã được sử dụng" });
             }
 
-            // Bước 2 → 4: Mở transaction, INSERT KhachThue, INSERT TaiKhoan, COMMIT
+            // Bước 2 → 4: Mở transaction, INSERT theo vai trò, INSERT TaiKhoan, COMMIT
             await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync();
             try
             {
-                // INSERT vào KhachThue
-                int maKhach;
-                await using (var insertKhachCmd = new SqlCommand(
-                    @"INSERT INTO KhachThue (HoTen, SDT)
-                      VALUES (@HoTen, @SDT);
-                      SELECT CAST(SCOPE_IDENTITY() AS INT);", conn, transaction))
-                {
-                    insertKhachCmd.Parameters.AddWithValue("@HoTen", request.HoTen.Trim());
-                    insertKhachCmd.Parameters.AddWithValue("@SDT",
-                        string.IsNullOrWhiteSpace(request.SDT) ? DBNull.Value : (object)request.SDT.Trim());
+                bool isManager = string.Equals(request.VaiTro, "QuanLy", StringComparison.OrdinalIgnoreCase);
+                int? maKhach = null;
+                int? maQuanLy = null;
 
-                    var result = await insertKhachCmd.ExecuteScalarAsync();
-                    maKhach = Convert.ToInt32(result);
+                if (isManager)
+                {
+                    // INSERT vào NguoiQuanLy
+                    await using (var insertQuanLyCmd = new SqlCommand(
+                        @"INSERT INTO NguoiQuanLy (HoTen, Sdt, TrangThai, NgayTao)
+                          VALUES (@HoTen, @SDT, N'Đang hoạt động', GETDATE());
+                          SELECT CAST(SCOPE_IDENTITY() AS INT);", conn, transaction))
+                    {
+                        insertQuanLyCmd.Parameters.AddWithValue("@HoTen", request.HoTen.Trim());
+                        insertQuanLyCmd.Parameters.AddWithValue("@SDT",
+                            string.IsNullOrWhiteSpace(request.SDT) ? DBNull.Value : (object)request.SDT.Trim());
+
+                        var result = await insertQuanLyCmd.ExecuteScalarAsync();
+                        maQuanLy = Convert.ToInt32(result);
+                    }
+                }
+                else
+                {
+                    // INSERT vào KhachThue
+                    await using (var insertKhachCmd = new SqlCommand(
+                        @"INSERT INTO KhachThue (HoTen, SDT)
+                          VALUES (@HoTen, @SDT);
+                          SELECT CAST(SCOPE_IDENTITY() AS INT);", conn, transaction))
+                    {
+                        insertKhachCmd.Parameters.AddWithValue("@HoTen", request.HoTen.Trim());
+                        insertKhachCmd.Parameters.AddWithValue("@SDT",
+                            string.IsNullOrWhiteSpace(request.SDT) ? DBNull.Value : (object)request.SDT.Trim());
+
+                        var result = await insertKhachCmd.ExecuteScalarAsync();
+                        maKhach = Convert.ToInt32(result);
+                    }
                 }
 
-                // INSERT vào TaiKhoan (VaiTro hard-code = 'KhachThue', lưu plain text)
+                // INSERT vào TaiKhoan
                 int maTaiKhoan;
+                string finalizedRole = isManager ? "NguoiQuanLy" : "KhachThue";
                 await using (var insertTkCmd = new SqlCommand(
                     @"INSERT INTO TaiKhoan (TenDangNhap, MatKhau, VaiTro, MaKhach, MaQuanLy)
-                      VALUES (@TenDangNhap, @MatKhau, N'KhachThue', @MaKhach, NULL);
+                      VALUES (@TenDangNhap, @MatKhau, @VaiTro, @MaKhach, @MaQuanLy);
                       SELECT CAST(SCOPE_IDENTITY() AS INT);", conn, transaction))
                 {
                     insertTkCmd.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap.Trim());
                     insertTkCmd.Parameters.AddWithValue("@MatKhau", request.MatKhau); // plain text
-                    insertTkCmd.Parameters.AddWithValue("@MaKhach", maKhach);
+                    insertTkCmd.Parameters.AddWithValue("@VaiTro", finalizedRole);
+                    insertTkCmd.Parameters.AddWithValue("@MaKhach", (object?)maKhach ?? DBNull.Value);
+                    insertTkCmd.Parameters.AddWithValue("@MaQuanLy", (object?)maQuanLy ?? DBNull.Value);
 
                     var result = await insertTkCmd.ExecuteScalarAsync();
                     maTaiKhoan = Convert.ToInt32(result);
@@ -81,7 +106,7 @@ namespace PhongTroAPI.Controllers
 
                 // Bước 5: Tạo JWT và trả AuthResponse
                 var token = GenerateJwtToken(maTaiKhoan, request.TenDangNhap.Trim(),
-                    "KhachThue", maKhach, null, request.HoTen.Trim());
+                    finalizedRole, maKhach, maQuanLy, request.HoTen.Trim());
 
                 return Ok(new AuthResponse
                 {
@@ -89,14 +114,40 @@ namespace PhongTroAPI.Controllers
                     MaTaiKhoan = maTaiKhoan,
                     TenDangNhap = request.TenDangNhap.Trim(),
                     HoTen = request.HoTen.Trim(),
-                    VaiTro = "KhachThue",
-                    MaKhach = maKhach
+                    VaiTro = finalizedRole,
+                    MaKhach = maKhach,
+                    MaQuanLy = maQuanLy
                 });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, new { message = "Đăng ký thất bại. Vui lòng thử lại.", detail = ex.Message });
+                
+                string friendlyMessage = "Đăng ký thất bại. Vui lòng thử lại.";
+                
+                // Kiểm tra SqlException lỗi trùng lặp (Unique Constraint / Duplicate Key)
+                SqlException? sqlEx = ex as SqlException ?? ex.InnerException as SqlException;
+                if (sqlEx != null)
+                {
+                    if (sqlEx.Number == 2627 || sqlEx.Number == 2601)
+                    {
+                        string msgLower = sqlEx.Message.ToLower();
+                        if (msgLower.Contains("uq__nguoiqua") || msgLower.Contains("sdt") || msgLower.Contains("nguoiquanly"))
+                        {
+                            friendlyMessage = "Số điện thoại này đã được sử dụng bởi một tài khoản quản lý khác.";
+                        }
+                        else if (msgLower.Contains("taikhoan") || msgLower.Contains("tendangnhap"))
+                        {
+                            friendlyMessage = "Tên đăng nhập đã được sử dụng.";
+                        }
+                        else
+                        {
+                            friendlyMessage = "Dữ liệu bị trùng lặp. Vui lòng kiểm tra lại thông tin.";
+                        }
+                    }
+                }
+
+                return StatusCode(500, new { message = friendlyMessage, detail = ex.Message });
             }
         }
 
@@ -213,6 +264,42 @@ namespace PhongTroAPI.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        // ─────────────────────────────────────────────
+        // POST /api/auth/forgot-password
+        // ─────────────────────────────────────────────
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await using var conn = new SqlConnection(_connStr);
+            await conn.OpenAsync();
+
+            // Check if username exists
+            bool exists = false;
+            await using (var checkCmd = new SqlCommand(
+                "SELECT COUNT(1) FROM TaiKhoan WHERE TenDangNhap = @TenDangNhap", conn))
+            {
+                checkCmd.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap.Trim());
+                exists = Convert.ToInt32(await checkCmd.ExecuteScalarAsync() ?? 0) > 0;
+            }
+
+            if (!exists)
+                return BadRequest(new { message = "Tên đăng nhập không tồn tại trong hệ thống" });
+
+            // Update password
+            await using (var updateCmd = new SqlCommand(
+                "UPDATE TaiKhoan SET MatKhau = @MatKhau WHERE TenDangNhap = @TenDangNhap", conn))
+            {
+                updateCmd.Parameters.AddWithValue("@MatKhau", request.NewPassword);
+                updateCmd.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap.Trim());
+                await updateCmd.ExecuteNonQueryAsync();
+            }
+
+            return Ok(new { message = "Đặt lại mật khẩu thành công" });
         }
     }
 }

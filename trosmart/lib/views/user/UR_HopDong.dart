@@ -9,6 +9,7 @@ import '../../shared/api_constants.dart';
 import '../../shared/app_theme.dart';
 import '../../logic/user/user_contract_controller.dart';
 import '../../logic/user/user_payment_controller.dart';
+import '../../logic/auth/auth_service.dart';
 import 'UR_KyHopDongOnline.dart';
 
 class UrHopDong extends StatelessWidget {
@@ -18,6 +19,7 @@ class UrHopDong extends StatelessWidget {
     if (dateStr == null || dateStr.isEmpty) return "N/A";
     try {
       DateTime parsed = DateTime.parse(dateStr);
+      if (parsed.year == 1) return "Chưa xác định";
       return DateFormat('dd/MM/yyyy').format(parsed);
     } catch (_) {
       return dateStr;
@@ -28,6 +30,7 @@ class UrHopDong extends StatelessWidget {
     if (dateStr == null || dateStr.isEmpty) return "N/A";
     try {
       DateTime parsed = DateTime.parse(dateStr);
+      if (parsed.year == 1) return "N/A";
       switch (parsed.weekday) {
         case 1:
           return "Thứ Hai";
@@ -54,6 +57,7 @@ class UrHopDong extends StatelessWidget {
     try {
       DateTime start = DateTime.parse(startStr);
       DateTime end = DateTime.parse(endStr);
+      if (end.year == 1) return 0.0; // avoid invalid date calculation
       DateTime now = DateTime.now();
 
       if (now.isBefore(start)) return 0.0;
@@ -73,6 +77,7 @@ class UrHopDong extends StatelessWidget {
     if (startStr == null) return 0;
     try {
       DateTime start = DateTime.parse(startStr);
+      if (start.year == 1) return 0;
       DateTime now = DateTime.now();
       if (now.isBefore(start)) return 0;
 
@@ -80,6 +85,19 @@ class UrHopDong extends StatelessWidget {
       return months < 0 ? 0 : months;
     } catch (_) {
       return 0;
+    }
+  }
+
+  int _getTotalMonths(String? startStr, String? endStr) {
+    if (startStr == null || endStr == null) return 12;
+    try {
+      DateTime start = DateTime.parse(startStr);
+      DateTime end = DateTime.parse(endStr);
+      if (end.year == 1) return 12; // fallback for uninitialized dates
+      int months = (end.year - start.year) * 12 + end.month - start.month;
+      return months <= 0 ? 12 : months;
+    } catch (_) {
+      return 12;
     }
   }
 
@@ -106,10 +124,12 @@ class UrHopDong extends StatelessWidget {
     );
 
     try {
+      final token = await AuthService().getToken();
       final response = await http.get(
         Uri.parse(
           '${ApiConstants.baseUrl}/HopDong/${controller.maHopDong}/export-pdf',
         ),
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
       );
 
       if (response.statusCode == 200) {
@@ -179,7 +199,7 @@ class UrHopDong extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.all(20.0),
                 child: Text(
-                  "Tài khoản của ông hiện chưa có hợp đồng thuê phòng nào được tạo nháp!",
+                  "Tài khoản của bạn hiện chưa có hợp đồng thuê phòng nào được tạo nháp!",
                   style: TextStyle(
                     color: Colors.grey,
                     fontStyle: FontStyle.italic,
@@ -194,6 +214,18 @@ class UrHopDong extends StatelessWidget {
           String trangThai =
               contract['trangThai']?.toString().trim() ?? "Chờ khách ký";
           bool daKy = trangThai == "Đang hiệu lực";
+          bool isExpired = false;
+          if (contract['ngayKetThuc'] != null) {
+            try {
+              DateTime end = DateTime.parse(contract['ngayKetThuc']);
+              if (end.year > 1 && end.isBefore(DateTime.now())) {
+                isExpired = true;
+              }
+            } catch (_) {}
+          }
+          if (trangThai == "Hết hạn" || trangThai == "Quá hạn") {
+            isExpired = true;
+          }
 
           return SafeArea(
             child: Column(
@@ -330,7 +362,14 @@ class UrHopDong extends StatelessWidget {
                     ),
                   ),
                 ),
-                _buildBottomButtons(context, controller, contract, daKy),
+                _buildBottomButtons(
+                  context,
+                  controller,
+                  contract,
+                  daKy,
+                  trangThai,
+                  isExpired,
+                ),
               ],
             ),
           );
@@ -403,6 +442,7 @@ class UrHopDong extends StatelessWidget {
   ) {
     double progressValue = _calculateProgress(start, end);
     int passedMonths = _getPassedMonths(start);
+    int totalMonths = _getTotalMonths(start, end);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -455,7 +495,7 @@ class UrHopDong extends StatelessWidget {
                 ),
               ),
               Text(
-                '$passedMonths / 12 tháng',
+                '$passedMonths / $totalMonths tháng',
                 style: const TextStyle(
                   color: AppTheme.deepPurple,
                   fontSize: 12,
@@ -684,7 +724,11 @@ class UrHopDong extends StatelessWidget {
     UserContractController controller,
     Map<String, dynamic> contract,
     bool daKy,
+    String trangThai,
+    bool isExpired,
   ) {
+    bool hasRequestedRenewal = trangThai == "Chờ gia hạn";
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
@@ -713,56 +757,139 @@ class UrHopDong extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ElevatedButton.icon(
-            icon: Icon(
-              daKy ? Icons.lock_outline : Icons.border_color_outlined,
-              color: Colors.white,
-            ),
-            label: Text(
-              daKy ? 'HỢP ĐỒNG ĐANG CÓ HIỆU LỰC' : 'TIẾN HÀNH KÝ ONLINE NGAY',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
+          if (hasRequestedRenewal) ...[
+            ElevatedButton.icon(
+              icon: const Icon(Icons.hourglass_empty, color: Colors.white),
+              label: const Text(
+                'YÊU CẦU GIA HẠN ĐANG CHỜ DUYỆT',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: daKy
-                  ? Colors.grey.shade400
-                  : AppTheme.deepPurple,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
               ),
-              elevation: 0,
+              onPressed: null,
             ),
-            onPressed: daKy
-                ? null
-                : () async {
-                    bool? success = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UrKyHopDongOnline(
-                          maHopDong: controller.maHopDong,
-                          maKhach:
-                              int.tryParse(
-                                (contract['MaKhach'] ??
-                                        contract['maKhach'] ??
-                                        contract['MAKHACH'] ??
-                                        contract['ma_khach'] ??
-                                        1)
-                                    .toString(),
-                              ) ??
-                              1,
-                        ),
+          ] else if (isExpired) ...[
+            ElevatedButton.icon(
+              icon: const Icon(Icons.autorenew, color: Colors.white),
+              label: const Text(
+                'GIA HẠN HỢP ĐỒNG',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              onPressed: () async {
+                bool confirm = await showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Yêu cầu gia hạn'),
+                    content: const Text('Bạn có chắc chắn muốn gửi yêu cầu gia hạn hợp đồng này đến chủ trọ?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Hủy'),
                       ),
-                    );
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Gửi yêu cầu', style: TextStyle(color: Colors.blue)),
+                      ),
+                    ],
+                  ),
+                ) ?? false;
 
-                    if (success == true) {
-                      controller.loadContractFlow();
+                if (confirm) {
+                  bool ok = await controller.yeuCauGiaHan(controller.maHopDong);
+                  if (context.mounted) {
+                    if (ok) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã gửi yêu cầu gia hạn đến chủ trọ!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Gửi yêu cầu gia hạn thất bại.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     }
-                  },
-          ),
+                  }
+                }
+              },
+            ),
+          ] else ...[
+            ElevatedButton.icon(
+              icon: Icon(
+                daKy ? Icons.lock_outline : Icons.border_color_outlined,
+                color: Colors.white,
+              ),
+              label: Text(
+                daKy ? 'HỢP ĐỒNG ĐANG CÓ HIỆU LỰC' : 'TIẾN HÀNH KÝ ONLINE NGAY',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: daKy
+                    ? Colors.grey.shade400
+                    : AppTheme.deepPurple,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              onPressed: daKy
+                  ? null
+                  : () async {
+                      bool? success = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UrKyHopDongOnline(
+                            maHopDong: controller.maHopDong,
+                            maKhach:
+                                int.tryParse(
+                                  (contract['MaKhach'] ??
+                                          contract['maKhach'] ??
+                                          contract['MAKHACH'] ??
+                                          contract['ma_khach'] ??
+                                          1)
+                                      .toString(),
+                                ) ??
+                                1,
+                          ),
+                        ),
+                      );
+
+                      if (success == true) {
+                        controller.loadContractFlow();
+                      }
+                    },
+            ),
+          ],
         ],
       ),
     );

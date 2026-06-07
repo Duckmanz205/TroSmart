@@ -17,6 +17,8 @@ namespace PhongTroAPI.DTOs
         public string HoTen { get; set; } = string.Empty;
 
         public string? SDT { get; set; }
+
+        public string VaiTro { get; set; } = "KhachThue";
     }
 
     // DTO cho yêu cầu đăng nhập
@@ -39,5 +41,16 @@ namespace PhongTroAPI.DTOs
         public string VaiTro { get; set; } = string.Empty;
         public int? MaKhach { get; set; }
         public int? MaQuanLy { get; set; }
+    }
+
+    // DTO cho yêu cầu đặt lại mật khẩu khi quên
+    public class ForgotPasswordRequest
+    {
+        [Required(ErrorMessage = "Tên đăng nhập là bắt buộc")]
+        public string TenDangNhap { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Mật khẩu mới là bắt buộc")]
+        [MinLength(6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự")]
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

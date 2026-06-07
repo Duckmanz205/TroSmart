@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/api_constants.dart';
+import '../auth/auth_service.dart';
 
 class UserContractController extends ChangeNotifier {
   int _maHopDong = 0;
@@ -25,6 +26,15 @@ class UserContractController extends ChangeNotifier {
 
   UserContractController() {
     loadContractFlow();
+  }
+
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await AuthService().getToken();
+    final headers = <String, String>{};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
   }
 
   Future<void> selectContract(int index) async {
@@ -57,6 +67,7 @@ class UserContractController extends ChangeNotifier {
       if (_maHopDong > 0) {
         final detailResponse = await http.get(
           Uri.parse('${ApiConstants.baseUrl}/HopDong/$_maHopDong'),
+          headers: await _getHeaders(),
         );
         if (detailResponse.statusCode == 200) {
           _contract = jsonDecode(detailResponse.body);
@@ -86,7 +97,10 @@ class UserContractController extends ChangeNotifier {
         _currentMaKhach = 1;
       }
 
-      final listResponse = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong'));
+      final listResponse = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/HopDong'),
+        headers: await _getHeaders(),
+      );
       if (listResponse.statusCode == 200) {
         final dynamic decoded = jsonDecode(listResponse.body);
         List<dynamic> contracts = [];
@@ -129,6 +143,7 @@ class UserContractController extends ChangeNotifier {
           if (_maHopDong > 0) {
             final detailResponse = await http.get(
               Uri.parse('${ApiConstants.baseUrl}/HopDong/$_maHopDong'),
+              headers: await _getHeaders(),
             );
             if (detailResponse.statusCode == 200) {
               _contract = jsonDecode(detailResponse.body);
@@ -146,5 +161,21 @@ class UserContractController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> yeuCauGiaHan(int maHopDong) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/$maHopDong/yeu-cau-gia-han'),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        await loadContractFlow();
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Lỗi gửi yêu cầu gia hạn: $e");
+    }
+    return false;
   }
 }

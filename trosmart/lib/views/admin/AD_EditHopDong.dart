@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/app_theme.dart';
 import '../../shared/api_constants.dart';
+import '../../logic/auth/auth_service.dart';
 
 class AdEditHopDong extends StatefulWidget {
   final int maHopDong;
@@ -37,7 +38,11 @@ class _AdEditHopDongState extends State<AdEditHopDong> {
   // 1. GỌI API LẤY THÔNG TIN HỢP ĐỒNG HIỆN TẠI ĐỂ ĐỔ VÀO FORM
   Future<void> _fetchContractDetails() async {
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'));
+      final token = await AuthService().getToken();
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'),
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      );
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -83,9 +88,13 @@ class _AdEditHopDongState extends State<AdEditHopDong> {
     setState(() => _isSaving = true);
 
     try {
+      final token = await AuthService().getToken();
       final response = await http.put(
         Uri.parse('${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
         body: jsonEncode({
           "maPhong": 0, // Backend ông không check mã phòng/khách khi update nên truyền ảo 0 là an toàn
           "maKhach": 0,

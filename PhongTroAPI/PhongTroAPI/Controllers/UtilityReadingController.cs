@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using PhongTroAPI.Entities;
 
 namespace PhongTroAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class UtilityReadingController : ControllerBase
 {
     private readonly QuanLyPhongTroContext _context;
@@ -31,13 +33,13 @@ public class UtilityReadingController : ControllerBase
 
         var roomsQuery = _context.Phongs.AsQueryable();
 
-        int? maQuanLy = null;
         var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
-        if (!string.IsNullOrEmpty(maQuanLyClaim) && int.TryParse(maQuanLyClaim, out int mqId))
+        if (string.IsNullOrEmpty(maQuanLyClaim) || !int.TryParse(maQuanLyClaim, out int mqId))
         {
-            maQuanLy = mqId;
-            roomsQuery = roomsQuery.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy.Value);
+            return Ok(new List<object>());
         }
+        int maQuanLy = mqId;
+        roomsQuery = roomsQuery.Where(p => p.MaCoSoNavigation != null && p.MaCoSoNavigation.MaQuanLy == maQuanLy);
 
         // Lấy tất cả phòng kèm thông tin cơ sở + khách thuê (từ hợp đồng) của manager
         var rooms = await roomsQuery
@@ -86,14 +88,35 @@ public class UtilityReadingController : ControllerBase
                 g => g.OrderByDescending(h => h.Nam).ThenByDescending(h => h.Thang).First()
             );
 
+        // Lấy hợp đồng đang hiệu lực để làm chỉ số cũ mặc định ban đầu
+        var activeContracts = await _context.HopDongThues
+            .Where(hd => hd.TrangThai == "Đang hiệu lực")
+            .ToListAsync();
+        var activeContractMap = activeContracts
+            .GroupBy(hd => hd.MaPhong)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(hd => hd.NgayBatDau).First()
+            );
+
         var result = rooms.Select(r =>
         {
             var hasReading = readingMap.TryGetValue(r.MaPhong, out var reading);
             var hasPrev = prevReadingMap.TryGetValue(r.MaPhong, out var prevReading);
             var hasLatestInvoice = latestInvoiceMap.TryGetValue(r.MaPhong, out var latestInvoice);
+            var hasActiveContract = activeContractMap.TryGetValue(r.MaPhong, out var activeContract);
 
-            int defaultDienCu = hasLatestInvoice ? Convert.ToInt32(latestInvoice.ChiSoDienMoi) : (hasPrev && prevReading!.ChiSoDienMoi.HasValue ? prevReading.ChiSoDienMoi.Value : 0);
-            int defaultNuocCu = hasLatestInvoice ? Convert.ToInt32(latestInvoice.ChiSoNuocMoi) : (hasPrev && prevReading!.ChiSoNuocMoi.HasValue ? prevReading.ChiSoNuocMoi.Value : 0);
+            int defaultDienCu = hasLatestInvoice 
+                ? Convert.ToInt32(latestInvoice.ChiSoDienMoi) 
+                : (hasPrev && prevReading!.ChiSoDienMoi.HasValue 
+                    ? prevReading.ChiSoDienMoi.Value 
+                    : (hasActiveContract && activeContract!.ChiSoDienCu.HasValue ? activeContract.ChiSoDienCu.Value : 0));
+
+            int defaultNuocCu = hasLatestInvoice 
+                ? Convert.ToInt32(latestInvoice.ChiSoNuocMoi) 
+                : (hasPrev && prevReading!.ChiSoNuocMoi.HasValue 
+                    ? prevReading.ChiSoNuocMoi.Value 
+                    : (hasActiveContract && activeContract!.ChiSoNuocCu.HasValue ? activeContract.ChiSoNuocCu.Value : 0));
 
             return new
             {

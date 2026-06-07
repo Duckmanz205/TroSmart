@@ -103,7 +103,7 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
           const AdQLHopDong(), // 4: Hợp đồng (chờ hoàn thiện)
           UtilityManagementView(isActive: _activePage == AdminPages.dienNuoc), // 5: Điện nước
           const AD_SuCo(), // 6: Sự cố
-          const AD_ThongBao(), // 7: Thông báo
+          AD_ThongBao(onNavigate: _navigateTo), // 7: Thông báo
           const AdLichCongViec(), // 8: Lịch & Công việc
           const StatisticsScreen(), // 9: Báo cáo (Thống kê)
           const AdChat(), // 10: Chat

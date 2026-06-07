@@ -32,11 +32,15 @@ class ThongKeService {
     if (response.statusCode == 200) {
       return AdminThongKeModel.fromJson(jsonDecode(response.body));
     } else {
-      final body = jsonDecode(response.body);
-      final msg = body is Map
-          ? (body['message'] ?? body['detail'] ?? 'Lỗi không xác định')
-          : 'Lỗi lấy dữ liệu';
-      throw Exception(msg);
+      try {
+        final body = jsonDecode(response.body);
+        final msg = body is Map
+            ? (body['message'] ?? body['detail'] ?? 'Lỗi không xác định')
+            : 'Lỗi lấy dữ liệu';
+        throw Exception(msg);
+      } catch (e) {
+        throw Exception('Server error (${response.statusCode}): ${response.body}');
+      }
     }
   }
 
@@ -62,11 +66,15 @@ class ThongKeService {
     if (response.statusCode == 200) {
       return UserThongKeModel.fromJson(jsonDecode(response.body));
     } else {
-      final body = jsonDecode(response.body);
-      final msg = body is Map
-          ? (body['message'] ?? body['detail'] ?? 'Lỗi không xác định')
-          : 'Lỗi lấy dữ liệu';
-      throw Exception(msg);
+      try {
+        final body = jsonDecode(response.body);
+        final msg = body is Map
+            ? (body['message'] ?? body['detail'] ?? 'Lỗi không xác định')
+            : 'Lỗi lấy dữ liệu';
+        throw Exception(msg);
+      } catch (e) {
+        throw Exception('Server error (${response.statusCode}): ${response.body}');
+      }
     }
   }
 }

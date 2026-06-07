@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trosmart/logic/auth/auth_service.dart';
 import 'package:trosmart/views/user/navigation_screen.dart';
+import 'package:trosmart/views/admin/navigation_screen_admin.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -14,6 +16,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  String _selectedRole = "KhachThue";
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -56,20 +59,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       // register() tự động gọi login() sau khi thành công
-      await _authService.register(
+      final authResponse = await _authService.register(
         tenDangNhap,
         matKhau,
         hoTen,
         sDT.isEmpty ? null : sDT,
+        _selectedRole,
       );
 
+      final prefs = await SharedPreferences.getInstance();
+      if (authResponse.maKhach != null) {
+        await prefs.setInt('maKhach', authResponse.maKhach!);
+      }
+
       if (!mounted) return;
-      // VaiTro luôn là KhachThue → điến home user
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-        (route) => false,
-      );
+      if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy' || authResponse.vaiTro == 'NguoiQuanLy') {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminNavigationScreen()),
+          (route) => false,
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+          (route) => false,
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       final message = e.toString().replaceFirst('Exception: ', '');
@@ -141,6 +157,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           keyboardType: TextInputType.phone,
                           controller: _phoneController,
                         ),
+                        const SizedBox(height: 20),
+
+                        _buildRoleSelector(),
                         const SizedBox(height: 20),
                         
                         _buildInputField(
@@ -279,6 +298,114 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRoleSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: const [
+            Icon(Icons.badge_outlined, size: 14, color: Color(0xFF595959)),
+            SizedBox(width: 8),
+            Text(
+              "VAI TRÒ TÀI KHOẢN",
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF595959), letterSpacing: 0.5),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedRole = "KhachThue"),
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: _selectedRole == "KhachThue"
+                        ? const Color(0xFF6A3092).withOpacity(0.08)
+                        : Colors.grey.shade50,
+                    border: Border.all(
+                      color: _selectedRole == "KhachThue"
+                          ? const Color(0xFF6A3092)
+                          : Colors.grey.shade300,
+                      width: _selectedRole == "KhachThue" ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.home_outlined,
+                        color: _selectedRole == "KhachThue"
+                            ? const Color(0xFF6A3092)
+                            : Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Khách Thuê",
+                        style: TextStyle(
+                          color: _selectedRole == "KhachThue"
+                              ? const Color(0xFF6A3092)
+                              : Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedRole = "QuanLy"),
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: _selectedRole == "QuanLy"
+                        ? const Color(0xFF6A3092).withOpacity(0.08)
+                        : Colors.grey.shade50,
+                    border: Border.all(
+                      color: _selectedRole == "QuanLy"
+                          ? const Color(0xFF6A3092)
+                          : Colors.grey.shade300,
+                      width: _selectedRole == "QuanLy" ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.admin_panel_settings_outlined,
+                        color: _selectedRole == "QuanLy"
+                            ? const Color(0xFF6A3092)
+                            : Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Quản Lý",
+                        style: TextStyle(
+                          color: _selectedRole == "QuanLy"
+                              ? const Color(0xFF6A3092)
+                              : Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

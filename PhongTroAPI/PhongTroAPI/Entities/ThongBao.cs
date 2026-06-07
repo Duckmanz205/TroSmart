@@ -17,5 +17,9 @@ public partial class ThongBao
 
     public DateTime? NgayGui { get; set; }
 
+    public int? MaQuanLy { get; set; }
+
     public virtual KhachThue? MaKhachNavigation { get; set; }
+
+    public virtual NguoiQuanLy? MaQuanLyNavigation { get; set; }
 }

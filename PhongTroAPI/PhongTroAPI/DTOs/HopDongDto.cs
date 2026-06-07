@@ -9,6 +9,8 @@ namespace PhongTroAPI.DTOs
         public DateOnly NgayBatDau { get; set; }
         public DateOnly? NgayKetThuc { get; set; }
         public decimal TienCoc { get; set; }
+        public int? ChiSoDienCu { get; set; }
+        public int? ChiSoNuocCu { get; set; }
     }
 
     public class HopDongRenderDto

@@ -5,6 +5,7 @@ import 'package:trosmart/views/admin/navigation_screen_admin.dart';
 import 'package:trosmart/views/user/navigation_screen.dart';
 import '../../widgets/common/custom_text_field.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // Điều hướng theo VaiTro
-      if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy') {
+      if (authResponse.vaiTro == 'Admin' || authResponse.vaiTro == 'QuanLy' || authResponse.vaiTro == 'NguoiQuanLy') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -172,7 +173,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ForgotPasswordScreen(),
+                            ),
+                          );
+                        },
                         child: const Text(
                           "Quên mật khẩu?",
                           style: TextStyle(
