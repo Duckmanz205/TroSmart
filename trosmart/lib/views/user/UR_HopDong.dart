@@ -214,6 +214,7 @@ class UrHopDong extends StatelessWidget {
           String trangThai =
               contract['trangThai']?.toString().trim() ?? "Chờ khách ký";
           bool daKy = trangThai == "Đang hiệu lực";
+          bool choKetThucSom = trangThai == "Chờ kết thúc sớm";
           bool isExpired = false;
           if (contract['ngayKetThuc'] != null) {
             try {
@@ -369,6 +370,7 @@ class UrHopDong extends StatelessWidget {
                   daKy,
                   trangThai,
                   isExpired,
+                  choKetThucSom,
                 ),
               ],
             ),
@@ -726,6 +728,7 @@ class UrHopDong extends StatelessWidget {
     bool daKy,
     String trangThai,
     bool isExpired,
+    bool choKetThucSom,
   ) {
     bool hasRequestedRenewal = trangThai == "Chờ gia hạn";
 
@@ -890,7 +893,227 @@ class UrHopDong extends StatelessWidget {
                     },
             ),
           ],
+          // Nút kết thúc sớm — chỉ hiện khi đang hiệu lực
+          if (daKy && !isExpired && !hasRequestedRenewal) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => _showYeuCauKetThucSomDialog(context, controller),
+              icon: const Icon(Icons.exit_to_app_outlined, color: Color(0xFFDC2626)),
+              label: const Text(
+                'Yêu cầu kết thúc sớm',
+                style: TextStyle(
+                  color: Color(0xFFDC2626),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                side: const BorderSide(color: Color(0xFFFCA5A5)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                backgroundColor: const Color(0xFFFFF5F5),
+              ),
+            ),
+          ],
+
+          // Nút chờ duyệt kết thúc sớm
+          if (choKetThucSom) ...[
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.hourglass_empty, color: Colors.white),
+              label: const Text(
+                'YÊU CẦU KẾT THÚC SỚM ĐANG CHỜ DUYỆT',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              onPressed: null,
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Future<void> _showYeuCauKetThucSomDialog(
+    BuildContext context,
+    UserContractController controller,
+  ) async {
+    final lyDoController = TextEditingController();
+    DateTime? selectedDate;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.exit_to_app_outlined, color: Color(0xFFDC2626)),
+              SizedBox(width: 8),
+              Text(
+                'Yêu cầu kết thúc sớm',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Vui lòng cung cấp lý do và ngày bạn muốn kết thúc hợp đồng sớm. Yêu cầu sẽ được gửi đến chủ trọ để xem xét và phê duyệt.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Lý do kết thúc sớm *',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: lyDoController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Nhập lý do của bạn...',
+                    hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFDC2626)),
+                    ),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Ngày muốn kết thúc *',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: DateTime.now().add(const Duration(days: 7)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      helpText: 'Chọn ngày muốn kết thúc',
+                    );
+                    if (picked != null) {
+                      setState(() => selectedDate = picked);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF6B7280)),
+                        const SizedBox(width: 8),
+                        Text(
+                          selectedDate == null
+                              ? 'Chọn ngày...'
+                              : '${selectedDate!.day.toString().padLeft(2,'0')}/${selectedDate!.month.toString().padLeft(2,'0')}/${selectedDate!.year}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: selectedDate == null ? const Color(0xFF9CA3AF) : const Color(0xFF1F2937),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Hủy', style: TextStyle(color: Color(0xFF6B7280))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () async {
+                if (lyDoController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vui lòng nhập lý do kết thúc sớm!'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                if (selectedDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vui lòng chọn ngày muốn kết thúc!'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx);
+                final ok = await controller.yeuCauKetThucSom(
+                  controller.maHopDong,
+                  lyDoController.text.trim(),
+                  selectedDate!,
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ok
+                            ? 'Đã gửi yêu cầu kết thúc sớm đến chủ trọ!'
+                            : 'Gửi yêu cầu thất bại. Vui lòng thử lại.',
+                      ),
+                      backgroundColor: ok ? Colors.green : Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                'Gửi yêu cầu',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

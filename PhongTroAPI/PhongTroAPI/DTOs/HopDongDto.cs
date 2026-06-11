@@ -34,6 +34,8 @@ namespace PhongTroAPI.DTOs
         public string? TenQuanLy { get; set; }
         public string? SdtQuanLy { get; set; }
         public string? EmailQuanLy { get; set; }
+        public string? LyDoKetThucSom { get; set; }
+        public DateOnly? NgayMuonKetThuc { get; set; }
     }
 
     public class GiaHanHopDongDto
@@ -41,6 +43,18 @@ namespace PhongTroAPI.DTOs
         public DateOnly NgayBatDauMoi { get; set; }
         public DateOnly NgayKetThucMoi { get; set; }
         public decimal GiaThueMoi { get; set; }
+        public string? GhiChu { get; set; }
+    }
+
+    public class YeuCauKetThucSomDto
+    {
+        public string? LyDo { get; set; }
+        public DateOnly NgayMuonKetThuc { get; set; }
+    }
+
+    public class DuyetKetThucSomDto
+    {
+        public DateOnly NgayKetThucThucTe { get; set; }
         public string? GhiChu { get; set; }
     }
 }

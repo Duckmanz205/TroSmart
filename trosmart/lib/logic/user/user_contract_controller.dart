@@ -178,4 +178,34 @@ class UserContractController extends ChangeNotifier {
     }
     return false;
   }
+
+  Future<bool> yeuCauKetThucSom(
+    int maHopDong,
+    String lyDo,
+    DateTime ngayMuonKetThuc,
+  ) async {
+    try {
+      final headers = await _getHeaders();
+      headers['Content-Type'] = 'application/json';
+      final body = {
+        'lyDo': lyDo,
+        'ngayMuonKetThuc': ngayMuonKetThuc.toIso8601String().substring(0, 10),
+      };
+      final response = await http.post(
+        Uri.parse(
+          '${ApiConstants.baseUrl}/HopDong/$maHopDong/yeu-cau-ket-thuc-som',
+        ),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+      if (response.statusCode == 200) {
+        await loadContractFlow();
+        return true;
+      }
+      debugPrint("Lỗi gửi yêu cầu kết thúc sớm: ${response.body}");
+    } catch (e) {
+      debugPrint("Lỗi gửi yêu cầu kết thúc sớm: $e");
+    }
+    return false;
+  }
 }
