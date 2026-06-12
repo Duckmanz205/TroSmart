@@ -163,6 +163,234 @@ class _AdDetailHopDongState extends State<AdDetailHopDong> {
     }
   }
 
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case "Đang hiệu lực":
+      case "Đã ký":
+        return Colors.green;
+      case "Chờ kết thúc sớm":
+        return const Color(0xFFDC2626);
+      case "Đã kết thúc sớm":
+        return const Color(0xFF9CA3AF);
+      case "Chờ gia hạn":
+        return const Color(0xFFF97316);
+      case "Chờ khách ký":
+      case "Chờ ký":
+        return const Color(0xFF60A5FA);
+      case "Đã hết hạn":
+      case "Đã hủy":
+        return const Color(0xFFF87171);
+      default:
+        return Colors.orange;
+    }
+  }
+
+  Future<void> _handleTuChoiKetThucSom() async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận từ chối'),
+        content: const Text(
+          'Bạn có chắc chắn muốn từ chối yêu cầu kết thúc sớm hợp đồng này?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Từ chối',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (!confirm) return;
+
+    try {
+      final token = await AuthService().getToken();
+      final response = await http.post(
+        Uri.parse(
+          '${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}/tu-choi-ket-thuc-som',
+        ),
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      );
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã từ chối yêu cầu kết thúc sớm!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() => _isLoading = true);
+          _fetchContractDetail();
+        }
+      } else {
+        throw Exception("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDuyetKetThucSom() async {
+    DateTime selectedDate = DateTime.now();
+    if (_contractData?['ngayMuonKetThuc'] != null) {
+      try {
+        selectedDate = DateTime.parse(_contractData!['ngayMuonKetThuc'].toString());
+      } catch (_) {}
+    }
+    
+    final noteController = TextEditingController();
+
+    bool confirm = await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text(
+            'Duyệt kết thúc sớm',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Chọn ngày kết thúc hợp đồng thực tế và nhập ghi chú nếu có.',
+                  style: TextStyle(fontSize: 13, color: Colors.black54),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Ngày kết thúc thực tế *',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: selectedDate,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) {
+                      setDlgState(() => selectedDate = picked);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16, color: Colors.black54),
+                        const SizedBox(width: 8),
+                        Text(
+                          DateFormat('dd/MM/yyyy').format(selectedDate),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Ghi chú (Tùy chọn)',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: noteController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: 'Nhập ghi chú...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text(
+                'Xác nhận duyệt',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ) ?? false;
+
+    if (!confirm) return;
+
+    try {
+      final token = await AuthService().getToken();
+      final body = {
+        'ngayKetThucThucTe': selectedDate.toIso8601String().substring(0, 10),
+        'ghiChu': noteController.text.trim().isEmpty ? null : noteController.text.trim(),
+      };
+      
+      final response = await http.post(
+        Uri.parse(
+          '${ApiConstants.baseUrl}/HopDong/${widget.maHopDong}/duyet-ket-thuc-som',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+      
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã duyệt yêu cầu kết thúc sớm!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() => _isLoading = true);
+          _fetchContractDetail();
+        }
+      } else {
+        throw Exception("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   // KIỂM TRA HỢP ĐỒNG CÓ PHẢI LÀ SẮP HẾT HOẶC ĐÃ HẾT KHÔNG
   bool _isContractExpiredOrNearExpiry() {
     if (_contractData?['ngayKetThuc'] == null) return false;
@@ -334,13 +562,30 @@ class _AdDetailHopDongState extends State<AdDetailHopDong> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: _contractData!['trangThai'] == 'Đang hiệu lực'
-                            ? Colors.green
-                            : Colors.orange,
+                        color: _getStatusColor(_contractData!['trangThai']),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // THÔNG TIN KẾT THÚC SỚM (NẾU CÓ)
+                  if (_contractData!['lyDoKetThucSom'] != null ||
+                      _contractData!['ngayMuonKetThuc'] != null) ...[
+                    _buildSectionTitle('Thông Tin Kết Thúc Sớm'),
+                    _buildInfoCard([
+                      if (_contractData!['ngayMuonKetThuc'] != null)
+                        _buildInfoRow(
+                          'Ngày muốn kết thúc:',
+                          _formatDate(_contractData!['ngayMuonKetThuc']),
+                        ),
+                      if (_contractData!['lyDoKetThucSom'] != null)
+                        _buildInfoRow(
+                          'Lý do kết thúc:',
+                          _contractData!['lyDoKetThucSom'] ?? "N/A",
+                        ),
+                    ]),
+                    const SizedBox(height: 20),
+                  ],
 
                   // THÔNG TIN KHÁCH & PHÒNG
                   _buildSectionTitle('Bên Thuê (Khách)'),
@@ -441,6 +686,52 @@ class _AdDetailHopDongState extends State<AdDetailHopDong> {
                             icon: const Icon(Icons.check, color: Colors.white),
                             label: const Text(
                               'Chấp nhận',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else if (_contractData!['trangThai'] == 'Chờ kết thúc sớm') ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _handleTuChoiKetThucSom,
+                            icon: const Icon(Icons.close, color: Colors.red),
+                            label: const Text(
+                              'Từ chối',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Colors.red),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _handleDuyetKetThucSom,
+                            icon: const Icon(Icons.check, color: Colors.white),
+                            label: const Text(
+                              'Duyệt kết thúc',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,

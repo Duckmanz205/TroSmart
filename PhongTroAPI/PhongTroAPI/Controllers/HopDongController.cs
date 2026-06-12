@@ -213,6 +213,58 @@ namespace PhongTroAPI.Controllers
             return BadRequest("Từ chối gia hạn thất bại.");
         }
 
+        // POST: api/HopDong/5/yeu-cau-ket-thuc-som (User gửi yêu cầu kết thúc hợp đồng sớm)
+        [HttpPost("{id}/yeu-cau-ket-thuc-som")]
+        public IActionResult YeuCauKetThucSom(int id, [FromBody] YeuCauKetThucSomDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            int? maKhach = null;
+            var maKhachClaim = User.FindFirst("MaKhach")?.Value;
+            if (int.TryParse(maKhachClaim, out int mkId))
+            {
+                maKhach = mkId;
+            }
+
+            var result = _hopDongService.YeuCauKetThucSom(id, dto, maKhach);
+            if (result) return Ok(true);
+            return BadRequest("Gửi yêu cầu kết thúc sớm thất bại. Hợp đồng phải đang có hiệu lực.");
+        }
+
+        // POST: api/HopDong/5/duyet-ket-thuc-som (Admin duyệt yêu cầu kết thúc sớm)
+        [HttpPost("{id}/duyet-ket-thuc-som")]
+        public IActionResult DuyetKetThucSom(int id, [FromBody] DuyetKetThucSomDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
+            var result = _hopDongService.DuyetKetThucSom(id, dto, maQuanLy);
+            if (result) return Ok(true);
+            return BadRequest("Duyệt kết thúc sớm thất bại.");
+        }
+
+        // POST: api/HopDong/5/tu-choi-ket-thuc-som (Admin từ chối yêu cầu kết thúc sớm)
+        [HttpPost("{id}/tu-choi-ket-thuc-som")]
+        public IActionResult TuChoiKetThucSom(int id)
+        {
+            int? maQuanLy = null;
+            var maQuanLyClaim = User.FindFirst("MaQuanLy")?.Value;
+            if (int.TryParse(maQuanLyClaim, out int mqId))
+            {
+                maQuanLy = mqId;
+            }
+
+            var result = _hopDongService.TuChoiKetThucSom(id, maQuanLy);
+            if (result) return Ok(true);
+            return BadRequest("Từ chối yêu cầu kết thúc sớm thất bại.");
+        }
+
         [HttpGet("{id}/export-pdf")]
         public IActionResult ExportContractPdf(int id)
         {

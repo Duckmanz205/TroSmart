@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -205,6 +205,8 @@ public partial class QuanLyPhongTroContext : DbContext
             entity.Property(e => e.TrangThai)
                 .HasMaxLength(50)
                 .HasDefaultValue("Đang hiệu lực");
+            entity.Property(e => e.LyDoKetThucSom)
+                .HasMaxLength(500);
 
             entity.HasOne(d => d.MaKhachNavigation).WithMany(p => p.HopDongThues)
                 .HasForeignKey(d => d.MaKhach)

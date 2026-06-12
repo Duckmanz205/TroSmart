@@ -28,7 +28,7 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatusFilter = 'Tất cả trạng thái';
 
-  int _countHieuLuc = 0, _countSapHetHan = 0, _countChoKy = 0, _countHetHan = 0;
+  int _countHieuLuc = 0, _countSapHetHan = 0, _countChoKy = 0, _countHetHan = 0, _countChoKetThucSom = 0;
 
   @override
   void initState() {
@@ -70,13 +70,14 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
   }
 
   void _calculateStatusStats() {
-    _countHieuLuc = _countSapHetHan = _countChoKy = _countHetHan = 0;
+    _countHieuLuc = _countSapHetHan = _countChoKy = _countHetHan = _countChoKetThucSom = 0;
     for (var contract in _allContracts) {
       String status = (contract['trangThai'] ?? "").toString().trim();
       if (status == "Đang hiệu lực" || status == "Đã ký") _countHieuLuc++;
       else if (status == "Chờ khách ký" || status == "Chờ ký") _countChoKy++;
       else if (status == "Sắp hết hạn") _countSapHetHan++;
       else if (status == "Đã hết hạn") _countHetHan++;
+      else if (status == "Chờ kết thúc sớm") _countChoKetThucSom++;
     }
   }
 
@@ -196,6 +197,8 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
       case "Sắp hết hạn": return const Color(0xFFFBBF24); 
       case "Chờ khách ký": case "Chờ ký": return const Color(0xFF60A5FA); 
       case "Chờ gia hạn": return const Color(0xFFF97316);
+      case "Chờ kết thúc sớm": return const Color(0xFFDC2626);
+      case "Đã kết thúc sớm": return const Color(0xFF9CA3AF);
       default: return const Color(0xFFF87171); 
     }
   }
@@ -293,13 +296,66 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
   }
 
   Widget _buildStatusGrid() {
-    return GridView.count(
-      shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 2.2,
+    return Column(
       children: [
-        _statusItem('Đang hiệu lực', _countHieuLuc.toString().padLeft(2, '0'), const Color(0x192DDCB1), const Color(0xFF2DDCB1)),
-        _statusItem('Sắp hết hạn', _countSapHetHan.toString().padLeft(2, '0'), const Color(0x19FBBF24), const Color(0xFFFBBF24)),
-        _statusItem('Chờ ký', _countChoKy.toString().padLeft(2, '0'), const Color(0x1960A5FA), const Color(0xFF60A5FA)),
-        _statusItem('Đã hết hạn', _countHetHan.toString().padLeft(2, '0'), const Color(0x19F87171), const Color(0xFFF87171)),
+        GridView.count(
+          shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 2.2,
+          children: [
+            _statusItem('Đang hiệu lực', _countHieuLuc.toString().padLeft(2, '0'), const Color(0x192DDCB1), const Color(0xFF2DDCB1)),
+            _statusItem('Sắp hết hạn', _countSapHetHan.toString().padLeft(2, '0'), const Color(0x19FBBF24), const Color(0xFFFBBF24)),
+            _statusItem('Chờ ký', _countChoKy.toString().padLeft(2, '0'), const Color(0x1960A5FA), const Color(0xFF60A5FA)),
+            _statusItem('Đã hết hạn', _countHetHan.toString().padLeft(2, '0'), const Color(0x19F87171), const Color(0xFFF87171)),
+          ],
+        ),
+        if (_countChoKetThucSom > 0) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDC2626).withOpacity(0.9),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.exit_to_app_outlined, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Yêu cầu kết thúc sớm', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                      Text('$_countChoKetThucSom hợp đồng đang chờ duyệt', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedStatusFilter = 'Chờ kết thúc sớm';
+                      _applySearchAndFilter();
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text('Xem ngay', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -339,7 +395,7 @@ class _AdQLHopDongState extends State<AdQLHopDong> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedStatusFilter, isExpanded: true, icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-              items: <String>['Tất cả trạng thái', 'Đang hiệu lực', 'Chờ ký', 'Sắp hết hạn', 'Đã hết hạn', 'Chờ gia hạn'].map((String value) => DropdownMenuItem<String>(value: value, child: Text(value))).toList(),
+              items: <String>['Tất cả trạng thái', 'Đang hiệu lực', 'Chờ ký', 'Sắp hết hạn', 'Đã hết hạn', 'Chờ gia hạn', 'Chờ kết thúc sớm', 'Đã kết thúc sớm'].map((String value) => DropdownMenuItem<String>(value: value, child: Text(value))).toList(),
               onChanged: (String? newValue) { if (newValue != null) { setState(() { _selectedStatusFilter = newValue; _applySearchAndFilter(); }); } },
             ),
           ),

@@ -35,6 +35,10 @@ public partial class HopDongThue
 
     public DateTime? NgayKy { get; set; }
 
+    public string? LyDoKetThucSom { get; set; }
+
+    public DateOnly? NgayMuonKetThuc { get; set; }
+
     public virtual ICollection<LichSuGiaHan> LichSuGiaHans { get; set; } = new List<LichSuGiaHan>();
 
     public virtual KhachThue MaKhachNavigation { get; set; } = null!;
