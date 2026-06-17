@@ -261,10 +261,14 @@ CREATE TABLE [dbo].[HopDongThue](
 	[TrangThai] [nvarchar](50) NULL,
 	[NgayTao] [datetime] NULL,
 	[ChuKy] [nvarchar](max) NULL,
+	[ChiSoDienCu] [int] NULL,
+	[ChiSoNuocCu] [int] NULL,
 	[UrlChuKyKhach] [nvarchar](max) NULL,
 	[ContractHash] [varchar](255) NULL,
 	[PublicKeyKhach] [varchar](max) NULL,
 	[NgayKy] [datetime] NULL,
+	[LyDoKetThucSom] [nvarchar](max) NULL,
+	[NgayMuonKetThuc] [date] NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[MaHopDong] ASC
@@ -580,9 +584,9 @@ SET IDENTITY_INSERT [dbo].[HinhAnhPhong] OFF
 GO
 SET IDENTITY_INSERT [dbo].[HopDongThue] ON 
 
-INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [NgayKetThuc], [TienCoc], [TrangThai], [NgayTao], [ChuKy], [UrlChuKyKhach], [ContractHash], [PublicKeyKhach], [NgayKy]) VALUES (1, 2, 1, CAST(N'2023-01-01' AS Date), NULL, CAST(2200000.00 AS Decimal(18, 2)), N'Đang hiệu lực', CAST(N'2026-06-04T09:32:22.960' AS DateTime), NULL, NULL, NULL, NULL, NULL)
-INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [NgayKetThuc], [TienCoc], [TrangThai], [NgayTao], [ChuKy], [UrlChuKyKhach], [ContractHash], [PublicKeyKhach], [NgayKy]) VALUES (2, 12, 2, CAST(N'2023-05-15' AS Date), NULL, CAST(2000000.00 AS Decimal(18, 2)), N'Đang hiệu lực', CAST(N'2026-06-04T09:32:22.960' AS DateTime), NULL, NULL, NULL, NULL, NULL)
-INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [NgayKetThuc], [TienCoc], [TrangThai], [NgayTao], [ChuKy], [UrlChuKyKhach], [ContractHash], [PublicKeyKhach], [NgayKy]) VALUES (3, 24, 3, CAST(N'2024-02-10' AS Date), NULL, CAST(2900000.00 AS Decimal(18, 2)), N'Đang hiệu lực', CAST(N'2026-06-04T09:32:22.960' AS DateTime), NULL, NULL, NULL, NULL, NULL)
+INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [NgayKetThuc], [TienCoc], [TrangThai], [NgayTao], [ChuKy], [ChiSoDienCu], [ChiSoNuocCu], [UrlChuKyKhach], [ContractHash], [PublicKeyKhach], [NgayKy]) VALUES (1, 2, 1, CAST(N'2023-01-01' AS Date), NULL, CAST(2200000.00 AS Decimal(18, 2)), N'Đang hiệu lực', CAST(N'2026-06-04T09:32:22.960' AS DateTime), NULL, 1250, 430, NULL, NULL, NULL, NULL)
+INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [NgayKetThuc], [TienCoc], [TrangThai], [NgayTao], [ChuKy], [ChiSoDienCu], [ChiSoNuocCu], [UrlChuKyKhach], [ContractHash], [PublicKeyKhach], [NgayKy]) VALUES (2, 12, 2, CAST(N'2023-05-15' AS Date), NULL, CAST(2000000.00 AS Decimal(18, 2)), N'Đang hiệu lực', CAST(N'2026-06-04T09:32:22.960' AS DateTime), NULL, 2100, 150, NULL, NULL, NULL, NULL)
+INSERT [dbo].[HopDongThue] ([MaHopDong], [MaPhong], [MaKhach], [NgayBatDau], [NgayKetThuc], [TienCoc], [TrangThai], [NgayTao], [ChuKy], [ChiSoDienCu], [ChiSoNuocCu], [UrlChuKyKhach], [ContractHash], [PublicKeyKhach], [NgayKy]) VALUES (3, 24, 3, CAST(N'2024-02-10' AS Date), NULL, CAST(2900000.00 AS Decimal(18, 2)), N'Đang hiệu lực', CAST(N'2026-06-04T09:32:22.960' AS DateTime), NULL, 300, 80, NULL, NULL, NULL, NULL)
 SET IDENTITY_INSERT [dbo].[HopDongThue] OFF
 GO
 SET IDENTITY_INSERT [dbo].[KhachThue] ON 
