@@ -28,6 +28,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   }
 
   Future<void> _loadManagerAndBankInfo() async {
+    if (!mounted) return;
     setState(() => isLoadingBank = true);
     try {
       maQuanLy = await AuthService().getMaQuanLy();
@@ -38,7 +39,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     } catch (e) {
       debugPrint("Error loading bank info: $e");
     } finally {
-      setState(() => isLoadingBank = false);
+      if (mounted) {
+        setState(() => isLoadingBank = false);
+      }
     }
   }
 
@@ -243,7 +246,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                                     backgroundColor: Colors.red,
                                   ),
                                 );
-                                setState(() => isLoadingBank = false);
+                                if (mounted) {
+                                  setState(() => isLoadingBank = false);
+                                }
                               }
                             },
                       style: ElevatedButton.styleFrom(
